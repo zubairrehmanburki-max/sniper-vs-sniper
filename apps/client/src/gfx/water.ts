@@ -50,13 +50,16 @@ export function buildWater(level: number, size: number, sunDir: THREE.Vector3, c
         vec2 w2 = vec2(-w.y, w.x);
         float dist = length(cameraPosition - vWorld);
         // Fade the ripples out with distance so the far water does not sparkle with aliasing.
-        float fade = 1.0 - smoothstep(300.0, 2200.0, dist);
+        // Long swell everywhere; the short chop only near the camera, where a pixel still covers
+        // less than a wavelength (further out it would alias into a moire).
+        float fade = 1.0 - smoothstep(150.0, 1800.0, dist);
+        float near = 1.0 - smoothstep(20.0, 160.0, dist);
         vec2 grad = vec2(0.0);
-        wave(p, w, 0.9, 0.08 * uChop, 1.6, grad);
-        wave(p, normalize(w + 0.6 * w2), 1.7, 0.05 * uChop, 2.3, grad);
-        wave(p, normalize(w - 0.5 * w2), 3.1, 0.025 * uChop, 3.1, grad);
-        wave(p, normalize(w + 0.2 * w2), 6.3, 0.012 * uChop, 4.4, grad);
-        wave(p, w2, 11.0, 0.006 * uChop, 5.0, grad);
+        wave(p, w, 0.25, 0.22 * uChop, 1.1, grad);
+        wave(p, normalize(w + 0.6 * w2), 0.45, 0.12 * uChop, 1.5, grad);
+        wave(p, normalize(w - 0.5 * w2), 0.9, 0.05 * uChop * (0.3 + 0.7 * near), 2.2, grad);
+        wave(p, normalize(w + 0.2 * w2), 2.6, 0.02 * uChop * near, 3.4, grad);
+        wave(p, w2, 5.5, 0.008 * uChop * near, 4.6, grad);
         grad *= fade;
         vec3 n = normalize(vec3(-grad.x, 1.0, -grad.y));
         vec3 v = normalize(cameraPosition - vWorld);

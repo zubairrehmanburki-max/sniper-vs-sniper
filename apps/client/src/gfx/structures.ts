@@ -169,6 +169,7 @@ export function addBridge(group: THREE.Group, spec: Extract<Structure, { kind: '
   }
   // Lamp posts, alternating sides.
   for (let x = -spec.halfSpan + 20, i = 0; x < spec.halfSpan - 10; x += 32, i++) {
+    if (Math.abs(x) < 12) continue; // keep mid-span, where the shooter lies, clear
     lampPost(group, x, spec.deckY, z + (i % 2 ? 1 : -1) * (spec.halfWidth - 0.9), mats);
   }
   // Road continuing onto the banks.

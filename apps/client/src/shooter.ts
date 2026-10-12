@@ -81,7 +81,7 @@ export class Shooter {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 0.95;
+    this.renderer.toneMappingExposure = 0.85;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.reticleCtx = $<HTMLCanvasElement>('reticle').getContext('2d')!;
@@ -357,8 +357,11 @@ export class Shooter {
     rc.height = h * dpr;
   }
 
+  /** Longest simulated step per frame; raised only by the debug harness on machines without a GPU. */
+  maxStep = 0.1;
+
   private frame(now: number): void {
-    const dt = Math.min(0.1, (now - this.lastFrame) / 1000);
+    const dt = Math.min(this.maxStep, (now - this.lastFrame) / 1000);
     this.lastFrame = now;
     if (this.running) this.time += dt;
     this.recoil *= Math.exp(-dt * 6);

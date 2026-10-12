@@ -116,12 +116,11 @@ export function buildWorld(opts: WorldOptions): RangeView {
 
   // ---- terrain ----------------------------------------------------------------------------
   const c = new THREE.Color();
-  const groundColor = (x: number, z: number, out: THREE.Color): void => {
+  const groundColor = (x: number, z: number, y: number, out: THREE.Color): void => {
     const inLane = Math.abs(x) < halfWidth && z < 10 && z > -laneLength - 20;
     const n = rand();
     const [lh, ls, ll] = pal.lane ?? [0.2, 0.35, 0.42];
     const [oh, os, ol] = pal.outside ?? [0.17, 0.3, 0.36];
-    const y = terrain(x, z);
     if (water !== undefined && y < water - 0.3) {
       // Sea or river bed: dark, seen only through the shallows.
       const [wh, ws, wl] = pal.water ?? [0.55, 0.35, 0.3];
@@ -168,15 +167,12 @@ export function buildWorld(opts: WorldOptions): RangeView {
       const x = pos.getX(i);
       const z = pos.getZ(i);
       let y = terrain(x, z) - inset;
-      groundColor(x, z, c);
-      if (far) {
-        const relief = farRelief(x, z);
-        if (relief > 0) {
-          y += relief;
-          const t = Math.min(1, relief / 400);
-          c.lerp(hillColor, t);
-          if (snowAbove !== undefined && y > snowAbove) c.lerp(snow, Math.min(1, (y - snowAbove) / 120));
-        }
+      const relief = far ? farRelief(x, z) : 0;
+      y += relief;
+      groundColor(x, z, y, c);
+      if (relief > 0) {
+        c.lerp(hillColor, Math.min(1, relief / 400));
+        if (snowAbove !== undefined && y > snowAbove) c.lerp(snow, Math.min(1, (y - snowAbove) / 120));
       }
       colors.push(c.r, c.g, c.b);
       pos.setY(i, y);
