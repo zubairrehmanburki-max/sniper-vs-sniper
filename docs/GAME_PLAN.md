@@ -1,6 +1,6 @@
 # Sniper Duel — Game Design & Build Plan
 
-_Author: Zubair Rehman · Oct 12, 2026 · transcribed from the original PDF plan_
+_Author: Zubair Rehman · Oct 12, 2026 · transcribed from the original plan ([live doc](https://claude.ai/artifact/Jy7EU52GYsEQy7yfwuNNWZ))_
 
 ## Contents
 
