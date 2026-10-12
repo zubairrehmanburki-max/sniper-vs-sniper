@@ -54,7 +54,9 @@ jobs:
           PY
           # The certificate store is encrypted with a passphrase derived from the API key, so no
           # extra secret is needed. Rotate the key and the `certificates` branch must be deleted.
-          echo "MATCH_PASSWORD=$(printf '%s' "$P8" | shasum -a 256 | cut -c1-48)" >> "$GITHUB_ENV"
+          pass=$(printf 'svs-match:%s:%s' "$KEY_ID" "$P8" | shasum -a 256 | cut -c1-48)
+          echo "::add-mask::$pass"
+          echo "MATCH_PASSWORD=$pass" >> "$GITHUB_ENV"
       # Xcode's automatic signing needs a registered device to archive, which an account without
       # a Mac never has, so signing is manual: fastlane match creates (once) an Apple Distribution
       # certificate and an App Store profile with the API key, keeps them encrypted on the
@@ -65,10 +67,17 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          fastlane run setup_ci
+          # A throwaway keychain the runner can unlock without a prompt.
+          KC="$RUNNER_TEMP/signing.keychain-db"
+          KC_PASS=$(uuidgen)
+          security create-keychain -p "$KC_PASS" "$KC"
+          security set-keychain-settings -lut 3600 "$KC"
+          security unlock-keychain -p "$KC_PASS" "$KC"
+          security list-keychains -d user -s "$KC" "$HOME/Library/Keychains/login.keychain-db"
           fastlane match appstore --readonly false --git_url "$MATCH_GIT_URL" --git_branch certificates \
-            --app_identifier com.snipervssniper.game --api_key_path "$RUNNER_TEMP/asc/key.json" \
-            --team_id "${{ secrets.APPLE_TEAM_ID }}"
+            --clone_branch_directly --app_identifier com.snipervssniper.game \
+            --api_key_path "$RUNNER_TEMP/asc/key.json" --team_id "${{ secrets.APPLE_TEAM_ID }}" \
+            --keychain_name "$KC" --keychain_password "$KC_PASS"
       - name: Archive (signed)
         working-directory: apps/client/ios/App
         run: >
