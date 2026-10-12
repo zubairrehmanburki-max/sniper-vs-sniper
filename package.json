@@ -7,9 +7,11 @@
     "node": ">=20"
   },
   "scripts": {
+    "dev": "pnpm --filter @svs/client dev",
+    "build": "pnpm -r build",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "check": "pnpm typecheck && pnpm test"
+    "check": "pnpm typecheck && pnpm test && pnpm build"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",

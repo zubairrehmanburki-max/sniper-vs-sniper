@@ -6,8 +6,16 @@
     "sightHeightM": 0.045,
     "zeroRangeM": 100,
     "muzzleVelocitySdMps": 4,
-    "transonic": { "machThreshold": 1.2, "sigmaRadPerSqrtS": 0.004 },
-    "effects": { "spinDrift": true, "aerodynamicJump": false, "coriolis": false, "transonicDispersion": true }
+    "transonic": {
+      "machThreshold": 1.2,
+      "sigmaRadPerSqrtS": 0.004
+    },
+    "effects": {
+      "spinDrift": true,
+      "aerodynamicJump": false,
+      "coriolis": false,
+      "transonicDispersion": true
+    }
   },
   "rifles": [
     {
@@ -22,8 +30,14 @@
       "lengthM": 0.0315,
       "muzzleVelocityMps": 790,
       "twistM": 0.2858,
-      "sweetSpotM": [300, 700],
-      "coldBoreShiftMrad": { "elevation": 0.1, "windage": 0.0 }
+      "sweetSpotM": [
+        300,
+        700
+      ],
+      "coldBoreShiftMrad": {
+        "elevation": 0.1,
+        "windage": 0.0
+      }
     },
     {
       "id": "bolt65cm",
@@ -37,8 +51,14 @@
       "lengthM": 0.0353,
       "muzzleVelocityMps": 825,
       "twistM": 0.2032,
-      "sweetSpotM": [400, 900],
-      "coldBoreShiftMrad": { "elevation": 0.1, "windage": -0.05 }
+      "sweetSpotM": [
+        400,
+        900
+      ],
+      "coldBoreShiftMrad": {
+        "elevation": 0.1,
+        "windage": -0.05
+      }
     },
     {
       "id": "mag338",
@@ -52,8 +72,14 @@
       "lengthM": 0.0395,
       "muzzleVelocityMps": 900,
       "twistM": 0.254,
-      "sweetSpotM": [600, 1200],
-      "coldBoreShiftMrad": { "elevation": 0.15, "windage": 0.05 }
+      "sweetSpotM": [
+        600,
+        1200
+      ],
+      "coldBoreShiftMrad": {
+        "elevation": 0.15,
+        "windage": 0.05
+      }
     },
     {
       "id": "am50",
@@ -67,8 +93,81 @@
       "lengthM": 0.0584,
       "muzzleVelocityMps": 850,
       "twistM": 0.381,
-      "sweetSpotM": [800, 1500],
-      "coldBoreShiftMrad": { "elevation": 0.2, "windage": 0.0 }
+      "sweetSpotM": [
+        800,
+        1500
+      ],
+      "coldBoreShiftMrad": {
+        "elevation": 0.2,
+        "windage": 0.0
+      }
     }
-  ]
+  ],
+  "scope": {
+    "minZoom": 5,
+    "maxZoom": 25,
+    "fovAt1xDeg": 30,
+    "clickMrad": 0.1,
+    "maxElevationMrad": 30,
+    "maxWindageMrad": 10,
+    "eyeFovDeg": 60
+  },
+  "sway": {
+    "$comment": "Aim wander is a figure-8 (Lissajous 1:2). Amplitudes in mrad.",
+    "amplitudeMrad": {
+      "prone": 0.35,
+      "crouch": 1.1,
+      "standing": 2.6
+    },
+    "bipodFactor": 0.5,
+    "periodSeconds": 4.5,
+    "holdBreath": {
+      "steadySeconds": 5,
+      "steadyFactor": 0.15,
+      "recoverSeconds": 4,
+      "strainGrowthPerSecond": 0.6,
+      "maxStrainFactor": 3
+    },
+    "eyeHeightM": {
+      "prone": 0.3,
+      "crouch": 1.0,
+      "standing": 1.6
+    }
+  },
+  "target": {
+    "$comment": "Human-size steel silhouette, also the opponent model for mil ranging.",
+    "widthM": 0.5,
+    "heightM": 0.95,
+    "headM": 0.25
+  },
+  "practiceRange": {
+    "targetsM": [
+      300,
+      600,
+      900
+    ],
+    "laneWidthM": 120,
+    "windZonesM": [
+      300,
+      600
+    ],
+    "wind": {
+      "baseSpeedMps": [
+        2,
+        7
+      ],
+      "directionJitterDeg": 40,
+      "gustAmplitude": 0.3,
+      "gustPeriodSeconds": 10,
+      "zoneSpeedJitter": 0.35
+    },
+    "atmosphere": {
+      "altitudeM": 300,
+      "temperatureC": 22,
+      "humidity": 0.45
+    },
+    "latitude": 35,
+    "speedOfSoundForAudioMps": 343,
+    "firingPointHeightM": 1.2
+  }
 }
