@@ -4,7 +4,7 @@
  */
 import * as THREE from 'three';
 import type { Vec3 } from '@svs/ballistics';
-import type { Box, Ground, Silhouette, Stance } from '@svs/shared';
+import type { Box, Ground, Palette, Silhouette, Stance } from '@svs/shared';
 
 export interface WorldOptions {
   seed: number;
@@ -21,6 +21,7 @@ export interface WorldOptions {
   /** Lateral half-width of the lane, m. */
   laneHalfWidth?: number;
   flags?: Array<[number, number]>;
+  palette?: Palette;
 }
 
 export interface RangeView {
@@ -91,7 +92,8 @@ export function buildWorld(opts: WorldOptions): RangeView {
   const halfWidth = opts.laneHalfWidth ?? 70;
   const rand = seededRandom(seed);
   const scene = new THREE.Scene();
-  const sky = new THREE.Color('#a9cbe6');
+  const pal = opts.palette ?? {};
+  const sky = new THREE.Color(pal.sky ?? '#a9cbe6');
   scene.background = sky;
   scene.fog = new THREE.Fog(sky, 1500, 5200);
 
@@ -106,7 +108,10 @@ export function buildWorld(opts: WorldOptions): RangeView {
   const groundColor = (x: number, z: number, out: THREE.Color): void => {
     const inLane = Math.abs(x) < halfWidth && z < 10 && z > -laneLength - 20;
     const n = rand();
-    out.setHSL(inLane ? 0.2 : 0.17 + n * 0.04, inLane ? 0.35 : 0.3 + n * 0.1, inLane ? 0.42 + n * 0.04 : 0.36 + n * 0.08);
+    const [lh, ls, ll] = pal.lane ?? [0.2, 0.35, 0.42];
+    const [oh, os, ol] = pal.outside ?? [0.17, 0.3, 0.36];
+    if (inLane) out.setHSL(lh, ls, ll + n * 0.04);
+    else out.setHSL(oh + n * 0.04, os + n * 0.1, ol + n * 0.08);
   };
   const c = new THREE.Color();
   // Fine mesh over the playable lane, so what you see matches the ground the bullet hits.
@@ -145,7 +150,7 @@ export function buildWorld(opts: WorldOptions): RangeView {
   }
 
   // Distant hills for a horizon.
-  const hillMat = new THREE.MeshLambertMaterial({ color: '#7d8a6a', flatShading: true });
+  const hillMat = new THREE.MeshLambertMaterial({ color: pal.hills ?? '#7d8a6a', flatShading: true });
   for (let i = 0; i < 26; i++) {
     const hill = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 1), hillMat);
     const a = (i / 26) * Math.PI * 2;
@@ -164,7 +169,7 @@ export function buildWorld(opts: WorldOptions): RangeView {
   }
 
   // Rocks: the boxes the hit test uses, drawn as faceted boulders filling the same volume.
-  const rockMat = new THREE.MeshLambertMaterial({ color: '#8e8a80', flatShading: true });
+  const rockMat = new THREE.MeshLambertMaterial({ color: pal.rocks ?? '#8e8a80', flatShading: true });
   for (const box of opts.cover ?? []) {
     const w = box.max.x - box.min.x;
     const h = box.max.y - box.min.y;
@@ -267,7 +272,7 @@ export function buildWorld(opts: WorldOptions): RangeView {
     uWind: { value: [new THREE.Vector2(), new THREE.Vector2(), new THREE.Vector2()] },
     uEdges: { value: new THREE.Vector2(laneEdges[0] ?? 1e9, laneEdges[1] ?? 1e9) },
   };
-  const grassMat = new THREE.MeshLambertMaterial({ color: '#9aa45a', side: THREE.DoubleSide });
+  const grassMat = new THREE.MeshLambertMaterial({ color: pal.grass ?? '#9aa45a', side: THREE.DoubleSide });
   grassMat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, grassUniforms);
     shader.vertexShader = shader.vertexShader

@@ -10,6 +10,7 @@ import {
   botPlan,
   config,
   createMatch,
+  DEFAULT_MAP,
   eyeOf,
   facingYaw,
   isSuddenDeath,
@@ -88,7 +89,7 @@ export class DuelMode {
       shooter.time = 0;
       this.state = createMatch({
         seed,
-        mapId: setup.mapId ?? 'training-lane',
+        mapId: setup.mapId ?? DEFAULT_MAP,
         players: {
           A: { name: setup.names.A, rifleId: setup.rifles.A },
           B: { name: setup.names.B, rifleId: setup.rifles.B, bot: setup.bot },
@@ -103,12 +104,9 @@ export class DuelMode {
       laneLength: this.map.laneLength,
       laneEdges: this.map.windEdges,
       cover: this.map.cover,
-      laneHalfWidth: 70,
-      flags: [
-        [-62, -120],
-        [64, -325],
-        [-66, -530],
-      ],
+      laneHalfWidth: this.map.look.laneHalfWidth,
+      flags: this.map.look.flags.map(([x, s]) => [x, -s] as [number, number]),
+      palette: this.map.look.palette,
     });
     shooter.attach(view, {
       eye: () => {
@@ -277,7 +275,7 @@ export class DuelMode {
     if (s.phase === 'roundOver' || s.phase === 'matchOver') return; // handled by the shot card
     if (s.phase === 'setup') {
       this.setupTurn = 'A';
-      this.viewer = 'A';
+      if (!this.online) this.viewer = 'A'; // online you are always your own side
       if (this.humans.length === 2) this.curtain('A');
       else this.showForPhase();
       return;
@@ -562,6 +560,8 @@ export class DuelMode {
     const h = rect.height;
     const s = this.state;
     const { zone, scale, toScreen } = this.mapFrame(w, h);
+    const me = s.players[this.viewer];
+    const [hue, sat, light] = this.map.look.palette?.lane ?? [0.21, 0.22, 0.4];
     ctx.clearRect(0, 0, w, h);
 
     // Terrain shading.
@@ -569,8 +569,8 @@ export class DuelMode {
     for (let x = zone.xMin; x < zone.xMax; x += step) {
       for (let sd = zone.sMin; sd < zone.sMax; sd += step) {
         const g = this.map.ground(x + step / 2, -(sd + step / 2));
-        const l = 30 + Math.min(30, g * 4);
-        ctx.fillStyle = `hsl(75 22% ${l}%)`;
+        const l = Math.min(80, light * 100 * 0.75 + Math.min(20, Math.max(0, g) * 3));
+        ctx.fillStyle = `hsl(${hue * 360} ${sat * 100}% ${l}%)`;
         const a = toScreen({ x, z: -sd });
         const b = toScreen({ x: x + step, z: -(sd + step) });
         ctx.fillRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x) + 0.5, Math.abs(b.y - a.y) + 0.5);
@@ -603,10 +603,10 @@ export class DuelMode {
     ctx.textAlign = 'center';
     ctx.fillText(`▲ Enemy zone, about ${Math.round(this.map.zones.B.front - this.map.zones.A.front)} m`, w / 2, 14);
 
-    const me = s.players[this.viewer];
     // Reach circle in your move phase.
     const budget = moveBudget(s, this.viewer);
-    const reachesAll = budget > Math.hypot(zone.xMax - zone.xMin, zone.sMax - zone.sMin);
+    const from = s.moveFrom ?? me.position;
+    const reachesAll = [zone.xMin, zone.xMax].every((x) => [zone.sMin, zone.sMax].every((sd) => Math.hypot(x - from.x, -sd - from.z) <= budget));
     if (s.phase === 'move' && s.actor === this.viewer && s.moveFrom && !reachesAll) {
       const c = toScreen(s.moveFrom);
       const z0 = toScreen({ x: zone.xMin, z: -zone.sMin });

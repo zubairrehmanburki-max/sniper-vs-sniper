@@ -1,7 +1,7 @@
 # @svs/server
 
 Authoritative game server for online duels, built on Colyseus (`@colyseus/core` with the WebSocket
-transport). There is one room type, `duel`, matched by private code; an empty code is quick match.
+transport). There is one room type, `duel`. Rooms are matched by private code and map. An empty code means quick match, which only pairs players who picked the same map. Someone joining a private code plays the host's map.
 
 ```sh
 pnpm server            # from the repo root: ws://localhost:2567 (PORT overrides the port)
@@ -25,4 +25,5 @@ How a room works:
 Not here yet:
 - Accounts, ELO, Postgres match history and Redis matchmaking. Matchmaking is in-memory on one
   process, which is enough for a single small instance.
-- Deployment: a Fly.io or Render config.
+- Hosting. The `Dockerfile` at the repo root builds one image that serves the client and runs the
+  server (`CLIENT_DIR`, port 8080). Where it gets hosted is still to be decided.

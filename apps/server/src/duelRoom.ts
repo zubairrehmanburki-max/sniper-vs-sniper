@@ -8,6 +8,8 @@ import {
   applyInput,
   config,
   createMatch,
+  DEFAULT_MAP,
+  MAPS,
   encodeView,
   other,
   rifleById,
@@ -30,12 +32,12 @@ interface Seat {
   connected: boolean;
 }
 
-const MAP_ID = 'training-lane';
 const TICK_MS = 250;
 
 export class DuelRoom extends Room {
   override maxClients = 2;
   private code = '';
+  private mapId = DEFAULT_MAP;
   private seats = new Map<string, Seat>();
   private match: MatchState | null = null;
   private startedAt = Date.now();
@@ -48,6 +50,7 @@ export class DuelRoom extends Room {
 
   override onCreate(options: Partial<JoinOptions>): void {
     this.code = options.code ?? '';
+    if (options.mapId && MAPS[options.mapId]) this.mapId = options.mapId;
     this.onMessage('input', (client: Client, msg: ClientMessage) => this.handle(client, msg));
     this.clock.setInterval(() => this.tick(), TICK_MS);
   }
@@ -72,7 +75,7 @@ export class DuelRoom extends Room {
     this.startedAt = Date.now();
     this.match = createMatch({
       seed: DuelRoom.seed(),
-      mapId: MAP_ID,
+      mapId: this.mapId,
       players: {
         A: { name: bySide.A.name, rifleId: bySide.A.rifleId },
         B: { name: bySide.B.name, rifleId: bySide.B.rifleId },

@@ -18,6 +18,8 @@ export interface JoinOptions {
   rifleId: string;
   /** Private game code; omit for quick match. */
   code?: string;
+  /** Map to play; quick match only pairs players who picked the same map. */
+  mapId?: string;
 }
 
 export type ClientMessage =

@@ -1,4 +1,4 @@
-import { config, makeCode, type BotDifficulty, type MatchView } from '@svs/shared';
+import { config, DEFAULT_MAP, makeCode, MAPS, type BotDifficulty, type MatchView } from '@svs/shared';
 import { DuelMode } from './duelMode.ts';
 import { OnlineLink, serverUrl } from './net.ts';
 import { PracticeMode } from './practiceMode.ts';
@@ -17,6 +17,16 @@ for (const id of ['rifle-a', 'rifle-b']) {
   }
 }
 $<HTMLSelectElement>('rifle-b').value = 'bolt65cm';
+for (const m of Object.values(MAPS)) {
+  const o = document.createElement('option');
+  o.value = m.id;
+  const a = m.zones.A;
+  const b = m.zones.B;
+  o.textContent = `${m.name} (${Math.round(b.front - a.front)}–${Math.round(b.sMax - a.sMin)} m, ${m.climate.altitudeM.toLocaleString('en')} m altitude)`;
+  $<HTMLSelectElement>('map').append(o);
+}
+$<HTMLSelectElement>('map').value = DEFAULT_MAP;
+const mapId = (): string => $<HTMLSelectElement>('map').value;
 
 function menu(): void {
   $('menu').hidden = false;
@@ -48,6 +58,7 @@ function duel(bot?: BotDifficulty): void {
       names: { A: nameA, B: nameB },
       rifles: { A: $<HTMLSelectElement>('rifle-a').value, B: $<HTMLSelectElement>('rifle-b').value },
       bot,
+      mapId: mapId(),
     },
     menu,
   );
@@ -89,7 +100,7 @@ function watch(link: OnlineLink): void {
 
 async function online(kind: 'quick' | 'create' | 'join'): Promise<void> {
   shooter.audio.unlock();
-  const opts = { name: $<HTMLInputElement>('name-a').value.trim() || 'Player 1', rifleId: $<HTMLSelectElement>('rifle-a').value };
+  const opts = { name: $<HTMLInputElement>('name-a').value.trim() || 'Player 1', rifleId: $<HTMLSelectElement>('rifle-a').value, mapId: mapId() };
   const code = $<HTMLInputElement>('join-code').value.trim().toUpperCase();
   if (kind === 'join' && !/^[A-Z]{4}$/.test(code)) {
     onlineStatus('Enter the 4-letter code your opponent shared.');
@@ -102,7 +113,7 @@ async function online(kind: 'quick' | 'create' | 'join'): Promise<void> {
         ? await OnlineLink.quick(opts)
         : kind === 'create'
           ? await OnlineLink.create({ ...opts, code: makeCode() })
-          : await OnlineLink.join({ ...opts, code });
+          : await OnlineLink.join({ name: opts.name, rifleId: opts.rifleId, code }); // the host picked the map
     watch(link);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
