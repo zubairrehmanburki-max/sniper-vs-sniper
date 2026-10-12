@@ -4,7 +4,24 @@
  */
 import * as THREE from 'three';
 import type { Vec3 } from '@svs/ballistics';
-import type { Silhouette } from '@svs/shared';
+import type { Box, Ground, Silhouette, Stance } from '@svs/shared';
+
+export interface WorldOptions {
+  seed: number;
+  ground: Ground;
+  /** Lane length (m) and wind-zone edges along it. */
+  laneLength: number;
+  laneEdges: number[];
+  /** Steel plates (practice range). */
+  steel?: Silhouette[];
+  /** Rocks and other cover boxes. */
+  cover?: Box[];
+  /** Height of a raised firing bench at the origin, if any. */
+  bench?: number;
+  /** Lateral half-width of the lane, m. */
+  laneHalfWidth?: number;
+  flags?: Array<[number, number]>;
+}
 
 export interface RangeView {
   scene: THREE.Scene;
@@ -17,6 +34,8 @@ export interface RangeView {
   ringPlate(id: string): void;
   /** Animate a tracer along world points starting now. */
   tracer(points: Array<{ t: number; p: Vec3 }>, until: number): void;
+  /** Show or move a player figure (duel). */
+  setFigure(id: string, figure: { position: Vec3; stance: Stance; facingYaw: number; dims: { heightM: number; widthM: number; headM: number } } | null): void;
 }
 
 const GRASS_COUNT = 9000;
@@ -66,7 +85,10 @@ function signTexture(text: string): THREE.Texture {
   return tex;
 }
 
-export function buildRange(targets: Silhouette[], laneEdges: number[], seed: number, firingPointHeight: number): RangeView {
+export function buildWorld(opts: WorldOptions): RangeView {
+  const { seed, ground, laneLength, laneEdges } = opts;
+  const targets = opts.steel ?? [];
+  const halfWidth = opts.laneHalfWidth ?? 70;
   const rand = seededRandom(seed);
   const scene = new THREE.Scene();
   const sky = new THREE.Color('#a9cbe6');
@@ -81,33 +103,46 @@ export function buildRange(targets: Silhouette[], laneEdges: number[], seed: num
   sun.position.set(-300, 500, 200);
   scene.add(sun);
 
-  // Ground: a big plane with vertex-colour variation, a mown lane in the middle.
-  const groundGeo = new THREE.PlaneGeometry(6000, 6000, 120, 120);
-  groundGeo.rotateX(-Math.PI / 2);
-  const colors: number[] = [];
-  const pos = groundGeo.attributes.position!;
-  const c = new THREE.Color();
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i);
-    const z = pos.getZ(i);
-    const inLane = Math.abs(x) < 70 && z < 10 && z > -1000;
+  const groundColor = (x: number, z: number, out: THREE.Color): void => {
+    const inLane = Math.abs(x) < halfWidth && z < 10 && z > -laneLength - 20;
     const n = rand();
-    c.setHSL(inLane ? 0.2 : 0.17 + n * 0.04, inLane ? 0.35 : 0.3 + n * 0.1, inLane ? 0.42 + n * 0.04 : 0.36 + n * 0.08);
-    colors.push(c.r, c.g, c.b);
-    // Rolling terrain outside the lane, dead flat inside it (the range is flat for Phase 1).
-    if (!(Math.abs(x) < 120 && z < 60 && z > -1100)) {
-      const d = Math.min(1, (Math.abs(x) - 120) / 300 + Math.max(0, -z - 1100) / 300 + Math.max(0, z - 60) / 300);
-      pos.setY(i, Math.max(0, d) * (Math.sin(x * 0.004) * 18 + Math.cos(z * 0.003) * 14 + 16));
+    out.setHSL(inLane ? 0.2 : 0.17 + n * 0.04, inLane ? 0.35 : 0.3 + n * 0.1, inLane ? 0.42 + n * 0.04 : 0.36 + n * 0.08);
+  };
+  const c = new THREE.Color();
+  // Fine mesh over the playable lane, so what you see matches the ground the bullet hits.
+  const laneW = 2 * (halfWidth + 120);
+  const laneL = laneLength + 260;
+  const fine = new THREE.PlaneGeometry(laneW, laneL, Math.ceil(laneW / 3), Math.ceil(laneL / 3));
+  fine.rotateX(-Math.PI / 2);
+  fine.translate(0, 0, -laneLength / 2);
+  // Coarse surround for the horizon, sunk slightly where it overlaps the lane mesh.
+  const coarse = new THREE.PlaneGeometry(6000, 6000, 120, 120);
+  coarse.rotateX(-Math.PI / 2);
+  coarse.translate(0, 0, -laneLength / 2);
+  for (const [geo, inset] of [
+    [fine, 0],
+    [coarse, 0.4],
+  ] as const) {
+    const pos = geo.attributes.position!;
+    const colors: number[] = [];
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i);
+      const z = pos.getZ(i);
+      groundColor(x, z, c);
+      colors.push(c.r, c.g, c.b);
+      pos.setY(i, ground(x, z) - inset);
     }
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    geo.computeVertexNormals();
+    scene.add(new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true })));
   }
-  groundGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-  groundGeo.computeVertexNormals();
-  scene.add(new THREE.Mesh(groundGeo, new THREE.MeshLambertMaterial({ vertexColors: true })));
 
-  // Raised firing bench the shooter lies on.
-  const bench = new THREE.Mesh(new THREE.BoxGeometry(6, firingPointHeight, 4), new THREE.MeshLambertMaterial({ color: '#7a6a52' }));
-  bench.position.set(0, firingPointHeight / 2, 1.2);
-  scene.add(bench);
+  if (opts.bench) {
+    // Raised firing bench the shooter lies on.
+    const bench = new THREE.Mesh(new THREE.BoxGeometry(6, opts.bench, 4), new THREE.MeshLambertMaterial({ color: '#7a6a52' }));
+    bench.position.set(0, opts.bench / 2, 1.2);
+    scene.add(bench);
+  }
 
   // Distant hills for a horizon.
   const hillMat = new THREE.MeshLambertMaterial({ color: '#7d8a6a', flatShading: true });
@@ -115,16 +150,61 @@ export function buildRange(targets: Silhouette[], laneEdges: number[], seed: num
     const hill = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 1), hillMat);
     const a = (i / 26) * Math.PI * 2;
     const r = 2400 + rand() * 900;
-    hill.position.set(Math.sin(a) * r, -40, -Math.cos(a) * r);
+    hill.position.set(Math.sin(a) * r, -40, -Math.cos(a) * r - laneLength / 2);
     hill.scale.set(300 + rand() * 400, 120 + rand() * 220, 300 + rand() * 300);
     scene.add(hill);
   }
 
-  // Earth berm behind the steel.
-  const bermMat = new THREE.MeshLambertMaterial({ color: '#8b7350', flatShading: true });
-  const berm = new THREE.Mesh(new THREE.BoxGeometry(260, 14, 30), bermMat);
-  berm.position.set(0, 7, -1040);
-  scene.add(berm);
+  if (targets.length) {
+    // Earth berm behind the steel.
+    const bermMat = new THREE.MeshLambertMaterial({ color: '#8b7350', flatShading: true });
+    const berm = new THREE.Mesh(new THREE.BoxGeometry(260, 14, 30), bermMat);
+    berm.position.set(0, 7, -laneLength - 140);
+    scene.add(berm);
+  }
+
+  // Rocks: the boxes the hit test uses, drawn as faceted boulders filling the same volume.
+  const rockMat = new THREE.MeshLambertMaterial({ color: '#8e8a80', flatShading: true });
+  for (const box of opts.cover ?? []) {
+    const w = box.max.x - box.min.x;
+    const h = box.max.y - box.min.y;
+    const d = box.max.z - box.min.z;
+    const geo = new THREE.BoxGeometry(w, h, d, 2, 2, 2);
+    const p = geo.attributes.position!;
+    for (let i = 0; i < p.count; i++) {
+      // Roughen the top and sides a little, never beyond the box.
+      const k = 0.92 + rand() * 0.08;
+      p.setXYZ(i, p.getX(i) * k, p.getY(i) < h / 2 - 0.01 ? p.getY(i) : p.getY(i) * (0.95 + rand() * 0.05), p.getZ(i) * k);
+    }
+    geo.computeVertexNormals();
+    const mesh = new THREE.Mesh(geo, rockMat);
+    mesh.position.set((box.min.x + box.max.x) / 2, (box.min.y + box.max.y) / 2, (box.min.z + box.max.z) / 2);
+    scene.add(mesh);
+  }
+
+  // Player figures (duel).
+  const figures = new Map<string, THREE.Group>();
+  const figureMat = new THREE.MeshLambertMaterial({ color: '#5d6340', side: THREE.DoubleSide });
+  const setFigure: RangeView['setFigure'] = (id, f) => {
+    const old = figures.get(id);
+    if (old) {
+      scene.remove(old);
+      figures.delete(id);
+    }
+    if (!f) return;
+    const g = new THREE.Group();
+    const { heightM: H, widthM: W, headM: hd } = f.dims;
+    const body = new THREE.Mesh(new THREE.BoxGeometry(W, H - hd, f.stance === 'prone' ? 1.6 : 0.3), figureMat);
+    body.position.set(0, (H - hd) / 2, f.stance === 'prone' ? 0.8 : 0);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(hd / 2, 10, 8), figureMat);
+    head.position.set(0, H - hd / 2, 0);
+    g.add(body, head);
+    g.position.set(f.position.x, f.position.y, f.position.z);
+    // Prone bodies extend away from the enemy (behind the head).
+    g.rotation.y = -f.facingYaw;
+    scene.add(g);
+    figures.set(id, g);
+  };
 
   // Steel silhouettes on posts.
   const plates = new Map<string, { pivot: THREE.Group; mat: THREE.MeshLambertMaterial; swing: number; flash: number }>();
@@ -214,13 +294,13 @@ export function buildRange(targets: Silhouette[], laneEdges: number[], seed: num
   const q = new THREE.Quaternion();
   for (let i = 0; i < GRASS_COUNT; i++) {
     // Tall grass in bands either side of the lane, where you read the wind; short mown grass in it.
-    const z = -(15 + rand() * 1000);
+    const z = -(15 + rand() * (laneLength + 100));
     const inLane = rand() < 0.3;
     const side = rand() < 0.5 ? -1 : 1;
-    const x = inLane ? (rand() * 2 - 1) * 30 : side * (32 + rand() * 120);
+    const x = inLane ? (rand() * 2 - 1) * (halfWidth - 40) : side * (halfWidth - 38 + rand() * 120);
     q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), rand() * Math.PI);
-    const s = inLane ? 0.3 + rand() * 0.25 : 0.8 + rand() * 0.9;
-    m4.compose(new THREE.Vector3(x, 0, z), q, new THREE.Vector3(s, s, s));
+    const s = inLane ? 0.15 + rand() * 0.2 : 0.8 + rand() * 0.9;
+    m4.compose(new THREE.Vector3(x, ground(x, z), z), q, new THREE.Vector3(s, s, s));
     grass.setMatrixAt(i, m4);
   }
   scene.add(grass);
@@ -229,23 +309,19 @@ export function buildRange(targets: Silhouette[], laneEdges: number[], seed: num
   const flags: Array<{ group: THREE.Group; cloth: THREE.Mesh; pos: Vec3 }> = [];
   const poleMat = new THREE.MeshLambertMaterial({ color: '#cccccc' });
   const clothMat = new THREE.MeshLambertMaterial({ color: '#e0412b', side: THREE.DoubleSide });
-  for (const [x, z] of [
-    [-22, -150],
-    [26, -450],
-    [-30, -750],
-    [20, -880],
-  ] as const) {
+  for (const [x, z] of opts.flags ?? []) {
+    const gy = ground(x, z);
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 6), poleMat);
-    pole.position.set(x, 3, z);
+    pole.position.set(x, gy + 3, z);
     scene.add(pole);
     const group = new THREE.Group();
-    group.position.set(x, 5.6, z);
+    group.position.set(x, gy + 5.6, z);
     const clothGeo = new THREE.PlaneGeometry(1.6, 0.9, 8, 1);
     clothGeo.translate(0.8, -0.45, 0);
     const cloth = new THREE.Mesh(clothGeo, clothMat);
     group.add(cloth);
     scene.add(group);
-    flags.push({ group, cloth, pos: { x, y: 5.6, z } });
+    flags.push({ group, cloth, pos: { x, y: gy + 5.6, z } });
   }
 
   // Dust puffs.
@@ -355,5 +431,5 @@ export function buildRange(targets: Silhouette[], laneEdges: number[], seed: num
     }
   };
 
-  return { scene, camera, update, dust, ringPlate, tracer };
+  return { scene, camera, update, dust, ringPlate, tracer, setFigure };
 }

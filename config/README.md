@@ -16,3 +16,13 @@ The plan's rifle table gives approximate figures. Where a published value exists
 
 Bullet lengths and twist rates (needed for spin drift) are typical published values for each bullet.
 `coldBoreShiftMrad` values are placeholders to be tuned in playtest.
+
+## Rule deviations from the plan
+
+- `rules.chestKillEnergyJ` is 1,500 J, not the plan's 2,500 J. A 175 gr .308 carries about 2,200 J
+  at 300 m and 1,300 J at 600 m, so 2,500 J would have made every .308 chest hit a wound. At 1,500 J
+  the .308 and 6.5 CM kill with chest hits to roughly 500 m, the .338 to about 1,300 m and the .50
+  beyond 1,500 m, which keeps the rifles distinct.
+- The frozen player sees nothing of the enemy's shot phase live (the plan's recommendation); the
+  result is shown to both players afterwards.
+- Best of 3 kills stays as written until playtests say otherwise.

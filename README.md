@@ -27,7 +27,7 @@ pnpm typecheck
 
 - [x] Phase 0: ballistics solver, validated against published dope tables within 1% to 1,000 m
 - [x] Phase 1: practice range (steel at 300/600/900 m, full scope UX, live wind cues)
-- [ ] Phase 2: turn system, hotseat, PvE bot
+- [x] Phase 2: turn system, hotseat, PvE bot
 - [ ] Phase 3: online play
 - [ ] Phase 4: content and soft launch
 - [ ] Phase 5: mobile wrap

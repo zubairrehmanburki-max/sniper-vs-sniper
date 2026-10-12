@@ -1,4 +1,5 @@
 import type { Trajectory, TrajectoryPoint, Vec3 } from '@svs/ballistics';
+import { segmentBoxEntry, type Box } from './geometry.ts';
 import { forward, rightOf, shotToWorld, type Aim } from './world.ts';
 
 export type HitZone = 'head' | 'chest' | 'body';
@@ -21,8 +22,9 @@ export type Ground = (x: number, z: number) => number;
 export const flatGround: Ground = () => 0;
 
 export interface Impact {
-  kind: 'target' | 'ground' | 'none';
+  kind: 'target' | 'ground' | 'cover' | 'none';
   targetId?: string;
+  coverId?: string;
   zone?: HitZone;
   /** World point of impact (last integrated point for 'none'). */
   point: Vec3;
@@ -59,6 +61,7 @@ export function resolveImpact(
   yaw: number,
   targets: Silhouette[],
   ground: Ground = flatGround,
+  obstacles: Box[] = [],
 ): Impact {
   const pts = traj.points;
   const world = (p: TrajectoryPoint): Vec3 => shotToWorld(p, eye, yaw);
@@ -114,6 +117,23 @@ export function resolveImpact(
         };
       }
     }
+    for (const box of obstacles) {
+      const f = segmentBoxEntry(prev, cur, box);
+      if (f !== undefined && (!best || f < best.f)) {
+        best = {
+          f,
+          impact: {
+            kind: 'cover',
+            coverId: box.id,
+            point: lerpPoint(prev, cur, f),
+            t: a.t + (b.t - a.t) * f,
+            speed: a.speed + (b.speed - a.speed) * f,
+            energy: a.energy + (b.energy - a.energy) * f,
+          },
+        };
+      }
+    }
+
     if (best) return best.impact;
     prev = cur;
   }
@@ -147,7 +167,14 @@ export function missCall(traj: Trajectory, eye: Vec3, yaw: number, s: Silhouette
 }
 
 /** Laser rangefinder: distance along the aim ray to the first silhouette or the ground. */
-export function rangefind(eye: Vec3, aim: Aim, targets: Silhouette[], ground: Ground = flatGround, maxRange = 3000): number | undefined {
+export function rangefind(
+  eye: Vec3,
+  aim: Aim,
+  targets: Silhouette[],
+  ground: Ground = flatGround,
+  maxRange = 3000,
+  obstacles: Box[] = [],
+): number | undefined {
   const f = forward(aim.yaw);
   const cp = Math.cos(aim.pitch);
   const dir = { x: f.x * cp, y: Math.sin(aim.pitch), z: f.z * cp };
@@ -162,6 +189,11 @@ export function rangefind(eye: Vec3, aim: Aim, targets: Silhouette[], ground: Gr
     const r = rightOf(s.facingYaw);
     const u = -((p.x - s.position.x) * r.x + (p.z - s.position.z) * r.z);
     if (silhouetteZone(s, u, p.y - s.position.y) && (best === undefined || d < best)) best = d;
+  }
+  for (const box of obstacles) {
+    const end = { x: eye.x + dir.x * maxRange, y: eye.y + dir.y * maxRange, z: eye.z + dir.z * maxRange };
+    const f = segmentBoxEntry(eye, end, box);
+    if (f !== undefined && f > 0 && (best === undefined || f * maxRange < best)) best = f * maxRange;
   }
   // March the ground.
   const step = 0.5;
