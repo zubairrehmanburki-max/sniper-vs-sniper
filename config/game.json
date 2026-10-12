@@ -169,5 +169,88 @@
     "latitude": 35,
     "speedOfSoundForAudioMps": 343,
     "firingPointHeightM": 1.2
+  },
+  "rules": {
+    "$comment": "Match rules (GAME_PLAN core loop + damage model). chestKillEnergyJ deviates from the plan's 2500 J: at 2500 J a .308 could never kill with a chest hit beyond ~150 m. See config/README.md.",
+    "setupSeconds": 60,
+    "moveSeconds": 30,
+    "shotSeconds": 30,
+    "killsToWin": 2,
+    "suddenDeathAfterPairs": 16,
+    "suddenDeathWindDecayPerPair": 0.25,
+    "suddenDeathZoneShrinkPerPair": 0.15,
+    "minZoneDepthM": 8,
+    "chestKillEnergyJ": 1500,
+    "woundsToDown": 2,
+    "nearMissRadiusM": 1.0,
+    "forfeitAfterIdlePhases": 2,
+    "roundWindDrift": 0.25
+  },
+  "player": {
+    "silhouette": {
+      "standing": {
+        "heightM": 1.75,
+        "widthM": 0.5,
+        "headM": 0.25
+      },
+      "crouch": {
+        "heightM": 0.95,
+        "widthM": 0.5,
+        "headM": 0.25
+      },
+      "prone": {
+        "heightM": 0.45,
+        "widthM": 0.55,
+        "headM": 0.25
+      }
+    },
+    "moveSpeedMps": 3.0,
+    "wound": {
+      "swayFactor": 1.4,
+      "moveSpeedFactor": 0.6
+    }
+  },
+  "bot": {
+    "$comment": "Difficulty is error on the bot's inputs, never on physics (GAME_PLAN PvE table).",
+    "thinkSeconds": [
+      8,
+      25
+    ],
+    "easy": {
+      "rangeErrorFrac": 0.08,
+      "windMode": "half-station",
+      "swayFireFactor": 1.0,
+      "spotChance": {
+        "standing": 0.9,
+        "crouch": 0.5,
+        "prone": 0.25
+      },
+      "positions": 3,
+      "relocateAfterFiring": false
+    },
+    "medium": {
+      "rangeErrorFrac": 0.03,
+      "windMode": "station",
+      "swayFireFactor": 0.35,
+      "spotChance": {
+        "standing": 0.97,
+        "crouch": 0.75,
+        "prone": 0.45
+      },
+      "positions": 0,
+      "relocateAfterFiring": true
+    },
+    "hard": {
+      "rangeErrorFrac": 0.01,
+      "windMode": "layered",
+      "swayFireFactor": 0.1,
+      "spotChance": {
+        "standing": 1.0,
+        "crouch": 0.9,
+        "prone": 0.65
+      },
+      "positions": 0,
+      "relocateAfterFiring": true
+    }
   }
 }

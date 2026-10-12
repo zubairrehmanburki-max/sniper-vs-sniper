@@ -71,6 +71,41 @@ export interface GameConfig {
     /** The firing point is a raised bench so prone shooters see over the grass. */
     firingPointHeightM: number;
   };
+  rules: {
+    setupSeconds: number;
+    moveSeconds: number;
+    shotSeconds: number;
+    killsToWin: number;
+    suddenDeathAfterPairs: number;
+    suddenDeathWindDecayPerPair: number;
+    suddenDeathZoneShrinkPerPair: number;
+    minZoneDepthM: number;
+    chestKillEnergyJ: number;
+    woundsToDown: number;
+    nearMissRadiusM: number;
+    forfeitAfterIdlePhases: number;
+    roundWindDrift: number;
+  };
+  player: {
+    silhouette: Record<Stance, { heightM: number; widthM: number; headM: number }>;
+    moveSpeedMps: number;
+    wound: { swayFactor: number; moveSpeedFactor: number };
+  };
+  bot: { thinkSeconds: [number, number] } & Record<BotDifficulty, BotProfile>;
+}
+
+export type BotDifficulty = 'easy' | 'medium' | 'hard';
+
+export interface BotProfile {
+  rangeErrorFrac: number;
+  /** half-station: holds half the wind at its own position; station: uses its station wind for the whole lane; layered: reads every zone. */
+  windMode: 'half-station' | 'station' | 'layered';
+  /** 1 = fires anywhere on the sway curve, 0 = fires exactly at the sway null. */
+  swayFireFactor: number;
+  spotChance: Record<Stance, number>;
+  /** Number of fixed spots it rotates through (0 = uses the map's full position set). */
+  positions: number;
+  relocateAfterFiring: boolean;
 }
 
 export const config = raw as unknown as GameConfig;

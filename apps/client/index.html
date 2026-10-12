@@ -65,17 +65,75 @@
         </details>
       </section>
 
-      <div id="intro">
+      <div id="duelbar" class="panel duel-only">
+        <div id="phasebar"></div>
+        <div id="me"></div>
+        <div class="row">
+          <button id="look" class="small">Look through scope</button>
+          <button id="ready" class="small primary">Ready</button>
+          <button id="quit" class="small">Quit</button>
+        </div>
+      </div>
+
+      <section id="mapview" class="panel" hidden>
+        <canvas id="zonemap"></canvas>
+        <div class="row">
+          <button data-stance="prone" class="small">Prone</button>
+          <button data-stance="crouch" class="small">Crouch</button>
+          <button data-stance="standing" class="small">Standing</button>
+        </div>
+        <p id="map-hint"></p>
+      </section>
+
+      <section id="waitview" class="panel" hidden>
+        <p id="wait-text"></p>
+      </section>
+
+      <div id="curtain" class="overlay" hidden>
         <div class="card">
-          <h1>Practice Range</h1>
-          <p>Steel at 300, 600 and 900 m. Read the wind from the grass and flags, dial your scope, and send it.</p>
-          <p class="touch-only">Drag to aim. Tap Scope, zoom with the slider, dial with the turret buttons, press and hold Hold breath, then Fire.</p>
+          <h2>Hand over</h2>
+          <p id="curtain-text"></p>
+          <p class="muted">The clock is paused until you tap.</p>
+          <button id="curtain-go" class="round fire">Go</button>
+        </div>
+      </div>
+
+      <div id="card" class="overlay" hidden>
+        <div class="card">
+          <h2 id="card-title"></h2>
+          <p id="card-text"></p>
+          <button id="card-go" class="primary">Continue</button>
+        </div>
+      </div>
+
+      <div id="menu" class="overlay">
+        <div class="card">
+          <h1>Sniper vs Sniper</h1>
+          <p class="muted">Turn-based duels where every shot is a solved physics problem.</p>
+          <div class="menu-grid">
+            <label>Player 1 <input id="name-a" value="Player 1" maxlength="16" /></label>
+            <label>Rifle <select id="rifle-a"></select></label>
+            <label>Player 2 <input id="name-b" value="Player 2" maxlength="16" /></label>
+            <label>Rifle <select id="rifle-b"></select></label>
+          </div>
+          <div class="menu-buttons">
+            <button id="play-range" class="primary">Practice range</button>
+            <button id="play-hotseat" class="primary">Duel on this device</button>
+            <span class="vsbot">
+              <button id="play-bot" class="primary fire">Duel vs bot</button>
+              <select id="bot-level" aria-label="Bot difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium" selected>Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </span>
+          </div>
+          <p class="touch-only muted">Drag to aim. Scope, zoom, turrets, Hold breath and Fire are on screen.</p>
           <ul class="keys desktop-only">
             <li><b>Mouse / drag</b> aim · <b>Right-click / Z</b> scope · <b>Wheel / Q E</b> zoom</li>
             <li><b>W S</b> elevation · <b>A D</b> windage (0.1 mil clicks) · <b>X</b> zero turrets</li>
             <li><b>Shift</b> hold breath · <b>Space / click</b> fire · <b>F</b> laser · <b>C</b> stance · <b>B</b> bipod</li>
           </ul>
-          <button id="start" class="round fire">Start</button>
         </div>
       </div>
     </div>
