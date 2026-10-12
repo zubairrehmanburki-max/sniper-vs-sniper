@@ -15,6 +15,7 @@ permissions:
 jobs:
   testflight:
     runs-on: macos-latest
+    timeout-minutes: 40
     steps:
       - name: Check the App Store Connect secrets are set
         env:
@@ -78,6 +79,9 @@ jobs:
             --app_identifier com.snipervssniper.game \
             --api_key_path "$RUNNER_TEMP/asc/key.json" --team_id "${{ secrets.APPLE_TEAM_ID }}" \
             --keychain_name "$KC" --keychain_password "$KC_PASS"
+          # Let codesign use the imported key without a UI prompt, which would hang the runner.
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PASS" "$KC" > /dev/null
+          security find-identity -v -p codesigning "$KC"
       - name: Archive (signed)
         working-directory: apps/client/ios/App
         run: >
