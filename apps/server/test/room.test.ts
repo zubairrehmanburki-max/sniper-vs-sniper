@@ -35,8 +35,8 @@ class Player {
     }
     return this;
   }
-  async quick(): Promise<this> {
-    return this.attach(await this.client.joinOrCreate(ROOM_NAME, { name: this.name, rifleId: 'bolt308', code: '' }));
+  async quick(mapId?: string): Promise<this> {
+    return this.attach(await this.client.joinOrCreate(ROOM_NAME, { name: this.name, rifleId: 'bolt308', code: '', mapId, playerId: `test-${this.name}-id` }));
   }
   send(msg: object): void {
     this.room.send('input', msg);
@@ -81,6 +81,7 @@ describe('duel room', () => {
   it('runs setup, a move and a shot, with the verdict sent to both players', async () => {
     const [a, b] = await startMatch('TEST');
     expect(b.view!.players.B.rifleId).toBe('mag338');
+    expect(b.view!.ranked).toBe(false); // private games are unrated
     a.send({ type: 'place', position: { x: 10, z: -40 }, stance: 'standing' });
     a.send({ type: 'ready' });
     b.send({ type: 'ready' });
@@ -140,6 +141,20 @@ describe('duel room', () => {
     expect(c.messages.some((m) => m.type === 'update')).toBe(false); // different maps: both still waiting
     c.room.leave();
     d.room.leave();
+  });
+
+  it('rates quick matches (a forfeit counts) and serves the new rating', async () => {
+    const a = await new Player('Rita').quick('training-lane');
+    const b = await new Player('Ravi').quick('training-lane');
+    await a.until((v) => v.phase === 'setup');
+    expect(a.view!.ranked).toBe(true);
+    expect(a.view!.ratings).toEqual({ A: { before: 1200 }, B: { before: 1200 } });
+    b.room.leave();
+    const v = await a.until((x) => x.phase === 'matchOver');
+    expect(v.ratings).toEqual({ A: { before: 1200, after: 1220 }, B: { before: 1200, after: 1180 } });
+    const res = await fetch(`http://localhost:${PORT}/rating/test-Rita-id`);
+    expect(await res.json()).toEqual({ rating: 1220, games: 1 });
+    a.room.leave();
   });
 
   it('awards the match when a player quits', async () => {

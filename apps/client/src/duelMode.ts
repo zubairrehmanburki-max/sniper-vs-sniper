@@ -451,7 +451,10 @@ export class DuelMode {
   private matchOver(): void {
     const w = this.state.players[this.state.winner!];
     const how = this.state.forfeit ? `${this.state.players[other(w.side)].name} forfeited.` : `${this.state.round} rounds, ${this.state.shots.length} shots fired.`;
-    this.card(`${w.name} wins the match`, `${this.score()}. ${how}`, true, () => this.exit());
+    const r = (this.state as MatchView).ratings?.[this.viewer];
+    const rating =
+      r?.after !== undefined ? ` Your rating: ${r.before} → ${r.after} (${r.after >= r.before ? '+' : ''}${r.after - r.before}).` : '';
+    this.card(`${w.name} wins the match`, `${this.score()}. ${how}${rating}`, true, () => this.exit());
     $('card-go').textContent = 'Back to menu';
   }
 
@@ -527,6 +530,8 @@ export class DuelMode {
     let status = me.wounds > 0 ? ' · wounded' : '';
     if (this.online && this.connection === 'dropped') status += ' · connection lost, reconnecting…';
     else if (this.online && !(s as MatchView).opponentConnected && s.phase !== 'matchOver') status += ' · opponent disconnected, holding their seat';
+    const rt = (s as MatchView).ratings;
+    if (rt) status += ` · ranked ${rt[this.viewer].before} vs ${rt[other(this.viewer)].before}`;
     $('me').textContent = `${me.name} · ${rifleById(me.rifleId).name} · ${me.stance}${status}`;
   }
 

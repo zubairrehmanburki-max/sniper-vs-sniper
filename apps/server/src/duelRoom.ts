@@ -12,6 +12,7 @@ import {
   MAPS,
   encodeView,
   other,
+  rateMatch,
   rifleById,
   thinOutcome,
   viewFor,
@@ -23,9 +24,11 @@ import {
   type ShotOutcome,
   type Side,
 } from '@svs/shared';
+import { MemoryRatingStore, ratingOf, validPlayerId, type RatingStore } from './ratings.ts';
 
 interface Seat {
   side: Side;
+  playerId?: string;
   name: string;
   rifleId: string;
   client: Client;
@@ -41,6 +44,9 @@ export class DuelRoom extends Room {
   private seats = new Map<string, Seat>();
   private match: MatchState | null = null;
   private startedAt = Date.now();
+  static ratings: RatingStore = new MemoryRatingStore();
+  private ranked = false;
+  private ratings: Record<Side, { before: number; after?: number }> | null = null;
   /** Seed source; overridable so tests can replay a match. */
   static seed: () => number = () => (Math.random() * 0x7fffffff) >>> 0;
 
@@ -50,6 +56,7 @@ export class DuelRoom extends Room {
 
   override onCreate(options: Partial<JoinOptions>): void {
     this.code = options.code ?? '';
+    this.ranked = this.code === '';
     if (options.mapId && MAPS[options.mapId]) this.mapId = options.mapId;
     this.onMessage('input', (client: Client, msg: ClientMessage) => this.handle(client, msg));
     this.clock.setInterval(() => this.tick(), TICK_MS);
@@ -65,7 +72,8 @@ export class DuelRoom extends Room {
     } catch {
       rifleId = config.rifles[0]!.id;
     }
-    this.seats.set(client.sessionId, { side, name, rifleId, client, connected: true });
+    const playerId = validPlayerId(options.playerId) ? options.playerId : undefined;
+    this.seats.set(client.sessionId, { side, playerId, name, rifleId, client, connected: true });
     if (this.seats.size < 2) {
       this.sendTo(client, { type: 'waiting', code: this.code || undefined });
       return;
@@ -73,6 +81,12 @@ export class DuelRoom extends Room {
     void this.lock();
     const bySide = Object.fromEntries([...this.seats.values()].map((s) => [s.side, s])) as Record<Side, Seat>;
     this.startedAt = Date.now();
+    // Ranked only between two different known players.
+    this.ranked = this.ranked && !!bySide.A.playerId && !!bySide.B.playerId && bySide.A.playerId !== bySide.B.playerId;
+    if (this.ranked) {
+      const r = DuelRoom.ratings;
+      this.ratings = { A: { before: ratingOf(r, bySide.A.playerId).rating }, B: { before: ratingOf(r, bySide.B.playerId).rating } };
+    }
     this.match = createMatch({
       seed: DuelRoom.seed(),
       mapId: this.mapId,
@@ -163,6 +177,7 @@ export class DuelRoom extends Room {
     if (r.error) return r.error;
     const wasOver = this.match.phase === 'matchOver';
     this.match = r.state;
+    if (!wasOver && this.match.phase === 'matchOver') this.recordResult();
     this.publish(r.outcome);
     if (!wasOver && this.match.phase === 'matchOver') {
       // Leave the result up briefly, then close the room.
@@ -178,9 +193,28 @@ export class DuelRoom extends Room {
     for (const seat of this.seats.values()) {
       if (!seat.connected) continue;
       const opp = [...this.seats.values()].find((s) => s.side === other(seat.side));
-      const view = encodeView(viewFor(this.match, seat.side, now, opp?.connected ?? false));
+      const view = encodeView({
+        ...viewFor(this.match, seat.side, now, opp?.connected ?? false),
+        ranked: this.ranked,
+        ratings: this.ratings ?? undefined,
+      });
       this.sendTo(seat.client, { type: 'update', view, outcome: wire });
     }
+  }
+
+  /** Ranked games write both new ratings as soon as the match is decided (forfeits included). */
+  private recordResult(): void {
+    const m = this.match;
+    if (!m || !this.ranked || !this.ratings || !m.winner) return;
+    const seat = (side: Side): Seat => [...this.seats.values()].find((s) => s.side === side)!;
+    const w = seat(m.winner);
+    const l = seat(other(m.winner));
+    const store = DuelRoom.ratings;
+    const next = rateMatch(ratingOf(store, w.playerId), ratingOf(store, l.playerId));
+    store.set(w.playerId!, { ...next.winner, name: w.name });
+    store.set(l.playerId!, { ...next.loser, name: l.name });
+    this.ratings[w.side].after = next.winner.rating;
+    this.ratings[l.side].after = next.loser.rating;
   }
 
   private sendTo(client: Client, msg: ServerMessage): void {
