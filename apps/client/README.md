@@ -49,3 +49,20 @@ downloadable workflow artifact for 14 days; the iOS simulator build runs only on
 ("Run workflow"), because macOS runners are costly on private repositories. Set the repository
 variable `GAME_SERVER_URL` to bake a server into those builds. Icons and splash screens are generated
 from `assets/` with `npx @capacitor/assets generate --ios --android`.
+
+### TestFlight (iPhone testing without a Mac)
+
+`.github/workflows/testflight.yml` archives, signs and uploads the iOS app from a GitHub macOS
+runner. One-time setup:
+
+1. Join the Apple Developer Program (paid, yearly) and note your Team ID (Membership page).
+2. In App Store Connect, create the app with bundle ID `com.snipervssniper.game` (My Apps → +).
+3. In App Store Connect → Users and Access → Integrations → App Store Connect API, create a team
+   key with the Admin role (automatic signing needs to create certificates), download the `.p8`
+   file, and note the Key ID and Issuer ID.
+4. Add repository secrets `APPLE_TEAM_ID`, `APPSTORE_KEY_ID`, `APPSTORE_ISSUER_ID` and
+   `APPSTORE_KEY_P8` (paste the whole `.p8` file).
+5. Run the TestFlight workflow from the Actions tab. After Apple finishes processing the build,
+   add yourself as an internal tester in App Store Connect and install it with the TestFlight app.
+
+Each run uses the workflow run number as the build number, so builds never collide.
