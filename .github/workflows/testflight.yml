@@ -1,0 +1,65 @@
+name: TestFlight
+
+# Builds, signs and uploads the iOS app to TestFlight from a GitHub macOS runner, so no Mac is
+# needed. Signing is Xcode's automatic cloud signing, authorised by an App Store Connect API key.
+# Needs repository secrets APPLE_TEAM_ID, APPSTORE_KEY_ID, APPSTORE_ISSUER_ID and APPSTORE_KEY_P8
+# (the full text of the downloaded .p8 file). Run it from the Actions tab ("Run workflow").
+on:
+  workflow_dispatch:
+
+jobs:
+  testflight:
+    runs-on: macos-latest
+    steps:
+      - name: Check the App Store Connect secrets are set
+        env:
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          ISSUER: ${{ secrets.APPSTORE_ISSUER_ID }}
+          P8: ${{ secrets.APPSTORE_KEY_P8 }}
+        run: |
+          for v in TEAM KEY_ID ISSUER P8; do
+            if [ -z "${!v}" ]; then echo "::error::Missing secret for $v; see apps/client/README.md (TestFlight)"; exit 1; fi
+          done
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build web bundle and sync it into the iOS project
+        working-directory: apps/client
+        run: pnpm cap:sync
+        env:
+          VITE_SERVER_URL: ${{ vars.GAME_SERVER_URL }}
+      - name: Write the API key
+        env:
+          P8: ${{ secrets.APPSTORE_KEY_P8 }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/asc"
+          printf '%s\n' "$P8" > "$RUNNER_TEMP/asc/key.p8"
+      - name: Archive (signed)
+        working-directory: apps/client/ios/App
+        run: >
+          xcodebuild -project App.xcodeproj -scheme App -configuration Release
+          -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/App.xcarchive"
+          -allowProvisioningUpdates
+          -authenticationKeyPath "$RUNNER_TEMP/asc/key.p8"
+          -authenticationKeyID "${{ secrets.APPSTORE_KEY_ID }}"
+          -authenticationKeyIssuerID "${{ secrets.APPSTORE_ISSUER_ID }}"
+          DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}"
+          CURRENT_PROJECT_VERSION="${{ github.run_number }}"
+          archive
+      - name: Upload to TestFlight
+        run: >
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive"
+          -exportOptionsPlist apps/client/ios/ci/ExportOptions.plist
+          -exportPath "$RUNNER_TEMP/export"
+          -allowProvisioningUpdates
+          -authenticationKeyPath "$RUNNER_TEMP/asc/key.p8"
+          -authenticationKeyID "${{ secrets.APPSTORE_KEY_ID }}"
+          -authenticationKeyIssuerID "${{ secrets.APPSTORE_ISSUER_ID }}"
+      - name: Remove the API key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/asc"
