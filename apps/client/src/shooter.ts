@@ -19,6 +19,7 @@ import { RangeAudio } from './audio.ts';
 import { clickTurret, formatMil, pxPerMrad, scopeFov, windClock } from './format.ts';
 import { drawReticle } from './reticle.ts';
 import type { RangeView } from './scene.ts';
+import { haptics } from './haptics.ts';
 import type { Box, Ground, Silhouette } from '@svs/shared';
 
 const STANCES: Stance[] = ['prone', 'crouch', 'standing'];
@@ -223,11 +224,13 @@ export class Shooter {
       case 'elev-down':
         this.elevMrad = clickTurret(this.elevMrad, act === 'elev-up' ? 1 : -1, s.clickMrad, s.maxElevationMrad, -2);
         this.audio.click();
+        haptics.click();
         break;
       case 'wind-left':
       case 'wind-right':
         this.windMrad = clickTurret(this.windMrad, act === 'wind-right' ? 1 : -1, s.clickMrad, s.maxWindageMrad);
         this.audio.click();
+        haptics.click();
         break;
       case 'zero':
         this.elevMrad = 0;
@@ -322,6 +325,7 @@ export class Shooter {
     this.lastShotAt = this.time;
     const aim = this.trueAim();
     this.recoil = this.stance === 'prone' && this.bipod ? 0.004 : 0.009;
+    haptics.recoil();
     this.hooks.fire({ yaw: aim.yaw, pitch: aim.pitch, dialElevationMrad: this.elevMrad, dialWindageMrad: this.windMrad }, this.time);
   }
 
