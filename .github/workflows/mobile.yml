@@ -1,0 +1,64 @@
+name: Mobile
+
+on:
+  pull_request:
+    paths: ['apps/client/**', 'packages/**', 'config/**', '.github/workflows/mobile.yml', 'pnpm-lock.yaml']
+  push:
+    branches: [main]
+    paths: ['apps/client/**', 'packages/**', 'config/**', '.github/workflows/mobile.yml', 'pnpm-lock.yaml']
+  workflow_dispatch:
+    inputs:
+      ios:
+        description: Also build the iOS app (macOS runner)
+        type: boolean
+        default: true
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: pnpm install --frozen-lockfile
+      - name: Build web bundle and sync it into the Android project
+        working-directory: apps/client
+        run: pnpm cap:sync
+        env:
+          VITE_SERVER_URL: ${{ vars.GAME_SERVER_URL }}
+      - name: Build debug APK
+        working-directory: apps/client/android
+        run: ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sniper-vs-sniper-debug-apk
+          path: apps/client/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
+
+  ios:
+    # macOS minutes are expensive on private repos, so iOS builds run on demand only.
+    if: github.event_name == 'workflow_dispatch' && inputs.ios
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build web bundle and sync it into the iOS project
+        working-directory: apps/client
+        run: pnpm cap:sync
+        env:
+          VITE_SERVER_URL: ${{ vars.GAME_SERVER_URL }}
+      - name: Build for the simulator (unsigned)
+        working-directory: apps/client/ios/App
+        run: xcodebuild -project App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build CODE_SIGNING_ALLOWED=NO build

@@ -38,3 +38,6 @@ pnpm typecheck
   - [x] Soft cover a big enough round can punch through
   - [ ] Hosting and soft launch
 - [ ] Phase 5: mobile wrap
+  - [x] Capacitor iOS and Android shells, icons and splash, haptics
+  - [x] CI builds a debug Android APK
+  - [ ] Store submission (needs Apple and Google developer accounts)

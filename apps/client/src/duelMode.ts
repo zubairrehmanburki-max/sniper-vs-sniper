@@ -40,6 +40,7 @@ import { playShotFeedback } from './practiceMode.ts';
 import { spotterCall } from './format.ts';
 import { buildWorld } from './scene.ts';
 import type { OnlineLink } from './net.ts';
+import { haptics } from './haptics.ts';
 import { $, type Shooter } from './shooter.ts';
 
 export interface DuelSetup {
@@ -372,6 +373,10 @@ export class DuelMode {
     const humanShot = this.humans.includes(shooterSide);
     if (humanShot) playShotFeedback(this.shooter, outcome.trajectory, outcome.eye, outcome.yaw, outcome.impact, rifle.diameterM);
     else this.shooter.audio.shot(rifle.diameterM > 0.0085 ? 0.8 : 0.6);
+    if (!humanShot && this.humans.includes(other(shooterSide))) {
+      if (outcome.verdict !== 'miss') haptics.struck(outcome.verdict === 'kill');
+      else if (outcome.nearMiss) haptics.snap();
+    }
 
     const dist = Math.round(this.state.shots.at(-1)?.distance ?? 0);
     let headline: string;

@@ -26,3 +26,26 @@ transonic dispersion), and hits are resolved by `@svs/shared` exactly as the ser
 Adding `?debug` to the URL exposes `window.svs` for automated playtests (`svs.debugSolve(2)` dials
 a perfect calculator solution on the 900 m plate; in a duel `svs.debugSolve()` aims at the enemy
 and `svs.debugState()` returns a one-line state summary).
+
+## iOS and Android apps (Phase 5)
+
+The same build runs inside native shells made with Capacitor (`capacitor.config.ts`, `android/`,
+`ios/`). Native builds add haptics (`src/haptics.ts`): a tick on every turret click, a heavy thump
+on firing, a light tap when your round rings steel, and a warning buzz when you are hit or a round
+snaps past. Mobile browsers with the Vibration API get the same cues; desktops get none.
+
+```sh
+pnpm --filter @svs/client cap:sync    # build the web bundle and copy it into both native projects
+pnpm --filter @svs/client android     # ...then open Android Studio
+pnpm --filter @svs/client ios         # ...then open Xcode (macOS only)
+```
+
+Online play inside the apps needs a hosted server: build with `VITE_SERVER_URL=wss://your-host`
+(the apps cannot use `ws://` or the page's own origin). Without it the apps offer practice, bot and
+hotseat play, and online play reports that it cannot reach a server.
+
+CI (`.github/workflows/mobile.yml`) builds a debug APK on every client change and keeps it as a
+downloadable workflow artifact for 14 days; the iOS simulator build runs only on demand
+("Run workflow"), because macOS runners are costly on private repositories. Set the repository
+variable `GAME_SERVER_URL` to bake a server into those builds. Icons and splash screens are generated
+from `assets/` with `npx @capacitor/assets generate --ios --android`.

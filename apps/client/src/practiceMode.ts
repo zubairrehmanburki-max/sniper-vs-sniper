@@ -16,6 +16,7 @@ import {
 } from '@svs/shared';
 import { spotterCall } from './format.ts';
 import { buildWorld } from './scene.ts';
+import { haptics } from './haptics.ts';
 import { $, type Shooter } from './shooter.ts';
 
 function storage(): Storage | null {
@@ -221,6 +222,7 @@ export function playShotFeedback(
     if (impact.kind === 'target') {
       shooter.view!.ringPlate(impact.targetId!);
       shooter.audio.ping(distance / sound, distance);
+      haptics.hit(distance / sound);
     } else if (impact.kind === 'ground' || impact.kind === 'cover') {
       shooter.view!.dust(impact.point, caliberM > 0.01 ? 1.8 : 1);
       shooter.audio.thud(distance / sound, distance);
