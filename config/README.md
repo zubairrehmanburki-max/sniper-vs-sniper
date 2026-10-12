@@ -47,3 +47,15 @@ Bullet lengths and twist rates (needed for spin drift) are typical published val
 - **Alpine Ridge** models thin, cold air through the map's altitude and temperature, and the shot
   angle through the real slope. Up- and down-slope thermals, and temperature changing with height
   along the path, are not modelled; the wind field is the same layered, gusty model as elsewhere.
+
+## Fixed-position maps (Phase 6)
+
+- A map with `fixed: true` has point zones: `clampToZone` always returns the one spot, so `place`
+  can only change the stance, and the pair cycle is shot A, shot B with no move phases (`cycle()` in
+  `match.ts`). Sudden-death stance escalation still applies, which is what ends a long stalemate of
+  misses: both players end up standing.
+- Platform tops (bridge decks, tower heads, helidecks) are part of the hit-test ground
+  (`withPlatforms` in `maps.ts`), so a low shot hits the deck edge or the structure, not the water
+  below it. Railings, lamp posts, cranes and the like are drawn but never hit-tested.
+- The water surface is at `water` (0 m on all three maps). A shot that reaches it is reported as a
+  splash; nothing floats, so there is no soft cover anywhere on these maps.

@@ -207,6 +207,12 @@ Each map is two opposing zones with a no-man's-land between them. Players move f
 
 **Build Dry Valley first** — it exercises every ballistic system with the simplest geometry.
 
+**Change of direction (2026-10-12):** after playing the open-ground maps, the owner asked for duels
+between two fixed positions with nothing to hide behind: bridge to bridge, tower to tower, rig to rig,
+across open water. Those maps (`twin-bridges`, `watchtowers`, `oil-rigs`) have point zones, no move
+phases (each pair is just shot A, shot B), and setup only picks a stance. Both players are always in
+sight, so the whole game is the wind call and the dope. The three open-ground maps above stay selectable.
+
 ## Multiplayer architecture
 
 Turn-based play makes this cheap: no tick-rate netcode, just a room-scoped state machine that advances on phase events.

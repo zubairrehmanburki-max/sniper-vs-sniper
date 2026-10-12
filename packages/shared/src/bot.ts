@@ -30,7 +30,9 @@ export function botMove(state: MatchState, side: Side, cfg: GameConfig = config)
   const spots = map.spots[side];
   const pool = profile.positions > 0 ? spots.slice(0, profile.positions) : spots;
   let target: Vec3;
-  if (profile.positions > 0) {
+  if (pool.length === 1) {
+    target = pool[0]!; // a fixed-position map: nowhere else to go
+  } else if (profile.positions > 0) {
     // Predictable: walks a fixed rotation.
     target = pool[(state.round + state.pair) % pool.length]!;
   } else {

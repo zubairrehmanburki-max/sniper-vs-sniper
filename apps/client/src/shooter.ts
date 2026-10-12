@@ -80,6 +80,10 @@ export class Shooter {
     const canvas = $<HTMLCanvasElement>('view');
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 0.95;
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.reticleCtx = $<HTMLCanvasElement>('reticle').getContext('2d')!;
     this.bindInput();
     window.addEventListener('resize', () => this.resize());

@@ -154,6 +154,7 @@ body.hud-off #turrets, body.hud-off #actions { display: none; }
   display: flex; flex-direction: column; gap: 8px; padding: 10px; z-index: 4;
 }
 #mapview[hidden], #waitview[hidden] { display: none; }
+#mapview.fixed { bottom: auto; }
 #zonemap { flex: 1; min-height: 0; width: 100%; border-radius: 8px; touch-action: none; cursor: crosshair; background: #2b3122; }
 #mapview .row { display: flex; gap: 8px; justify-content: center; }
 #mapview [data-stance].on { border-color: var(--accent); color: var(--accent); }

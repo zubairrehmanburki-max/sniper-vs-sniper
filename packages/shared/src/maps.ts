@@ -19,10 +19,26 @@ export interface Zone {
   front: number;
 }
 
+/** A man-made platform players stand on: the hit model treats its top as ground. */
+export type Structure =
+  | { kind: 'bridge'; s: number; deckY: number; halfSpan: number; halfWidth: number; pylonsX: number[] }
+  | { kind: 'tower'; x: number; s: number; topY: number; halfSize: number; style: 'concrete' | 'rig' };
+
 export interface DuelMap {
   id: string;
   name: string;
+  /** One-line pitch for the map picker. */
+  blurb?: string;
   laneLength: number;
+  /**
+   * Fixed-position duel: each side has one spot, nothing to hide behind and no move phases, so the
+   * whole game is the shot. Zones collapse to that spot.
+   */
+  fixed?: boolean;
+  /** Water surface height, if the map has open water (shots falling in it splash). */
+  water?: number;
+  /** Terrain as drawn, when the hit-test ground also includes platform tops; defaults to `ground`. */
+  terrain?: Ground;
   zones: Record<Side, Zone>;
   ground: Ground;
   cover: Box[];
@@ -43,7 +59,7 @@ export interface DuelMap {
   };
   latitude: number;
   /** How the map is drawn: wind flags (world x, lane distance s) and an optional palette. */
-  look: { flags: Array<[number, number]>; laneHalfWidth: number; palette?: Palette };
+  look: { flags: Array<[number, number]>; laneHalfWidth: number; palette?: Palette; structures?: Structure[] };
 }
 
 /** Colours for drawing a map; anything left out uses the client's default green range. */
@@ -57,6 +73,10 @@ export interface Palette {
   grass?: string;
   hills?: string;
   rocks?: string;
+  /** Trees or bushes on the land around the lane. */
+  vegetation?: 'pine' | 'shrub' | 'none';
+  /** Snow line height for the far mountains, m (none if absent). */
+  snowAbove?: number;
 }
 
 const smoothstep = (e0: number, e1: number, x: number): number => {
@@ -431,13 +451,238 @@ function makeAlpineRidge(): DuelMap {
   };
 }
 
+// ---- fixed-position maps -------------------------------------------------------------------
+// Both players stand in the open on a platform with nothing but water between them. No moving, no
+// hiding: the duel is the wind call, the range and the trigger.
+
+/** Hit-test ground: the terrain, with every platform top as a hard plateau. */
+function withPlatforms(terrain: Ground, structures: Structure[]): Ground {
+  return (x, z) => {
+    const s = -z;
+    let y = terrain(x, z);
+    for (const st of structures) {
+      if (st.kind === 'bridge') {
+        if (Math.abs(x) <= st.halfSpan && Math.abs(s - st.s) <= st.halfWidth) y = Math.max(y, st.deckY);
+      } else if (Math.abs(x - st.x) <= st.halfSize && Math.abs(s - st.s) <= st.halfSize) y = Math.max(y, st.topY);
+    }
+    return y;
+  };
+}
+
+function fixedZones(a: Vec3, b: Vec3): Record<Side, Zone> {
+  return {
+    A: { xMin: a.x, xMax: a.x, sMin: -a.z, sMax: -a.z, front: -a.z },
+    B: { xMin: b.x, xMax: b.x, sMin: -b.z, sMax: -b.z, front: -b.z },
+  };
+}
+
+/**
+ * Twin Bridges: two road bridges 640 m apart across a wide, slow estuary. Each sniper stands at
+ * mid-span, 24 m over the water, with the whole river between them. Sea level, a steady wind
+ * along the valley: a crosswind with nothing to break it.
+ */
+function makeTwinBridges(): DuelMap {
+  const DECK = 24;
+  const terrain: Ground = (x, z) => {
+    const s = -z;
+    const ax = Math.abs(x);
+    // River bed between the banks, then the banks climb to the road level and on into hills.
+    const bed = -8 * (1 - smoothstep(180, 230, ax));
+    const bank = DECK * smoothstep(200, 290, ax);
+    const hills = smoothstep(300, 700, ax) * (30 + 25 * Math.sin(ax * 0.004 + s * 0.003) + 12 * Math.cos(s * 0.007 + x * 0.002));
+    const roll = 2 * Math.sin(s * 0.01) * smoothstep(240, 400, ax);
+    return bed + bank + hills + roll;
+  };
+  const structures: Structure[] = [
+    { kind: 'bridge', s: 0, deckY: DECK, halfSpan: 210, halfWidth: 7, pylonsX: [-90, 90] },
+    { kind: 'bridge', s: 640, deckY: DECK, halfSpan: 210, halfWidth: 7, pylonsX: [-90, 90] },
+  ];
+  const a = { x: 0, y: DECK, z: -2 };
+  const b = { x: 0, y: DECK, z: -638 };
+  return {
+    id: 'twin-bridges',
+    name: 'Twin Bridges',
+    blurb: 'Mid-span to mid-span across an estuary, 640 m',
+    laneLength: 640,
+    fixed: true,
+    water: 0,
+    terrain,
+    zones: fixedZones(a, b),
+    ground: withPlatforms(terrain, structures),
+    cover: [],
+    spots: { A: [a], B: [b] },
+    windEdges: [215, 425],
+    climate: {
+      altitudeM: 4,
+      temperatureC: [9, 24],
+      humidity: [0.55, 0.9],
+      windSpeedMps: [3, 8],
+      windToward: Math.PI / 2,
+      windSpread: 0.35,
+      gustAmplitude: 0.2,
+      gustPeriodSeconds: 11,
+    },
+    latitude: 48,
+    look: {
+      flags: [
+        [-26, 110],
+        [26, 320],
+        [-26, 530],
+      ],
+      laneHalfWidth: 180,
+      structures,
+      palette: {
+        sky: '#bcd0e4',
+        lane: [0.3, 0.3, 0.42],
+        outside: [0.27, 0.32, 0.38],
+        water: [0.55, 0.4, 0.3],
+        grass: '#7f9a4f',
+        hills: '#6f8a66',
+        rocks: '#8a8580',
+        vegetation: 'pine',
+      },
+    },
+  };
+}
+
+/**
+ * Watchtowers: two concrete watchtowers standing in a flooded marsh, 450 m apart, open platforms
+ * 22 m up. Reeds and dead pines all round, the air damp and almost still, then a gust.
+ */
+function makeWatchtowers(): DuelMap {
+  const TOP = 22;
+  const terrain: Ground = (x, z) => {
+    const s = -z;
+    const dx = x;
+    const ds = s - 225;
+    const r = Math.hypot(dx * 0.75, ds);
+    // Marsh floor under the water in the middle, reed islands, then wooded shores beyond 360 m.
+    const floor = -3;
+    const shore = 5 * smoothstep(340, 460, r) + smoothstep(420, 800, r) * (22 + 14 * Math.sin(x * 0.006 + s * 0.004) + 8 * Math.cos(s * 0.009));
+    const islets = 0.9 * Math.max(0, Math.sin(x * 0.045) * Math.sin(s * 0.052) - 0.55) * 8 * (1 - smoothstep(300, 340, r));
+    return floor + shore + islets;
+  };
+  const structures: Structure[] = [
+    { kind: 'tower', x: 0, s: 0, topY: TOP, halfSize: 3, style: 'concrete' },
+    { kind: 'tower', x: 0, s: 450, topY: TOP, halfSize: 3, style: 'concrete' },
+  ];
+  const a = { x: 0, y: TOP, z: -1.2 };
+  const b = { x: 0, y: TOP, z: -448.8 };
+  return {
+    id: 'watchtowers',
+    name: 'Watchtowers',
+    blurb: 'Tower to tower over a drowned marsh, 450 m',
+    laneLength: 450,
+    fixed: true,
+    water: 0,
+    terrain,
+    zones: fixedZones(a, b),
+    ground: withPlatforms(terrain, structures),
+    cover: [],
+    spots: { A: [a], B: [b] },
+    windEdges: [150, 300],
+    climate: {
+      altitudeM: 180,
+      temperatureC: [4, 18],
+      humidity: [0.7, 0.98],
+      windSpeedMps: [0.5, 5],
+      windToward: Math.PI / 2,
+      windSpread: 1.2,
+      gustAmplitude: 0.55,
+      gustPeriodSeconds: 7,
+    },
+    latitude: 52,
+    look: {
+      flags: [
+        [-30, 90],
+        [34, 225],
+        [-30, 360],
+      ],
+      laneHalfWidth: 160,
+      structures,
+      palette: {
+        sky: '#c9d3d8',
+        lane: [0.22, 0.28, 0.34],
+        outside: [0.2, 0.3, 0.3],
+        water: [0.46, 0.25, 0.22],
+        grass: '#9a9b55',
+        hills: '#55684f',
+        rocks: '#7d7c74',
+        vegetation: 'pine',
+      },
+    },
+  };
+}
+
+/**
+ * Oil Rigs: two production platforms 900 m apart in open sea, helidecks 34 m above the swell.
+ * Nothing between them but wind: strong, steady and cold. The .338 and .50 map.
+ */
+function makeOilRigs(): DuelMap {
+  const TOP = 34;
+  const terrain: Ground = () => -40;
+  const structures: Structure[] = [
+    { kind: 'tower', x: 0, s: 0, topY: TOP, halfSize: 18, style: 'rig' },
+    { kind: 'tower', x: 0, s: 900, topY: TOP, halfSize: 18, style: 'rig' },
+  ];
+  const a = { x: 0, y: TOP, z: -14 };
+  const b = { x: 0, y: TOP, z: -886 };
+  return {
+    id: 'oil-rigs',
+    name: 'Oil Rigs',
+    blurb: 'Helideck to helideck in the open sea, 870 m',
+    laneLength: 900,
+    fixed: true,
+    water: 0,
+    terrain,
+    zones: fixedZones(a, b),
+    ground: withPlatforms(terrain, structures),
+    cover: [],
+    spots: { A: [a], B: [b] },
+    windEdges: [300, 600],
+    climate: {
+      altitudeM: 0,
+      temperatureC: [2, 14],
+      humidity: [0.7, 0.95],
+      windSpeedMps: [6, 13],
+      windToward: Math.PI / 2,
+      windSpread: 0.3,
+      gustAmplitude: 0.18,
+      gustPeriodSeconds: 16,
+    },
+    latitude: 58,
+    look: {
+      flags: [
+        [-24, 150],
+        [24, 450],
+        [-24, 750],
+      ],
+      laneHalfWidth: 200,
+      structures,
+      palette: {
+        sky: '#b7c4cf',
+        lane: [0.58, 0.3, 0.22],
+        outside: [0.58, 0.3, 0.22],
+        water: [0.58, 0.32, 0.2],
+        grass: '#7f8f70',
+        hills: '#6c7a84',
+        rocks: '#777',
+        vegetation: 'none',
+      },
+    },
+  };
+}
+
 export const MAPS: Record<string, DuelMap> = {
+  'twin-bridges': makeTwinBridges(),
+  watchtowers: makeWatchtowers(),
+  'oil-rigs': makeOilRigs(),
   'dry-valley': makeDryValley(),
   'harbor-rooftops': makeHarborRooftops(),
   'alpine-ridge': makeAlpineRidge(),
   'training-lane': makeTrainingLane(),
 };
-export const DEFAULT_MAP = 'dry-valley';
+export const DEFAULT_MAP = 'twin-bridges';
 
 export function mapById(id: string): DuelMap {
   const m = MAPS[id];
