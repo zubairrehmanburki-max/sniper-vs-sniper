@@ -1,15 +1,21 @@
 name: TestFlight
 
 # Builds, signs and uploads the iOS app to TestFlight from a GitHub macOS runner, so no Mac is
-# needed. Signing is Xcode's automatic cloud signing, authorised by an App Store Connect API key.
+# needed, authorised by an App Store Connect API key.
 # Needs repository secrets APPLE_TEAM_ID, APPSTORE_KEY_ID, APPSTORE_ISSUER_ID and APPSTORE_KEY_P8
 # (the full text of the downloaded .p8 file). Run it from the Actions tab ("Run workflow").
+# Signing is manual via fastlane match (see the signing step) because automatic signing cannot
+# archive without a registered device.
 on:
   workflow_dispatch:
+
+permissions:
+  contents: write # match pushes the encrypted certificates branch
 
 jobs:
   testflight:
     runs-on: macos-latest
+    timeout-minutes: 40
     steps:
       - name: Check the App Store Connect secrets are set
         env:
@@ -33,22 +39,68 @@ jobs:
         run: pnpm cap:sync
         env:
           VITE_SERVER_URL: ${{ vars.GAME_SERVER_URL }}
+      # Swift package resolution has hung inside xcodebuild after the keychain search list was
+      # changed for signing, so resolve the packages first, with the runner's keychains untouched.
+      - name: Resolve Swift packages
+        working-directory: apps/client/ios/App
+        run: >
+          ../ci/watchdog.sh 600
+          xcodebuild -resolvePackageDependencies -project App.xcodeproj -scheme App
+          -clonedSourcePackagesDirPath "$RUNNER_TEMP/spm"
       - name: Write the API key
         env:
           P8: ${{ secrets.APPSTORE_KEY_P8 }}
+          KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          ISSUER: ${{ secrets.APPSTORE_ISSUER_ID }}
         run: |
           mkdir -p "$RUNNER_TEMP/asc"
           printf '%s\n' "$P8" > "$RUNNER_TEMP/asc/key.p8"
+          python3 - "$RUNNER_TEMP/asc/key.p8" "$RUNNER_TEMP/asc/key.json" <<'PY'
+          import json, os, sys
+          p8, out = sys.argv[1], sys.argv[2]
+          json.dump({"key_id": os.environ["KEY_ID"], "issuer_id": os.environ["ISSUER"],
+                     "key": open(p8).read(), "in_house": False}, open(out, "w"))
+          PY
+          # The certificate store is encrypted with a passphrase derived from the API key, so no
+          # extra secret is needed. Rotate the key and the `certificates` branch must be deleted.
+          pass=$(printf 'svs-match:%s:%s' "$KEY_ID" "$P8" | shasum -a 256 | cut -c1-48)
+          echo "::add-mask::$pass"
+          echo "MATCH_PASSWORD=$pass" >> "$GITHUB_ENV"
+      # Xcode's automatic signing needs a registered device to archive, which an account without
+      # a Mac never has, so signing is manual: fastlane match creates (once) an Apple Distribution
+      # certificate and an App Store profile with the API key, keeps them encrypted on the
+      # `certificates` branch of this repository, and installs them in a throwaway keychain.
+      - name: Fetch or create the signing certificate and profile
+        env:
+          MATCH_GIT_URL: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          # A throwaway keychain the runner can unlock without a prompt.
+          KC="$RUNNER_TEMP/signing.keychain-db"
+          KC_PASS=$(uuidgen)
+          security create-keychain -p "$KC_PASS" "$KC"
+          security set-keychain-settings -lut 3600 "$KC"
+          security unlock-keychain -p "$KC_PASS" "$KC"
+          security list-keychains -d user -s "$KC" "$HOME/Library/Keychains/login.keychain-db"
+          fastlane match appstore --readonly false --git_url "$MATCH_GIT_URL" --git_branch certificates \
+            --app_identifier com.snipervssniper.game \
+            --api_key_path "$RUNNER_TEMP/asc/key.json" --team_id "${{ secrets.APPLE_TEAM_ID }}" \
+            --keychain_name "$KC" --keychain_password "$KC_PASS"
+          # Let codesign use the imported key without a UI prompt, which would hang the runner.
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PASS" "$KC" > /dev/null
+          security find-identity -v -p codesigning "$KC"
       - name: Archive (signed)
         working-directory: apps/client/ios/App
         run: >
+          ../ci/watchdog.sh 900
           xcodebuild -project App.xcodeproj -scheme App -configuration Release
           -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/App.xcarchive"
-          -allowProvisioningUpdates
-          -authenticationKeyPath "$RUNNER_TEMP/asc/key.p8"
-          -authenticationKeyID "${{ secrets.APPSTORE_KEY_ID }}"
-          -authenticationKeyIssuerID "${{ secrets.APPSTORE_ISSUER_ID }}"
+          -clonedSourcePackagesDirPath "$RUNNER_TEMP/spm" -onlyUsePackageVersionsFromResolvedFile
           DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}"
+          CODE_SIGN_STYLE=Manual
+          CODE_SIGN_IDENTITY="Apple Distribution"
+          PROVISIONING_PROFILE_SPECIFIER="match AppStore com.snipervssniper.game"
           CURRENT_PROJECT_VERSION="${{ github.run_number }}"
           archive
       - name: Upload to TestFlight
@@ -56,7 +108,6 @@ jobs:
           xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive"
           -exportOptionsPlist apps/client/ios/ci/ExportOptions.plist
           -exportPath "$RUNNER_TEMP/export"
-          -allowProvisioningUpdates
           -authenticationKeyPath "$RUNNER_TEMP/asc/key.p8"
           -authenticationKeyID "${{ secrets.APPSTORE_KEY_ID }}"
           -authenticationKeyIssuerID "${{ secrets.APPSTORE_ISSUER_ID }}"
