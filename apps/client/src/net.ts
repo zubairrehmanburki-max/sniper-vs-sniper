@@ -7,6 +7,33 @@ import { Client, type Room } from '@colyseus/sdk';
 import { decodeView, ROOM_NAME, type ClientMessage, type JoinOptions, type MatchView, type ServerMessage, type ShotOutcome } from '@svs/shared';
 
 const TOKEN_KEY = 'svs.reconnect';
+const PLAYER_KEY = 'svs.playerId';
+
+/** This browser's stable player id (no accounts yet). Ratings follow it. */
+export function playerId(): string | undefined {
+  try {
+    let id = localStorage.getItem(PLAYER_KEY);
+    if (!id) {
+      id = crypto.randomUUID().replace(/-/g, '');
+      localStorage.setItem(PLAYER_KEY, id);
+    }
+    return id;
+  } catch {
+    return undefined; // storage blocked: play unrated
+  }
+}
+
+/** Ranked rating for this browser, or null when the server can't be reached. */
+export async function fetchRating(): Promise<{ rating: number; games: number } | null> {
+  const id = playerId();
+  if (!id) return null;
+  try {
+    const res = await fetch(`${serverUrl().replace(/^ws/, 'http')}/rating/${id}`);
+    return res.ok ? ((await res.json()) as { rating: number; games: number }) : null;
+  } catch {
+    return null;
+  }
+}
 
 export function serverUrl(): string {
   const param = new URLSearchParams(location.search).get('server');

@@ -74,3 +74,17 @@ describe('player views', () => {
     expect(makeCode()).toMatch(/^[A-HJ-NP-Z]{4}$/);
   });
 });
+
+describe('elo', () => {
+  it('rewards upsets more than expected wins, and settles after ten games', async () => {
+    const { rateMatch, expectedScore, NEW_RATING } = await import('../src/elo.ts');
+    expect(expectedScore(1200, 1200)).toBeCloseTo(0.5);
+    const even = rateMatch(NEW_RATING, NEW_RATING);
+    expect(even.winner.rating).toBe(1220);
+    expect(even.loser.rating).toBe(1180);
+    const upset = rateMatch({ rating: 1100, games: 30 }, { rating: 1400, games: 30 });
+    const expected = rateMatch({ rating: 1400, games: 30 }, { rating: 1100, games: 30 });
+    expect(upset.winner.rating - 1100).toBeGreaterThan(expected.winner.rating - 1400);
+    expect(upset.winner.games).toBe(31);
+  });
+});

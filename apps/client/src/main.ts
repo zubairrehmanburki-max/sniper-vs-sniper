@@ -1,6 +1,6 @@
 import { config, DEFAULT_MAP, makeCode, MAPS, type BotDifficulty, type MatchView } from '@svs/shared';
 import { DuelMode } from './duelMode.ts';
-import { OnlineLink, serverUrl } from './net.ts';
+import { fetchRating, OnlineLink, playerId, serverUrl } from './net.ts';
 import { PracticeMode } from './practiceMode.ts';
 import { $, Shooter } from './shooter.ts';
 
@@ -28,7 +28,14 @@ for (const m of Object.values(MAPS)) {
 $<HTMLSelectElement>('map').value = DEFAULT_MAP;
 const mapId = (): string => $<HTMLSelectElement>('map').value;
 
+function showRating(): void {
+  void fetchRating().then((r) => {
+    $('my-rating').textContent = r ? `Your rating: ${r.rating}${r.games < 10 ? ` (provisional, ${r.games} of 10 games)` : ''}` : '';
+  });
+}
+
 function menu(): void {
+  showRating();
   $('menu').hidden = false;
   shooter.inputEnabled = false;
   shooter.setScoped(false);
@@ -100,7 +107,12 @@ function watch(link: OnlineLink): void {
 
 async function online(kind: 'quick' | 'create' | 'join'): Promise<void> {
   shooter.audio.unlock();
-  const opts = { name: $<HTMLInputElement>('name-a').value.trim() || 'Player 1', rifleId: $<HTMLSelectElement>('rifle-a').value, mapId: mapId() };
+  const opts = {
+    name: $<HTMLInputElement>('name-a').value.trim() || 'Player 1',
+    rifleId: $<HTMLSelectElement>('rifle-a').value,
+    mapId: mapId(),
+    playerId: playerId(),
+  };
   const code = $<HTMLInputElement>('join-code').value.trim().toUpperCase();
   if (kind === 'join' && !/^[A-Z]{4}$/.test(code)) {
     onlineStatus('Enter the 4-letter code your opponent shared.');
@@ -113,7 +125,7 @@ async function online(kind: 'quick' | 'create' | 'join'): Promise<void> {
         ? await OnlineLink.quick(opts)
         : kind === 'create'
           ? await OnlineLink.create({ ...opts, code: makeCode() })
-          : await OnlineLink.join({ name: opts.name, rifleId: opts.rifleId, code }); // the host picked the map
+          : await OnlineLink.join({ name: opts.name, rifleId: opts.rifleId, playerId: opts.playerId, code }); // the host picked the map
     watch(link);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

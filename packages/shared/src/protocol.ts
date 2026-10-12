@@ -20,6 +20,8 @@ export interface JoinOptions {
   code?: string;
   /** Map to play; quick match only pairs players who picked the same map. */
   mapId?: string;
+  /** Stable random id this browser plays under (no accounts yet); quick-match ratings are kept per id. */
+  playerId?: string;
 }
 
 export type ClientMessage =
@@ -37,6 +39,9 @@ export interface MatchView extends MatchState {
   now: number;
   /** The opponent's connection, for "reconnecting" notices. */
   opponentConnected: boolean;
+  /** Quick-match games are ranked; `after` is filled in once the match is decided. */
+  ranked?: boolean;
+  ratings?: Record<Side, { before: number; after?: number }>;
 }
 
 export type ServerMessage =
