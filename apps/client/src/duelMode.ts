@@ -35,6 +35,7 @@ import {
   type Side,
   type Stance,
 } from '@svs/shared';
+import { playKillcam } from './killcam.ts';
 import { playShotFeedback } from './practiceMode.ts';
 import { spotterCall } from './format.ts';
 import { buildWorld } from './scene.ts';
@@ -66,6 +67,8 @@ export class DuelMode {
   private pendingCard: (() => void) | null = null;
   private readonly online: OnlineLink | null;
   private connection: 'ok' | 'dropped' = 'ok';
+  /** True while the killcam plays; phase changes wait until its result card is dismissed. */
+  private cinematic = false;
 
   constructor(
     private readonly shooter: Shooter,
@@ -257,6 +260,7 @@ export class DuelMode {
   }
 
   private checkPhase(): void {
+    if (this.cinematic) return;
     const key = `${this.state.round}:${this.state.pair}:${this.state.step}:${this.state.phase}`;
     if (key !== this.phaseKey) this.enterPhase();
     else if (this.screen === 'map') this.drawMap();
@@ -391,11 +395,32 @@ export class DuelMode {
     const after = this.state;
     const wait = humanShot ? outcome.impact.t * 1000 + 700 : 300;
     if (!this.online) this.shooter.running = false;
-    window.setTimeout(() => {
+    const showCard = (): void =>
       this.card(headline, detail.join(' '), outcome.verdict !== 'miss', () => {
         if (after.phase === 'roundOver') this.roundOver();
         else if (after.phase === 'matchOver') this.matchOver();
         else this.checkPhase();
+      });
+    window.setTimeout(() => {
+      if (outcome.verdict === 'miss') {
+        showCard();
+        return;
+      }
+      // Every hit gets the killcam, for the shooter and for the player who was hit.
+      this.shooter.view!.setFigure('enemy', null);
+      this.cinematic = true;
+      void playKillcam(this.shooter, {
+        trajectory: outcome.trajectory,
+        eye: outcome.eye,
+        yaw: outcome.yaw,
+        impact: outcome.impact,
+        target: { position: target.position, stance: target.stance, facingYaw: facingYaw(target.side) },
+        title: headline,
+        lethal: outcome.verdict === 'kill',
+      }).then(() => {
+        this.cinematic = false;
+        this.show(this.screen);
+        showCard();
       });
     }, wait);
   }

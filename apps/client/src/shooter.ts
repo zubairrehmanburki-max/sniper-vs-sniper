@@ -55,6 +55,8 @@ export class Shooter {
   yaw = 0;
   pitch = 0;
   scoped = false;
+  /** While set, a cinematic (the killcam) drives the camera instead of the player's aim. */
+  director: ((cam: THREE.PerspectiveCamera, dt: number) => void) | null = null;
   zoom = 10;
   elevMrad = 0;
   windMrad = 0;
@@ -357,7 +359,11 @@ export class Shooter {
       if (this.callTimer <= 0) $('call').classList.remove('show');
     }
     this.hooks?.onFrame?.(dt);
-    if (this.view && this.hooks) {
+    if (this.view && this.hooks && this.director) {
+      this.director(this.view.camera, dt);
+      this.view.update(this.time, dt, (p) => this.hooks!.windAt(p));
+      this.renderer.render(this.view.scene, this.view.camera);
+    } else if (this.view && this.hooks) {
       const cam = this.view.camera;
       const aim = this.trueAim();
       const eye = this.hooks.eye();

@@ -178,3 +178,14 @@ body.duel #call { top: 170px; }
 }
 .online-status { color: var(--accent); font-weight: 600; }
 .online-status b { font-size: 1.4em; letter-spacing: 0.2em; }
+
+#killcam {
+  position: absolute; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%);
+  width: min(560px, calc(100% - 32px)); background: var(--panel); border-radius: 12px; padding: 10px 14px;
+  display: grid; gap: 6px; z-index: 30;
+}
+.killcam-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-weight: 700; }
+#killcam-stats { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+#killcam-stats b { color: var(--text); }
+body.killcam-on #duelbar, body.killcam-on #turrets, body.killcam-on #actions, body.killcam-on #mapview,
+body.killcam-on #waitview, body.killcam-on #call, body.killcam-on #side, body.killcam-on #crosshair { display: none !important; }
