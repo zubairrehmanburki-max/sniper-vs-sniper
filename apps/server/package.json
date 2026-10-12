@@ -1,0 +1,24 @@
+{
+  "name": "@svs/server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Authoritative game server: Colyseus duel rooms running the shared match rules.",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@colyseus/core": "0.18.15",
+    "@colyseus/ws-transport": "0.18.2",
+    "@svs/ballistics": "workspace:*",
+    "@svs/shared": "workspace:*",
+    "express": "5.1.0",
+    "tsx": "^4.20.0"
+  },
+  "devDependencies": {
+    "@colyseus/sdk": "0.18.2"
+  }
+}

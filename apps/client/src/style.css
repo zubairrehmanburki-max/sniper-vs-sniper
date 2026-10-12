@@ -166,3 +166,14 @@ body.duel #call { top: 170px; }
   #mapview { top: 200px; }
   body.duel #side { display: none; }
 }
+
+.online { margin-top: 16px; padding-top: 12px; border-top: 1px solid #ffffff22; display: grid; gap: 8px; justify-items: center; }
+.online h2 { margin: 0; font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; }
+.online p { margin: 0; }
+.online .join { display: inline-flex; gap: 6px; }
+#join-code {
+  width: 5.5em; text-transform: uppercase; letter-spacing: 0.2em; text-align: center;
+  background: #0006; color: var(--text); border: 1px solid #ffffff33; border-radius: 8px; padding: 8px; font: inherit;
+}
+.online-status { color: var(--accent); font-weight: 600; }
+.online-status b { font-size: 1.4em; letter-spacing: 0.2em; }
