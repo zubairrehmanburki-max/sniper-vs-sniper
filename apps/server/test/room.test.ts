@@ -51,11 +51,12 @@ class Player {
   }
 }
 
-async function startMatch(code?: string): Promise<[Player, Player]> {
+async function startMatch(code?: string, mapId = 'training-lane'): Promise<[Player, Player]> {
   const a = new Player('Alice');
   const b = new Player('Bob');
   if (code) {
-    a.attach(await a.client.create(ROOM_NAME, { name: 'Alice', rifleId: 'bolt308', code }));
+    // Tests that walk a move phase need an open-ground map; the default map has fixed positions.
+    a.attach(await a.client.create(ROOM_NAME, { name: 'Alice', rifleId: 'bolt308', code, mapId }));
     b.attach(await b.client.join(ROOM_NAME, { name: 'Bob', rifleId: 'mag338', code }));
   } else {
     await a.quick();

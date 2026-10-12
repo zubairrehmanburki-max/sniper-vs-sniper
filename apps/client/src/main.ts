@@ -22,7 +22,8 @@ for (const m of Object.values(MAPS)) {
   o.value = m.id;
   const a = m.zones.A;
   const b = m.zones.B;
-  o.textContent = `${m.name} (${Math.round(b.front - a.front)}–${Math.round(b.sMax - a.sMin)} m, ${m.climate.altitudeM.toLocaleString('en')} m altitude)`;
+  const range = m.fixed ? `${Math.round(b.front - a.front)} m` : `${Math.round(b.front - a.front)}–${Math.round(b.sMax - a.sMin)} m`;
+  o.textContent = m.fixed ? `${m.name}: fixed positions, ${range}` : `${m.name}: open ground, ${range}, ${m.climate.altitudeM.toLocaleString('en')} m altitude`;
   $<HTMLSelectElement>('map').append(o);
 }
 $<HTMLSelectElement>('map').value = DEFAULT_MAP;

@@ -105,6 +105,10 @@ export class DuelMode {
     const view = buildWorld({
       seed,
       ground: this.map.ground,
+      terrain: this.map.terrain,
+      water: this.map.water,
+      structures: this.map.look.structures,
+      renderer: shooter.renderer,
       laneLength: this.map.laneLength,
       laneEdges: this.map.windEdges,
       cover: this.map.cover,
@@ -392,7 +396,8 @@ export class DuelMode {
       detail.push(`Spotter: ${spotterCall(outcome.call.upMrad, outcome.call.rightMrad)} at ${dist} m.`);
     } else if (humanShot) {
       const at = Math.round(Math.hypot(outcome.impact.point.x - outcome.eye.x, outcome.impact.point.z - outcome.eye.z));
-      detail.push(`Spotter: dust at ${at} m, well short of the target at ${dist} m.`);
+      const splash = this.map.water !== undefined && outcome.impact.point.y <= this.map.water + 0.3;
+      detail.push(`Spotter: ${splash ? 'splash' : 'dust'} at ${at} m, well short of the target at ${dist} m.`);
     }
     if (outcome.nearMiss) detail.push(`${target.name} heard the snap: it passed within a metre.`);
     if (!humanShot) detail.push(`The shot came from ${dist} m away. Its position is revealed until it moves.`);
@@ -521,7 +526,7 @@ export class DuelMode {
     const s = this.state;
     const t = Math.ceil(timeLeft(s, this.shooter.time));
     let what = '';
-    if (s.phase === 'setup') what = 'Setup: choose your start position';
+    if (s.phase === 'setup') what = this.map.fixed ? 'Setup: choose your stance' : 'Setup: choose your start position';
     else if (s.phase === 'move') what = `${s.players[s.actor!].name} moves`;
     else if (s.phase === 'shot') what = `${s.players[s.actor!].name} shoots`;
     else if (s.phase === 'roundOver') what = 'Round over';
@@ -585,6 +590,17 @@ export class DuelMode {
 
   private drawMap(): void {
     const canvas = $<HTMLCanvasElement>('zonemap');
+    const s = this.state;
+    const me = s.players[this.viewer];
+    document.querySelectorAll<HTMLButtonElement>('#mapview [data-stance]').forEach((b) => b.classList.toggle('on', b.dataset.stance === me.stance));
+    $('mapview').classList.toggle('fixed', !!this.map.fixed);
+    if (this.map.fixed) {
+      canvas.hidden = true;
+      const range = Math.round(Math.abs(this.map.zones.B.front - this.map.zones.A.front));
+      $('map-hint').textContent = `${this.map.name}: you and ${s.players[other(this.viewer)].name} face each other across ${range} m of open water, with nothing to hide behind. Pick a stance, then Ready.`;
+      return;
+    }
+    canvas.hidden = false;
     const rect = canvas.getBoundingClientRect();
     const dpr = Math.min(2, window.devicePixelRatio);
     canvas.width = Math.max(1, rect.width * dpr);
@@ -593,9 +609,7 @@ export class DuelMode {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const w = rect.width;
     const h = rect.height;
-    const s = this.state;
     const { zone, scale, toScreen } = this.mapFrame(w, h);
-    const me = s.players[this.viewer];
     const [hue, sat, light] = this.map.look.palette?.lane ?? [0.21, 0.22, 0.4];
     ctx.clearRect(0, 0, w, h);
 
@@ -679,7 +693,6 @@ export class DuelMode {
           : reachesAll
             ? 'Tap anywhere in your zone to move, pick a stance, then Done moving.'
             : 'Tap inside the circle to move, pick a stance, then Done moving.';
-    document.querySelectorAll<HTMLButtonElement>('#mapview [data-stance]').forEach((b) => b.classList.toggle('on', b.dataset.stance === me.stance));
     if (me.heardSnapFrom) {
       const dx = me.heardSnapFrom.x - me.position.x;
       const dz = me.heardSnapFrom.z - me.position.z;

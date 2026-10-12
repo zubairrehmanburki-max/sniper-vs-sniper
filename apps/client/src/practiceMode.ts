@@ -38,6 +38,7 @@ export class PracticeMode {
     const view = buildWorld({
       seed: this.seed,
       ground: flatGround,
+      renderer: shooter.renderer,
       laneLength: 900,
       laneEdges: this.range.wind.edges,
       steel: this.range.targets,

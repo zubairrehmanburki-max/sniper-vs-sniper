@@ -3,6 +3,7 @@
  * and seed always produce the same match, so hotseat, bot games, the server and replays share it.
  *
  * Round: setup (both place) → move(first) → shot(second) → move(second) → shot(first) → repeat.
+ * On a fixed-position map there are no move phases: shot(second) → shot(first) → repeat.
  * Every shot is taken at a frozen target. First to `killsToWin` kills takes the match.
  */
 import { createRng, hashSeed, standardPressure, type Vec3 } from '@svs/ballistics';
@@ -223,10 +224,19 @@ export function moveBudget(state: MatchState, side: Side, cfg: GameConfig = conf
   return cfg.player.moveSpeedMps * cfg.rules.moveSeconds * wounded;
 }
 
-/** The phase cycle after setup: [kind, actor] for step 0..3. */
+/**
+ * The phase cycle after setup: [kind, actor] per step. On a fixed-position map nobody moves, so
+ * the sides simply trade shots.
+ */
 function cycle(state: MatchState, step: number): { phase: 'move' | 'shot'; actor: Side } {
   const f = state.firstMover;
   const s = other(f);
+  if (mapById(state.mapId).fixed) {
+    return [
+      { phase: 'shot' as const, actor: s },
+      { phase: 'shot' as const, actor: f },
+    ][step % 2]!;
+  }
   return [
     { phase: 'move' as const, actor: f },
     { phase: 'shot' as const, actor: s },
@@ -234,6 +244,8 @@ function cycle(state: MatchState, step: number): { phase: 'move' | 'shot'; actor
     { phase: 'shot' as const, actor: f },
   ][step % 4]!;
 }
+
+const cycleLength = (state: MatchState): number => (mapById(state.mapId).fixed ? 2 : 4);
 
 function clone(state: MatchState): MatchState {
   return {
@@ -292,7 +304,7 @@ function endPhase(state: MatchState, time: number, cfg: GameConfig): void {
       state.windScale = Math.max(0, 1 - (state.pair - cfg.rules.suddenDeathAfterPairs + 1) * cfg.rules.suddenDeathWindDecayPerPair);
     }
   }
-  enterPhase(state, (state.step + 1) % 4, time, cfg);
+  enterPhase(state, (state.step + 1) % cycleLength(state), time, cfg);
 }
 
 function endRound(state: MatchState, winner: Side, time: number, cfg: GameConfig): void {
