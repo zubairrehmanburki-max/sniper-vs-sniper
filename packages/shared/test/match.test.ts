@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyInput,
   botPlan,
+  MAPS,
   chestOf,
   config,
   createMatch,
@@ -213,10 +214,10 @@ describe('forfeit', () => {
 });
 
 /** Drive a whole match with bots on both sides, the way the hotseat client does. */
-function playBots(seed: number, a: 'easy' | 'medium' | 'hard', b: 'easy' | 'medium' | 'hard') {
+function playBots(seed: number, a: 'easy' | 'medium' | 'hard', b: 'easy' | 'medium' | 'hard', mapId = 'training-lane') {
   let s = createMatch({
     seed,
-    mapId: 'training-lane',
+    mapId,
     players: { A: { name: 'BotA', rifleId: 'bolt65cm', bot: a }, B: { name: 'BotB', rifleId: 'mag338', bot: b } },
     time: 0,
   });
@@ -248,6 +249,11 @@ describe('bots', () => {
     expect(s.players[s.winner!].kills).toBe(R.killsToWin);
     expect(s.shots.length).toBeGreaterThan(0);
   });
+  it.each(Object.keys(MAPS))('bots finish a match on %s', (mapId) => {
+    const s = playBots(77, 'medium', 'medium', mapId);
+    expect(s.phase).toBe('matchOver');
+    expect(s.forfeit).toBe(false);
+  });
   it('hard beats easy more often than not', () => {
     let hardWins = 0;
     const n = 6;
@@ -255,3 +261,17 @@ describe('bots', () => {
     expect(hardWins).toBeGreaterThanOrEqual(4);
   });
 });
+
+it.skipIf(!process.env.MAP_STATS)('map stats', () => {
+  for (const mapId of Object.keys(MAPS)) {
+    for (const [a, b] of [['medium', 'medium'], ['easy', 'hard'], ['hard', 'hard']] as const) {
+      let pairs = 0, rounds = 0, shots = 0, hits = 0, bWins = 0;
+      for (let i = 0; i < 10; i++) {
+        const s = playBots(500 + i, a, b, mapId);
+        rounds += s.round; shots += s.shots.length; hits += s.shots.filter((x) => x.verdict !== 'miss').length;
+        pairs += s.shots.length / 2; if (s.winner === 'B') bWins++;
+      }
+      console.log(mapId, a, b, 'shots/round', (shots / rounds).toFixed(1), 'hit%', ((100 * hits) / shots).toFixed(0), 'B wins', bWins);
+    }
+  }
+}, 300000);

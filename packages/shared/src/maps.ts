@@ -42,6 +42,19 @@ export interface DuelMap {
     gustPeriodSeconds: number;
   };
   latitude: number;
+  /** How the map is drawn: wind flags (world x, lane distance s) and an optional palette. */
+  look: { flags: Array<[number, number]>; laneHalfWidth: number; palette?: Palette };
+}
+
+/** Colours for drawing a map; anything left out uses the client's default green range. */
+export interface Palette {
+  sky?: string;
+  /** Ground hue/saturation/lightness in the lane and around it (0–1 each). */
+  lane?: [number, number, number];
+  outside?: [number, number, number];
+  grass?: string;
+  hills?: string;
+  rocks?: string;
 }
 
 const smoothstep = (e0: number, e1: number, x: number): number => {
@@ -119,10 +132,106 @@ function makeTrainingLane(): DuelMap {
       gustPeriodSeconds: 10,
     },
     latitude: 38,
+    look: {
+      flags: [
+        [-62, 120],
+        [64, 325],
+        [-66, 530],
+      ],
+      laneHalfWidth: 70,
+    },
   };
 }
 
-export const MAPS: Record<string, DuelMap> = { 'training-lane': makeTrainingLane() };
+/**
+ * Dry Valley (GAME_PLAN launch map): 690–870 m across a dry wash at 1,200 m, hot and thin-aired,
+ * with a strong, steady crosswind. A sits on a low bench, B on a higher one with a wash between.
+ */
+function dryValleyGround(x: number, z: number): number {
+  const s = -z;
+  const benchA = 6 * (1 - smoothstep(95, 180, s));
+  const benchB = 11 * smoothstep(650, 770, s);
+  // The wash: a shallow channel snaking across mid-lane, with gravel bars either side.
+  const wash = -3.2 * Math.exp(-(((s - 430 - 25 * Math.sin(x * 0.02)) / 38) ** 2));
+  const bars = 0.8 * Math.sin(s * 0.035 + x * 0.015) * smoothstep(180, 260, s) * (1 - smoothstep(600, 660, s));
+  const outside = smoothstep(80, 240, Math.abs(x));
+  const ridges = outside * (16 + 12 * Math.sin(x * 0.008 + s * 0.004) + 7 * Math.cos(s * 0.01));
+  return benchA + benchB + wash + bars + ridges;
+}
+
+function makeDryValley(): DuelMap {
+  const ground = dryValleyGround;
+  const cover: Box[] = [];
+  const spots: Record<Side, Vec3[]> = { A: [], B: [] };
+  // Six boulders a side: two pairs close together (a short dash between them) and two loners.
+  const layoutA: Array<[number, number, number, number]> = [
+    [-46, 76, 1.4, 2.6],
+    [-40, 64, 1.0, 2.0],
+    [-12, 84, 1.2, 2.4],
+    [14, 70, 1.6, 3.0],
+    [20, 58, 1.0, 1.8],
+    [44, 80, 1.3, 2.2],
+  ];
+  layoutA.forEach(([x, s, h, w], i) => {
+    cover.push(rock(`A-rock-${i}`, x, s, w, h, 1.6, ground));
+    spots.A.push({ x: x + (i % 2 === 0 ? 1.8 : -1.8), y: ground(x, -(s - 1.8)), z: -(s - 1.8) });
+  });
+  const layoutB: Array<[number, number, number, number]> = [
+    [-44, 792, 1.3, 2.4],
+    [-18, 784, 1.5, 2.8],
+    [-12, 800, 1.0, 1.8],
+    [10, 790, 1.2, 2.2],
+    [36, 786, 1.6, 3.0],
+    [42, 802, 1.0, 2.0],
+  ];
+  layoutB.forEach(([x, s, h, w], i) => {
+    cover.push(rock(`B-rock-${i}`, x, s, w, h, 1.6, ground));
+    spots.B.push({ x: x + (i % 2 === 0 ? -1.8 : 1.8), y: ground(x, -(s + 1.8)), z: -(s + 1.8) });
+  });
+  return {
+    id: 'dry-valley',
+    name: 'Dry Valley',
+    laneLength: 870,
+    zones: {
+      A: { xMin: -60, xMax: 60, sMin: 0, sMax: 90, front: 90 },
+      B: { xMin: -60, xMax: 60, sMin: 780, sMax: 870, front: 780 },
+    },
+    ground,
+    cover,
+    spots,
+    windEdges: [290, 580],
+    climate: {
+      altitudeM: 1200,
+      temperatureC: [26, 42],
+      humidity: [0.08, 0.3],
+      windSpeedMps: [5, 10],
+      windToward: Math.PI / 2,
+      windSpread: 0.25,
+      gustAmplitude: 0.12,
+      gustPeriodSeconds: 14,
+    },
+    latitude: 34,
+    look: {
+      flags: [
+        [-70, 160],
+        [72, 440],
+        [-74, 700],
+      ],
+      laneHalfWidth: 75,
+      palette: {
+        sky: '#c7d6e2',
+        lane: [0.09, 0.32, 0.56],
+        outside: [0.08, 0.28, 0.5],
+        grass: '#b9a66b',
+        hills: '#a88d6c',
+        rocks: '#9c8165',
+      },
+    },
+  };
+}
+
+export const MAPS: Record<string, DuelMap> = { 'dry-valley': makeDryValley(), 'training-lane': makeTrainingLane() };
+export const DEFAULT_MAP = 'dry-valley';
 
 export function mapById(id: string): DuelMap {
   const m = MAPS[id];

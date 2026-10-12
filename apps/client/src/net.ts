@@ -12,6 +12,8 @@ export function serverUrl(): string {
   const param = new URLSearchParams(location.search).get('server');
   if (param) return param;
   const env = import.meta.env.VITE_SERVER_URL as string | undefined;
+  // A build served by the game server itself (the hosted deploy) talks to its own origin.
+  if (env === 'same-origin') return `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`;
   if (env) return env;
   return `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname || 'localhost'}:2567`;
 }

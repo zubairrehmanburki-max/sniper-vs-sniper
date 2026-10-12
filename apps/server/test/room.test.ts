@@ -124,6 +124,24 @@ describe('duel room', () => {
     b2.room.leave();
   });
 
+  it("plays the host's map in a private game, and matches quick games by map", async () => {
+    const a = new Player('Alice');
+    const b = new Player('Bob');
+    a.attach(await a.client.create(ROOM_NAME, { name: 'Alice', rifleId: 'bolt308', code: 'MAPS', mapId: 'training-lane' }));
+    b.attach(await b.client.join(ROOM_NAME, { name: 'Bob', rifleId: 'bolt308', code: 'MAPS' }));
+    expect((await b.until((v) => v.phase === 'setup')).mapId).toBe('training-lane');
+    a.room.leave();
+    b.room.leave();
+    const c = new Player('Cat');
+    const d = new Player('Dan');
+    c.attach(await c.client.joinOrCreate(ROOM_NAME, { name: 'Cat', rifleId: 'bolt308', code: '', mapId: 'training-lane' }));
+    d.attach(await d.client.joinOrCreate(ROOM_NAME, { name: 'Dan', rifleId: 'bolt308', code: '', mapId: 'dry-valley' }));
+    await new Promise((r) => setTimeout(r, 150));
+    expect(c.messages.some((m) => m.type === 'update')).toBe(false); // different maps: both still waiting
+    c.room.leave();
+    d.room.leave();
+  });
+
   it('awards the match when a player quits', async () => {
     const [a, b] = await startMatch('QUIT');
     b.room.leave();

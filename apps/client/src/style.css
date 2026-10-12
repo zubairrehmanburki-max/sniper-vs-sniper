@@ -130,6 +130,7 @@ button.fire { background: var(--fire); border-color: #ff8a7a; }
 button.primary { background: #3a4a2c; border-color: #7e9a5c; font-weight: 600; }
 button.primary.fire { background: var(--fire); border-color: #ff8a7a; }
 .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; text-align: left; margin: 14px 0; }
+.menu-grid .wide { grid-column: 1 / -1; }
 .menu-grid label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: 12px; min-width: 0; }
 .menu-grid input, .menu-grid select, #bot-level {
   font: inherit; color: var(--text); background: #26292c; border: 1px solid #444; border-radius: 8px; padding: 8px; min-width: 0;
