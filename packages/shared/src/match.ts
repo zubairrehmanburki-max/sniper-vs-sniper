@@ -202,6 +202,21 @@ export function isSuddenDeath(state: MatchState, cfg: GameConfig = config): bool
   return state.pair >= cfg.rules.suddenDeathAfterPairs;
 }
 
+const STANCE_ORDER: Stance[] = ['prone', 'crouch', 'standing'];
+
+/** Lowest stance allowed now: deep into sudden death you can no longer hide by lying flat. */
+export function minStance(state: MatchState, cfg: GameConfig = config): Stance {
+  const over = state.pair - cfg.rules.suddenDeathAfterPairs;
+  if (over >= cfg.rules.suddenDeathStandingAfterPairs) return 'standing';
+  if (over >= cfg.rules.suddenDeathNoProneAfterPairs) return 'crouch';
+  return 'prone';
+}
+
+export function clampStance(state: MatchState, stance: Stance, cfg: GameConfig = config): Stance {
+  const min = minStance(state, cfg);
+  return STANCE_ORDER.indexOf(stance) < STANCE_ORDER.indexOf(min) ? min : stance;
+}
+
 /** Furthest a mover may end up from where their move phase started, m. */
 export function moveBudget(state: MatchState, side: Side, cfg: GameConfig = config): number {
   const wounded = state.players[side].wounds > 0 ? cfg.player.wound.moveSpeedFactor : 1;
@@ -237,6 +252,7 @@ function enterPhase(state: MatchState, step: number, time: number, cfg: GameConf
   state.acted = false;
   state.phaseStart = time;
   state.phaseEnd = time + (next.phase === 'move' ? cfg.rules.moveSeconds : cfg.rules.shotSeconds);
+  for (const side of ['A', 'B'] as const) state.players[side].stance = clampStance(state, state.players[side].stance, cfg);
   if (next.phase === 'move') {
     const p = state.players[next.actor];
     // Sudden death: the usable zone shrinks toward the front, forcing exposure.
@@ -370,7 +386,7 @@ export function applyInput(prev: MatchState, input: MatchInput, cfg: GameConfig 
       }
       if (horizontalDistance(p.position, target) > 0.5) p.revealed = null; // moved away from where they last fired
       p.position = target;
-      p.stance = input.stance;
+      p.stance = clampStance(state, input.stance, cfg);
       state.acted = true;
       return { state };
     }

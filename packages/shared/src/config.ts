@@ -71,6 +71,7 @@ export interface GameConfig {
     /** The firing point is a raised bench so prone shooters see over the grass. */
     firingPointHeightM: number;
   };
+  softCover: { minEnergyJ: number; energyKeep: number; maxLayers: number };
   rules: {
     setupSeconds: number;
     moveSeconds: number;
@@ -84,6 +85,9 @@ export interface GameConfig {
     woundsToDown: number;
     nearMissRadiusM: number;
     forfeitAfterIdlePhases: number;
+    /** Sudden death pairs after which nobody may lie prone, and after which everyone stands. */
+    suddenDeathNoProneAfterPairs: number;
+    suddenDeathStandingAfterPairs: number;
     /** Online: pause between a round's last shot and the next setup, s. */
     roundBreakSeconds: number;
     /** Online: how long a dropped player's seat is held before they forfeit, s. */

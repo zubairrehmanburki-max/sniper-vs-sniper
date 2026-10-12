@@ -30,3 +30,20 @@ Bullet lengths and twist rates (needed for spin drift) are typical published val
   of waiting for both players to tap Continue. A dropped player's seat is held for
   `rules.reconnectGraceSeconds` (60 s, as in the plan); the phase clock keeps running meanwhile, so
   the idle-forfeit rule still applies.
+
+## Phase 4 simplifications
+
+- **Soft cover** (`softCover`): a bullet carrying at least `minEnergyJ` (2,500 J) when it reaches a
+  soft box (wood, sheet metal) goes through `maxLayers` (1) of them and keeps `energyKeep` (70%) of
+  its energy, roughly the plan's ~30% loss. The path itself is not re-integrated after the exit: the
+  remaining flight keeps the original trajectory and only the energy (and speed) at impact are scaled.
+  At these ranges the extra drop and drift after a 1 m exit are a few centimetres. At sea level a .50
+  carries enough to about 1,400 m, a .338 to about 750 m, and a .308 or 6.5 CM only inside 200 m,
+  closer than any enemy zone, so in practice only the two big rifles punch through. Hard cover
+  (rock, concrete, earth) stops everything.
+- **Sudden death escalation** (not in the plan): after `rules.suddenDeathNoProneAfterPairs` (2)
+  sudden-death pairs nobody may lie prone, and after `rules.suddenDeathStandingAfterPairs` (4) both
+  players must stand. This ends the rare stalemate where both players hide fully behind cover.
+- **Alpine Ridge** models thin, cold air through the map's altitude and temperature, and the shot
+  angle through the real slope. Up- and down-slope thermals, and temperature changing with height
+  along the path, are not modelled; the wind field is the same layered, gusty model as elsewhere.

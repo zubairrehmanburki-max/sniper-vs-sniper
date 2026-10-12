@@ -34,6 +34,18 @@ export interface Impact {
   energy: number;
   /** For target hits: offset from the plate centre in the plate plane, m (right, up). */
   local?: { u: number; v: number };
+  /** Soft cover the bullet went through on the way, in order. */
+  penetrated?: string[];
+}
+
+/** How bullets get through soft cover (GAME_PLAN damage model). */
+export interface Penetration {
+  /** Energy the bullet needs at the cover to go through, J. */
+  minEnergyJ: number;
+  /** Fraction of energy left after each layer. */
+  energyKeep: number;
+  /** Most soft layers one bullet can pass. */
+  maxLayers: number;
 }
 
 const CHEST_DEPTH = 0.35; // m of torso below the head that counts as chest
@@ -62,8 +74,16 @@ export function resolveImpact(
   targets: Silhouette[],
   ground: Ground = flatGround,
   obstacles: Box[] = [],
+  penetration?: Penetration,
 ): Impact {
   const pts = traj.points;
+  // After going through soft cover the bullet keeps its path (the small deflection is ignored) but
+  // carries less energy; speed scales with the square root.
+  const passed = new Set<string>();
+  const penetrated: string[] = [];
+  let keep = 1;
+  const scaled = (impact: Impact): Impact =>
+    penetrated.length ? { ...impact, energy: impact.energy * keep, speed: impact.speed * Math.sqrt(keep), penetrated: penetrated.slice() } : impact;
   const world = (p: TrajectoryPoint): Vec3 => shotToWorld(p, eye, yaw);
   const frames = targets.map((s) => ({ s, n: forward(s.facingYaw), r: rightOf(s.facingYaw) }));
   let prev = world(pts[0]!);
@@ -117,9 +137,12 @@ export function resolveImpact(
         };
       }
     }
+    let bestBox: Box | undefined;
     for (const box of obstacles) {
+      if (passed.has(box.id)) continue;
       const f = segmentBoxEntry(prev, cur, box);
       if (f !== undefined && (!best || f < best.f)) {
+        bestBox = box;
         best = {
           f,
           impact: {
@@ -134,11 +157,21 @@ export function resolveImpact(
       }
     }
 
-    if (best) return best.impact;
+    if (best && best.impact.kind === 'cover' && bestBox?.material === 'soft' && penetration) {
+      const energy = best.impact.energy * keep;
+      if (energy >= penetration.minEnergyJ && penetrated.length < penetration.maxLayers) {
+        passed.add(bestBox.id);
+        penetrated.push(bestBox.id);
+        keep *= penetration.energyKeep;
+        i--; // look at this segment again, beyond the layer it went through
+        continue;
+      }
+    }
+    if (best) return scaled(best.impact);
     prev = cur;
   }
   const last = pts[pts.length - 1]!;
-  return { kind: 'none', point: prev, t: last.t, speed: last.speed, energy: last.energy };
+  return scaled({ kind: 'none', point: prev, t: last.t, speed: last.speed, energy: last.energy });
 }
 
 /**

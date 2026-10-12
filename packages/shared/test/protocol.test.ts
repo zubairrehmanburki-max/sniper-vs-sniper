@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyInput, createMatch, decodeView, encodeView, makeCode, resolveShot, thinOutcome, viewFor, type MatchState } from '../src/index.ts';
+import { applyInput, createMatch, decodeView, encodeView, makeCode, resolveImpact, resolveShot, silhouetteFor, thinOutcome, viewFor, type MatchState } from '../src/index.ts';
 import { mapById } from '../src/maps.ts';
 
 function match(): MatchState {
@@ -86,5 +86,39 @@ describe('elo', () => {
     const expected = rateMatch({ rating: 1400, games: 30 }, { rating: 1100, games: 30 });
     expect(upset.winner.rating - 1100).toBeGreaterThan(expected.winner.rating - 1400);
     expect(upset.winner.games).toBe(31);
+  });
+});
+
+describe('soft cover', () => {
+  // A straight, level bullet path along north (yaw 0) at eye height 1 m, losing energy as it goes.
+  const path = (startEnergy: number) => ({
+    points: Array.from({ length: 401 }, (_, i) => ({ t: i * 0.001, x: i, y: 0, z: 0, vx: 800, vy: 0, vz: 0, speed: 800, mach: 2.3, energy: startEnergy - i * 2 })),
+    muzzleVelocity: 800,
+    stability: 1.5,
+    aerodynamicJump: 0,
+    losElevation: 0,
+    termination: 'range' as const,
+  });
+  const eye = { x: 0, y: 1, z: 0 };
+  const tin = { id: 'tin', min: { x: -1, y: 0, z: -101 }, max: { x: 1, y: 2, z: -100 }, material: 'soft' as const };
+  const rock = { ...tin, id: 'rock', material: 'hard' as const };
+  const target = silhouetteFor('T', { x: 0, y: 0, z: -200 }, 'standing', Math.PI);
+  const pen = { minEnergyJ: 2500, energyKeep: 0.7, maxLayers: 1 };
+
+  it('lets a hard enough hit through soft cover, with energy lost', () => {
+    const hit = resolveImpact(path(6000), eye, 0, [target], () => -10, [tin], pen);
+    expect(hit.kind).toBe('target');
+    expect(hit.penetrated).toEqual(['tin']);
+    expect(hit.energy).toBeCloseTo((6000 - 200 * 2) * 0.7, -1);
+  });
+
+  it('stops a weak hit, and hard cover stops everything', () => {
+    expect(resolveImpact(path(2000), eye, 0, [target], () => -10, [tin], pen)).toMatchObject({ kind: 'cover', coverId: 'tin' });
+    expect(resolveImpact(path(9000), eye, 0, [target], () => -10, [rock], pen)).toMatchObject({ kind: 'cover', coverId: 'rock' });
+  });
+
+  it('goes through only as many layers as allowed', () => {
+    const tin2 = { ...tin, id: 'tin2', min: { ...tin.min, z: -151 }, max: { ...tin.max, z: -150 } };
+    expect(resolveImpact(path(9000), eye, 0, [target], () => -10, [tin, tin2], pen)).toMatchObject({ kind: 'cover', coverId: 'tin2', penetrated: ['tin'] });
   });
 });
