@@ -1,0 +1,74 @@
+{
+  "$comment": "Every gameplay-visible number lives here (GAME_PLAN.md, handoff notes). Units are SI unless the key says otherwise. Bullet data are published figures; see config/README.md for sources and deviations from the plan.",
+  "ballistics": {
+    "dtSeconds": 0.0005,
+    "integrator": "rk4",
+    "sightHeightM": 0.045,
+    "zeroRangeM": 100,
+    "muzzleVelocitySdMps": 4,
+    "transonic": { "machThreshold": 1.2, "sigmaRadPerSqrtS": 0.004 },
+    "effects": { "spinDrift": true, "aerodynamicJump": false, "coriolis": false, "transonicDispersion": true }
+  },
+  "rifles": [
+    {
+      "id": "bolt308",
+      "name": "Bolt-action .308",
+      "class": "starter",
+      "cartridge": "7.62x51 / 175 gr match (M118LR class)",
+      "dragModel": "G7",
+      "bc": 0.243,
+      "massKg": 0.01134,
+      "diameterM": 0.00782,
+      "lengthM": 0.0315,
+      "muzzleVelocityMps": 790,
+      "twistM": 0.2858,
+      "sweetSpotM": [300, 700],
+      "coldBoreShiftMrad": { "elevation": 0.1, "windage": 0.0 }
+    },
+    {
+      "id": "bolt65cm",
+      "name": "Bolt-action 6.5 Creedmoor",
+      "class": "precision",
+      "cartridge": "6.5 Creedmoor / 140 gr match",
+      "dragModel": "G7",
+      "bc": 0.315,
+      "massKg": 0.00907,
+      "diameterM": 0.00671,
+      "lengthM": 0.0353,
+      "muzzleVelocityMps": 825,
+      "twistM": 0.2032,
+      "sweetSpotM": [400, 900],
+      "coldBoreShiftMrad": { "elevation": 0.1, "windage": -0.05 }
+    },
+    {
+      "id": "mag338",
+      "name": "Magnum .338",
+      "class": "magnum",
+      "cartridge": ".338 Lapua Magnum / 250 gr",
+      "dragModel": "G7",
+      "bc": 0.322,
+      "massKg": 0.0162,
+      "diameterM": 0.00861,
+      "lengthM": 0.0395,
+      "muzzleVelocityMps": 900,
+      "twistM": 0.254,
+      "sweetSpotM": [600, 1200],
+      "coldBoreShiftMrad": { "elevation": 0.15, "windage": 0.05 }
+    },
+    {
+      "id": "am50",
+      "name": "Anti-materiel .50",
+      "class": "anti-materiel",
+      "cartridge": ".50 BMG / 660 gr",
+      "dragModel": "G7",
+      "bc": 0.36,
+      "massKg": 0.0428,
+      "diameterM": 0.01295,
+      "lengthM": 0.0584,
+      "muzzleVelocityMps": 850,
+      "twistM": 0.381,
+      "sweetSpotM": [800, 1500],
+      "coldBoreShiftMrad": { "elevation": 0.2, "windage": 0.0 }
+    }
+  ]
+}
