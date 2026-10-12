@@ -75,7 +75,7 @@ jobs:
           security unlock-keychain -p "$KC_PASS" "$KC"
           security list-keychains -d user -s "$KC" "$HOME/Library/Keychains/login.keychain-db"
           fastlane match appstore --readonly false --git_url "$MATCH_GIT_URL" --git_branch certificates \
-            --clone_branch_directly --app_identifier com.snipervssniper.game \
+            --app_identifier com.snipervssniper.game \
             --api_key_path "$RUNNER_TEMP/asc/key.json" --team_id "${{ secrets.APPLE_TEAM_ID }}" \
             --keychain_name "$KC" --keychain_password "$KC_PASS"
       - name: Archive (signed)
