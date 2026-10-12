@@ -53,7 +53,10 @@ from `assets/` with `npx @capacitor/assets generate --ios --android`.
 ### TestFlight (iPhone testing without a Mac)
 
 `.github/workflows/testflight.yml` archives, signs and uploads the iOS app from a GitHub macOS
-runner. One-time setup:
+runner. Signing is manual: the first run lets fastlane match create an Apple Distribution
+certificate and an App Store profile with the API key and store them, encrypted, on the
+`certificates` branch (passphrase derived from the key, so there is no extra secret). If the API
+key is ever replaced, delete that branch and the next run recreates them. One-time setup:
 
 1. Join the Apple Developer Program (paid, yearly) and note your Team ID (Membership page).
 2. In App Store Connect, create the app with bundle ID `com.snipervssniper.game` (My Apps → +).
