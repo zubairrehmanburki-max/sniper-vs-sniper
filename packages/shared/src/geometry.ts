@@ -1,11 +1,16 @@
 import type { Vec3 } from '@svs/ballistics';
 
-/** Axis-aligned box in world space. Hard cover stops every bullet; soft cover is for Phase 4 penetration. */
+/**
+ * Axis-aligned box in world space. Hard cover (rock, concrete) stops every bullet; soft cover
+ * (sheet metal, wood) lets a hard enough hit through. Both block sight.
+ */
 export interface Box {
   id: string;
   min: Vec3;
   max: Vec3;
   material: 'hard' | 'soft';
+  /** How it is drawn; defaults to a boulder. */
+  look?: 'rock' | 'concrete' | 'metal' | 'wood';
 }
 
 /**

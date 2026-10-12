@@ -100,7 +100,7 @@ export function resolveShot(req: ShotRequest, cfg: GameConfig = config): ShotOut
     maxTime: 5,
   });
   const target = silhouetteFor(req.target.id, req.target.position, req.target.stance, facingYaw(req.target.side), cfg);
-  const impact = resolveImpact(trajectory, eye, req.input.yaw, [target], req.map.ground, req.map.cover);
+  const impact = resolveImpact(trajectory, eye, req.input.yaw, [target], req.map.ground, req.map.cover, cfg.softCover);
   const call = missCall(trajectory, eye, req.input.yaw, target);
 
   let verdict: Verdict = 'miss';

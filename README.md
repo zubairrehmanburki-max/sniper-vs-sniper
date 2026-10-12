@@ -32,4 +32,9 @@ pnpm typecheck
 - [x] Phase 2: turn system, hotseat, PvE bot
 - [x] Phase 3: online play (quick match, private codes, reconnection)
 - [ ] Phase 4: content and soft launch
+  - [x] Dry Valley, Harbor Rooftops and Alpine Ridge maps, with a map picker
+  - [x] Killcam
+  - [x] Ranked quick match with Elo ratings
+  - [x] Soft cover a big enough round can punch through
+  - [ ] Hosting and soft launch
 - [ ] Phase 5: mobile wrap

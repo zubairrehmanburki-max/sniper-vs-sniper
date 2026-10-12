@@ -618,15 +618,17 @@ export class DuelMode {
       ctx.fillRect(0, bottom, w, h - bottom);
       ctx.fillRect(0, 0, w, top);
     }
-    // Rocks.
-    ctx.fillStyle = '#9a958a';
+    // Cover: hard is grey, soft (bullets of enough energy go through) is blue-grey and dashed.
     ctx.strokeStyle = '#2c2a26';
     for (const box of this.map.cover) {
+      ctx.fillStyle = box.material === 'soft' ? '#8fa3b5' : '#9a958a';
+      ctx.setLineDash(box.material === 'soft' ? [3, 2] : []);
       const a = toScreen({ x: box.min.x, z: box.min.z });
       const b = toScreen({ x: box.max.x, z: box.max.z });
       ctx.fillRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y));
       ctx.strokeRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y));
     }
+    ctx.setLineDash([]);
     // Enemy direction.
     ctx.fillStyle = 'rgba(255,255,255,0.85)';
     ctx.font = '600 12px system-ui, sans-serif';

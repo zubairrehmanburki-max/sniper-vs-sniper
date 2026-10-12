@@ -4,7 +4,7 @@
  */
 import { createRng, hashSeed, solveFiringSolution, uniformWind, windAt, type Vec3, type WindField } from '@svs/ballistics';
 import { config, rifleById, rifleShot, type BotDifficulty, type GameConfig, type Stance } from './config.ts';
-import { activeConditions, other, type MatchInput, type MatchState } from './match.ts';
+import { activeConditions, clampStance, other, type MatchInput, type MatchState } from './match.ts';
 import { chestOf, eyeOf, facingYaw, silhouetteFor, type FireInput } from './combat.ts';
 import { horizontalDistance } from './geometry.ts';
 import { laneWindAt, shotWindField, vectorToShot } from './world.ts';
@@ -43,7 +43,14 @@ export function botMove(state: MatchState, side: Side, cfg: GameConfig = config)
       target = choices[Math.floor(rng.next() * choices.length)]!;
     }
   }
-  const stance: Stance = 'prone';
+  // Lowest stance from which it can see out over its cover toward the enemy zone.
+  const ez = map.zones[other(side)];
+  const lx = (ez.xMin + ez.xMax) / 2;
+  const lz = -(ez.sMin + ez.sMax) / 2;
+  const look = { x: lx, y: map.ground(lx, lz) + 0.6, z: lz };
+  const stances: Stance[] = ['prone', 'crouch', 'standing'];
+  const sees = stances.find((st) => lineOfSight(eyeOf(target, st, cfg), look, map.ground, map.cover));
+  const stance: Stance = clampStance(state, sees ?? 'prone', cfg);
   const at = state.phase === 'setup' ? 1 + rng.next() * 3 : 3 + rng.next() * 8;
   return [
     { at, input: { type: 'place', side, position: target, stance, time: 0 } },

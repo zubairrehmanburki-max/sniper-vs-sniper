@@ -110,7 +110,8 @@ export function buildWorld(opts: WorldOptions): RangeView {
     const n = rand();
     const [lh, ls, ll] = pal.lane ?? [0.2, 0.35, 0.42];
     const [oh, os, ol] = pal.outside ?? [0.17, 0.3, 0.36];
-    if (inLane) out.setHSL(lh, ls, ll + n * 0.04);
+    if (pal.water && ground(x, z) < -0.5) out.setHSL(pal.water[0], pal.water[1], pal.water[2] + n * 0.03);
+    else if (inLane) out.setHSL(lh, ls, ll + n * 0.04);
     else out.setHSL(oh + n * 0.04, os + n * 0.1, ol + n * 0.08);
   };
   const c = new THREE.Color();
@@ -170,10 +171,22 @@ export function buildWorld(opts: WorldOptions): RangeView {
 
   // Rocks: the boxes the hit test uses, drawn as faceted boulders filling the same volume.
   const rockMat = new THREE.MeshLambertMaterial({ color: pal.rocks ?? '#8e8a80', flatShading: true });
+  const builtMats: Record<string, THREE.Material> = {
+    concrete: new THREE.MeshLambertMaterial({ color: '#a9a49a' }),
+    metal: new THREE.MeshLambertMaterial({ color: '#7f8d99' }),
+    wood: new THREE.MeshLambertMaterial({ color: '#86643f' }),
+  };
   for (const box of opts.cover ?? []) {
     const w = box.max.x - box.min.x;
     const h = box.max.y - box.min.y;
     const d = box.max.z - box.min.z;
+    if (box.look && box.look !== 'rock') {
+      // Man-made cover is drawn as the plain box it is.
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), builtMats[box.look]);
+      mesh.position.set((box.min.x + box.max.x) / 2, (box.min.y + box.max.y) / 2, (box.min.z + box.max.z) / 2);
+      scene.add(mesh);
+      continue;
+    }
     const geo = new THREE.BoxGeometry(w, h, d, 2, 2, 2);
     const p = geo.attributes.position!;
     for (let i = 0; i < p.count; i++) {

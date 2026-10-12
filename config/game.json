@@ -170,6 +170,12 @@
     "speedOfSoundForAudioMps": 343,
     "firingPointHeightM": 1.2
   },
+  "softCover": {
+    "$comment": "Sheet metal and wood: a hit carrying at least minEnergyJ goes through, keeping energyKeep of its energy (GAME_PLAN: ~30% loss). The .338 and .50 can punish someone hiding behind it; the .308 and 6.5 only up close.",
+    "minEnergyJ": 2500,
+    "energyKeep": 0.7,
+    "maxLayers": 1
+  },
   "rules": {
     "$comment": "Match rules (GAME_PLAN core loop + damage model). chestKillEnergyJ deviates from the plan's 2500 J: at 2500 J a .308 could never kill with a chest hit beyond ~150 m. See config/README.md.",
     "setupSeconds": 60,
@@ -179,6 +185,8 @@
     "suddenDeathAfterPairs": 16,
     "suddenDeathWindDecayPerPair": 0.25,
     "suddenDeathZoneShrinkPerPair": 0.15,
+    "suddenDeathNoProneAfterPairs": 2,
+    "suddenDeathStandingAfterPairs": 4,
     "minZoneDepthM": 8,
     "chestKillEnergyJ": 1500,
     "woundsToDown": 2,
