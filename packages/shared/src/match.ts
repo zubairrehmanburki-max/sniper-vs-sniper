@@ -82,7 +82,9 @@ export type MatchInput =
   | { type: 'place'; side: Side; position: Vec3; stance: Stance; time: number }
   | { type: 'ready'; side: Side; time: number }
   | { type: 'fire'; side: Side; input: FireInput; time: number }
-  | { type: 'nextRound'; time: number };
+  | { type: 'nextRound'; time: number }
+  /** A player quits or never comes back: the other side wins. */
+  | { type: 'forfeit'; side: Side; time: number };
 
 export interface StepResult {
   state: MatchState;
@@ -333,6 +335,15 @@ export function applyInput(prev: MatchState, input: MatchInput, cfg: GameConfig 
 
   switch (input.type) {
     case 'tick':
+      return { state };
+
+    case 'forfeit':
+      state.winner = other(input.side);
+      state.forfeit = true;
+      state.phase = 'matchOver';
+      state.actor = null;
+      state.phaseStart = input.time;
+      state.phaseEnd = Infinity;
       return { state };
 
     case 'nextRound':

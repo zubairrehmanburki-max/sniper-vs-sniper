@@ -1,6 +1,7 @@
 /**
- * Duel on one device: two humans passing the device (hotseat), or a human against the bot.
+ * A duel: two humans passing the device (hotseat), a human against the bot, or an online match.
  * The match itself is @svs/shared's pure state machine; this file only renders it and feeds inputs.
+ * Offline the reducer runs here; online the server runs it and sends this player's view.
  */
 import { gustFactor, solveFiringSolution, type Vec3 } from '@svs/ballistics';
 import {
@@ -28,6 +29,7 @@ import {
   type DuelMap,
   type MatchInput,
   type MatchState,
+  type MatchView,
   type ShotOutcome,
   type Side,
   type Stance,
@@ -35,6 +37,7 @@ import {
 import { playShotFeedback } from './practiceMode.ts';
 import { spotterCall } from './format.ts';
 import { buildWorld } from './scene.ts';
+import type { OnlineLink } from './net.ts';
 import { $, type Shooter } from './shooter.ts';
 
 export interface DuelSetup {
@@ -43,6 +46,8 @@ export interface DuelSetup {
   /** Bot difficulty for side B, or undefined for hotseat. */
   bot?: BotDifficulty;
   mapId?: string;
+  /** Online match: the server link and its first view of the match. */
+  online?: { link: OnlineLink; view: MatchView };
 }
 
 type Screen = 'map' | 'scope' | 'wait' | 'card';
@@ -58,26 +63,40 @@ export class DuelMode {
   private phaseKey = '';
   private setupTurn: Side = 'A';
   private pendingCard: (() => void) | null = null;
+  private readonly online: OnlineLink | null;
+  private connection: 'ok' | 'dropped' = 'ok';
 
   constructor(
     private readonly shooter: Shooter,
     private readonly setup: DuelSetup,
     private readonly onExit: () => void,
   ) {
-    this.map = mapById(setup.mapId ?? 'training-lane');
-    const seed = (Date.now() ^ (Math.random() * 0x7fffffff)) >>> 0;
-    this.humans = setup.bot ? ['A'] : ['A', 'B'];
-    this.viewer = 'A';
-    shooter.time = 0;
-    this.state = createMatch({
-      seed,
-      mapId: this.map.id,
-      players: {
-        A: { name: setup.names.A, rifleId: setup.rifles.A },
-        B: { name: setup.names.B, rifleId: setup.rifles.B, bot: setup.bot },
-      },
-      time: 0,
-    });
+    this.online = setup.online?.link ?? null;
+    let seed: number;
+    if (setup.online) {
+      // The match seed stays on the server; scenery only needs some seed both players can share.
+      const v = setup.online.view;
+      seed = 0x5eed;
+      this.state = v;
+      this.humans = [v.you];
+      this.viewer = v.you;
+      shooter.time = v.now;
+    } else {
+      seed = (Date.now() ^ (Math.random() * 0x7fffffff)) >>> 0;
+      this.humans = setup.bot ? ['A'] : ['A', 'B'];
+      this.viewer = 'A';
+      shooter.time = 0;
+      this.state = createMatch({
+        seed,
+        mapId: setup.mapId ?? 'training-lane',
+        players: {
+          A: { name: setup.names.A, rifleId: setup.rifles.A },
+          B: { name: setup.names.B, rifleId: setup.rifles.B, bot: setup.bot },
+        },
+        time: 0,
+      });
+    }
+    this.map = mapById(this.state.mapId);
     const view = buildWorld({
       seed,
       ground: this.map.ground,
@@ -102,7 +121,7 @@ export class DuelMode {
       rangeables: () => {
         const e = this.state.players[other(this.viewer)];
         return {
-          targets: [silhouetteFor(e.side, e.position, e.stance, facingYaw(e.side))],
+          targets: this.enemyVisible() ? [silhouetteFor(e.side, e.position, e.stance, facingYaw(e.side))] : [],
           ground: this.map.ground,
           cover: this.map.cover,
         };
@@ -112,6 +131,18 @@ export class DuelMode {
       onFrame: () => this.frame(),
     });
     this.bindUi();
+    this.online?.listen({
+      update: (v, outcome) => this.remote(v, outcome),
+      error: (message) => this.shooter.call(message),
+      connection: (c) => {
+        if (c === 'lost') {
+          this.card('Connection lost', 'Could not get back to the game server. If you do not return in time the match is forfeited.', false, () => this.exit());
+          $('card-go').textContent = 'Back to menu';
+        }
+        this.connection = c === 'dropped' ? 'dropped' : 'ok';
+        this.renderBar();
+      },
+    });
     $('rifle').hidden = true;
     $('log').innerHTML = '';
     document.body.classList.add('duel');
@@ -121,6 +152,13 @@ export class DuelMode {
   // ---- inputs ------------------------------------------------------------
 
   private input(input: MatchInput): void {
+    if (this.online) {
+      // The server stamps the time and runs the reducer; its answer arrives as an update.
+      if (input.type === 'place') this.online.send({ type: 'place', position: input.position, stance: input.stance });
+      else if (input.type === 'ready') this.online.send({ type: 'ready' });
+      else if (input.type === 'fire') this.online.send({ type: 'fire', input: input.input });
+      return;
+    }
     const r = applyInput(this.state, input);
     if (r.error) {
       if (this.humans.includes((input as { side?: Side }).side ?? 'A')) this.shooter.call(r.error);
@@ -130,6 +168,21 @@ export class DuelMode {
     this.state = r.state;
     if (r.outcome) this.onShot(before, r.outcome);
     else this.checkPhase();
+  }
+
+  /** A new view from the server, with the shot that produced it if there was one. */
+  private remote(view: MatchView, outcome?: ShotOutcome): void {
+    if (Math.abs(this.shooter.time - view.now) > 0.25) this.shooter.time = view.now;
+    const before = this.state;
+    this.state = view;
+    if (outcome) this.onShot(before, outcome);
+    else if (view.phase === 'matchOver' && before.phase !== 'matchOver') this.matchOver(); // forfeit or idle timeout
+    else this.checkPhase();
+  }
+
+  /** Offline both figures are known; online the server only sends the enemy when you can see it. */
+  private enemyVisible(): boolean {
+    return !this.online || (this.state as MatchView).enemySeen;
   }
 
   private bindUi(): void {
@@ -188,6 +241,10 @@ export class DuelMode {
 
   private frame(): void {
     if (!this.shooter.running) {
+      this.renderBar();
+      return;
+    }
+    if (this.online) {
       this.renderBar();
       return;
     }
@@ -276,7 +333,7 @@ export class DuelMode {
     const enemy = s.players[other(this.viewer)];
     this.shooter.view!.setFigure(
       'enemy',
-      scope
+      scope && this.enemyVisible()
         ? { position: enemy.position, stance: enemy.stance, facingYaw: facingYaw(enemy.side), dims: config.player.silhouette[enemy.stance] }
         : null,
     );
@@ -314,7 +371,7 @@ export class DuelMode {
     if (humanShot) playShotFeedback(this.shooter, outcome.trajectory, outcome.eye, outcome.yaw, outcome.impact, rifle.diameterM);
     else this.shooter.audio.shot(rifle.diameterM > 0.0085 ? 0.8 : 0.6);
 
-    const dist = Math.round(Math.hypot(target.position.x - shooter.position.x, target.position.z - shooter.position.z));
+    const dist = Math.round(this.state.shots.at(-1)?.distance ?? 0);
     let headline: string;
     if (outcome.verdict === 'kill') headline = `${shooter.name} killed ${target.name}`;
     else if (outcome.verdict === 'wound') headline = `${shooter.name} wounded ${target.name}`;
@@ -326,13 +383,16 @@ export class DuelMode {
       detail.push(`The bullet hit cover at ${dist} m.`);
     } else if (humanShot && outcome.call) {
       detail.push(`Spotter: ${spotterCall(outcome.call.upMrad, outcome.call.rightMrad)} at ${dist} m.`);
+    } else if (humanShot) {
+      const at = Math.round(Math.hypot(outcome.impact.point.x - outcome.eye.x, outcome.impact.point.z - outcome.eye.z));
+      detail.push(`Spotter: dust at ${at} m, well short of the target at ${dist} m.`);
     }
     if (outcome.nearMiss) detail.push(`${target.name} heard the snap: it passed within a metre.`);
     if (!humanShot) detail.push(`The shot came from ${dist} m away. Its position is revealed until it moves.`);
 
     const after = this.state;
     const wait = humanShot ? outcome.impact.t * 1000 + 700 : 300;
-    this.shooter.running = false;
+    if (!this.online) this.shooter.running = false;
     window.setTimeout(() => {
       this.card(headline, detail.join(' '), outcome.verdict !== 'miss', () => {
         if (after.phase === 'roundOver') this.roundOver();
@@ -343,7 +403,7 @@ export class DuelMode {
   }
 
   private card(title: string, text: string, hit: boolean, next: () => void): void {
-    this.shooter.running = false;
+    if (!this.online) this.shooter.running = false; // offline the clock waits; online the server does not
     this.pendingCard = next;
     $('card-title').textContent = title;
     $('card-title').classList.toggle('hit', hit);
@@ -358,18 +418,26 @@ export class DuelMode {
 
   private roundOver(): void {
     const w = this.state.players[this.state.roundWinner!];
-    this.card(`Round ${this.state.round} to ${w.name}`, `${this.score()}. First to ${config.rules.killsToWin} kills wins. Positions reset and the weather drifts.`, false, () => {
-      this.input({ type: 'nextRound', time: this.shooter.time });
+    const next = this.online ? 'The next round starts in a few seconds.' : 'Positions reset and the weather drifts.';
+    this.card(`Round ${this.state.round} to ${w.name}`, `${this.score()}. First to ${config.rules.killsToWin} kills wins. ${next}`, false, () => {
+      if (this.online) this.checkPhase();
+      else this.input({ type: 'nextRound', time: this.shooter.time });
     });
   }
 
   private matchOver(): void {
     const w = this.state.players[this.state.winner!];
-    this.card(`${w.name} wins the match`, `${this.score()} in ${this.state.round} rounds, ${this.state.shots.length} shots fired.`, true, () => this.exit());
+    const how = this.state.forfeit ? `${this.state.players[other(w.side)].name} forfeited.` : `${this.state.round} rounds, ${this.state.shots.length} shots fired.`;
+    this.card(`${w.name} wins the match`, `${this.score()}. ${how}`, true, () => this.exit());
     $('card-go').textContent = 'Back to menu';
   }
 
   private exit(): void {
+    if (this.online) {
+      if (this.state.phase !== 'matchOver') this.online.send({ type: 'forfeit' });
+      this.online.handlers = null;
+      this.online.leave();
+    }
     this.shooter.running = true;
     this.shooter.inputEnabled = false;
     $('card').hidden = true;
@@ -433,7 +501,9 @@ export class DuelMode {
     const a = activeConditions(s).atmosphere;
     $('weather').textContent = `${a.temperatureC.toFixed(0)} °C · ${a.pressureHPa.toFixed(0)} hPa · ${(a.humidity * 100).toFixed(0)}% RH`;
     const me = s.players[this.viewer];
-    const status = me.wounds > 0 ? ' · wounded' : '';
+    let status = me.wounds > 0 ? ' · wounded' : '';
+    if (this.online && this.connection === 'dropped') status += ' · connection lost, reconnecting…';
+    else if (this.online && !(s as MatchView).opponentConnected && s.phase !== 'matchOver') status += ' · opponent disconnected, holding their seat';
     $('me').textContent = `${me.name} · ${rifleById(me.rifleId).name} · ${me.stance}${status}`;
   }
 

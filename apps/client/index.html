@@ -128,6 +128,20 @@
               </select>
             </span>
           </div>
+          <div class="online">
+            <h2>Online</h2>
+            <p class="muted">Plays as Player 1 with that rifle.</p>
+            <div class="menu-buttons">
+              <button id="play-quick" class="primary">Quick match</button>
+              <button id="play-create" class="primary">Private game</button>
+              <span class="join">
+                <input id="join-code" placeholder="Code" maxlength="4" autocapitalize="characters" autocomplete="off" aria-label="Private game code" />
+                <button id="play-join" class="primary">Join</button>
+              </span>
+            </div>
+            <p id="online-status" class="online-status" hidden></p>
+            <button id="online-cancel" hidden>Cancel</button>
+          </div>
           <p class="touch-only muted">Drag to aim. Scope, zoom, turrets, Hold breath and Fire are on screen.</p>
           <ul class="keys desktop-only">
             <li><b>Mouse / drag</b> aim · <b>Right-click / Z</b> scope · <b>Wheel / Q E</b> zoom</li>

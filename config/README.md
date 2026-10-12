@@ -26,3 +26,7 @@ Bullet lengths and twist rates (needed for spin drift) are typical published val
 - The frozen player sees nothing of the enemy's shot phase live (the plan's recommendation); the
   result is shown to both players afterwards.
 - Best of 3 kills stays as written until playtests say otherwise.
+- Online, a round ends with an `rules.roundBreakSeconds` pause (8 s) before the next setup, instead
+  of waiting for both players to tap Continue. A dropped player's seat is held for
+  `rules.reconnectGraceSeconds` (60 s, as in the plan); the phase clock keeps running meanwhile, so
+  the idle-forfeit rule still applies.

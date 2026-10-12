@@ -84,6 +84,10 @@ export interface GameConfig {
     woundsToDown: number;
     nearMissRadiusM: number;
     forfeitAfterIdlePhases: number;
+    /** Online: pause between a round's last shot and the next setup, s. */
+    roundBreakSeconds: number;
+    /** Online: how long a dropped player's seat is held before they forfeit, s. */
+    reconnectGraceSeconds: number;
     roundWindDrift: number;
   };
   player: {

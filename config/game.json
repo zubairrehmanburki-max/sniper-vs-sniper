@@ -184,6 +184,8 @@
     "woundsToDown": 2,
     "nearMissRadiusM": 1.0,
     "forfeitAfterIdlePhases": 2,
+    "roundBreakSeconds": 8,
+    "reconnectGraceSeconds": 60,
     "roundWindDrift": 0.25
   },
   "player": {

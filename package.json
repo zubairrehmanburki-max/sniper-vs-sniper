@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter @svs/client dev",
+    "server": "pnpm --filter @svs/server dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
