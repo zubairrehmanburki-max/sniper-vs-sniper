@@ -25,30 +25,30 @@
 <div style="position: absolute; left: 356px; top: 116px; width: 290px; display: flex; flex-direction: column; gap: 6px">
 <div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.18em; color: #A7AD9F">XP EARNED</div>
 <div style="padding: 10px 12px; background: rgba(10,12,11,0.7); display: flex; flex-direction: column; gap: 6px; font-size: 12px">
-<div style="display: flex; justify-content: space-between"><span>Duel won</span><span style="font-family: 'Share Tech Mono', monospace">+1,200</span></div>
-<div style="display: flex; justify-content: space-between"><span>First-shot hit</span><span style="font-family: 'Share Tech Mono', monospace">+300</span></div>
-<div style="display: flex; justify-content: space-between"><span>Headshot</span><span style="font-family: 'Share Tech Mono', monospace">+250</span></div>
-<div style="display: flex; justify-content: space-between"><span>Daily order: 3 first-round hits</span><span style="font-family: 'Share Tech Mono', monospace">+500</span></div>
+<div data-bind="xp0" style="display: flex; justify-content: space-between"><span data-bind="xp0k">Duel won</span><span data-bind="xp0v" style="font-family: 'Share Tech Mono', monospace">+1,200</span></div>
+<div data-bind="xp1" style="display: flex; justify-content: space-between"><span data-bind="xp1k">First-shot hit</span><span data-bind="xp1v" style="font-family: 'Share Tech Mono', monospace">+300</span></div>
+<div data-bind="xp2" style="display: flex; justify-content: space-between"><span data-bind="xp2k">Headshot</span><span data-bind="xp2v" style="font-family: 'Share Tech Mono', monospace">+250</span></div>
+<div data-bind="xp3" style="display: flex; justify-content: space-between"><span data-bind="xp3k">Daily order: 3 first-round hits</span><span data-bind="xp3v" style="font-family: 'Share Tech Mono', monospace">+500</span></div>
 <div style="height: 1px; background: rgba(237,239,232,0.16)"></div>
-<div style="display: flex; justify-content: space-between; font-weight: 600"><span>TOTAL</span><span style="font-family: 'Share Tech Mono', monospace; color: #F2B33D">+2,250</span></div>
+<div style="display: flex; justify-content: space-between; font-weight: 600"><span>TOTAL</span><span data-bind="xpTotal" style="font-family: 'Share Tech Mono', monospace; color: #F2B33D">+2,250</span></div>
 </div>
 <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 2px">
-<div style="display: flex; justify-content: space-between; font-size: 11px; letter-spacing: 0.1em"><span>LEVEL 42</span><span style="color: #A7AD9F">LEVEL 43</span></div>
-<div style="height: 6px; background: rgba(237,239,232,0.14); display: flex"><div style="width: 68%; height: 6px; background: #EDEFE8"></div><div style="width: 22%; height: 6px; background: #F2B33D"></div></div>
+<div style="display: flex; justify-content: space-between; font-size: 11px; letter-spacing: 0.1em"><span data-bind="lvl">LEVEL 42</span><span data-bind="lvlNext" style="color: #A7AD9F">LEVEL 43</span></div>
+<div style="height: 6px; background: rgba(237,239,232,0.14); display: flex"><div data-bind="lvlBase" style="width: 68%; height: 6px; background: #EDEFE8"></div><div data-bind="lvlGain" style="width: 22%; height: 6px; background: #F2B33D"></div></div>
 </div>
 </div>
 
 <div style="position: absolute; right: 30px; top: 116px; width: 230px; padding: 14px; box-sizing: border-box; background: rgba(10,12,11,0.74); border: 1px solid rgba(237,239,232,0.14); display: flex; flex-direction: column; align-items: center; gap: 6px">
-<div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.18em; color: #A7AD9F">RANKED</div>
+<div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.18em; color: #A7AD9F" data-bind="rankMode">RANKED</div>
 <svg width="70" height="70" viewBox="0 0 70 70" aria-hidden="true"><path d="M35 4 L62 18 L62 44 L35 66 L8 44 L8 18 Z" fill="rgba(159,196,255,0.14)" stroke="#9fc4ff" stroke-width="2"></path><path d="M22 30 L35 22 L48 30 M22 40 L35 32 L48 40" fill="none" stroke="#9fc4ff" stroke-width="3"></path></svg>
-<div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: 0.06em">MARKSMAN II</div>
-<div style="display: flex; align-items: baseline; gap: 8px"><span style="font-family: 'Share Tech Mono', monospace; font-size: 24px">1,408</span><span style="font-family: 'Share Tech Mono', monospace; font-size: 14px; color: #F2B33D">+24</span></div>
-<div style="width: 100%; height: 4px; background: rgba(237,239,232,0.14)"><div style="width: 81%; height: 4px; background: #9fc4ff"></div></div>
-<div style="font-size: 11px; color: #A7AD9F">92 to Marksman I</div>
+<div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: 0.06em" data-bind="rank">MARKSMAN II</div>
+<div style="display: flex; align-items: baseline; gap: 8px"><span data-bind="rating" style="font-family: 'Share Tech Mono', monospace; font-size: 24px">1,408</span><span data-bind="delta" style="font-family: 'Share Tech Mono', monospace; font-size: 14px; color: #F2B33D">+24</span></div>
+<div style="width: 100%; height: 4px; background: rgba(237,239,232,0.14)"><div data-bind="rankBar" style="width: 81%; height: 4px; background: #9fc4ff"></div></div>
+<div style="font-size: 11px; color: #A7AD9F; text-align: center" data-bind="rankNext">92 to Marksman I</div>
 </div>
 
 <div style="position: absolute; left: 30px; right: 30px; bottom: 18px; display: flex; gap: 10px; justify-content: flex-end">
-<button data-on="bulletcam" style="height: 46px; padding: 0 22px; border: 1px solid rgba(237,239,232,0.3); background: rgba(10,12,11,0.5); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 0.14em; display: flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="2" aria-hidden="true"><path d="M8 5l11 7-11 7z"></path></svg>WATCH BULLET CAM</button>
+<button data-on="bulletcam" data-bind="bulletcam" style="height: 46px; padding: 0 22px; border: 1px solid rgba(237,239,232,0.3); background: rgba(10,12,11,0.5); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 0.14em; display: flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="2" aria-hidden="true"><path d="M8 5l11 7-11 7z"></path></svg>WATCH BULLET CAM</button>
 <button style="height: 46px; padding: 0 22px; border: 1px solid rgba(237,239,232,0.3); background: rgba(10,12,11,0.5); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 0.14em" data-on="rematch">REMATCH</button>
 <button style="height: 46px; padding: 0 34px; border: none; background: #F2B33D; color: #14120c; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: 0.16em" data-on="continue">CONTINUE</button>
 </div>

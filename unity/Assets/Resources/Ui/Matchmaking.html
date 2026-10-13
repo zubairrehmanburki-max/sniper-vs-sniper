@@ -35,18 +35,18 @@
 <div style="display: flex; flex-direction: column; gap: 3px">
 <div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px; color: #A7AD9F" data-bind="opponent">SEARCHING…</div>
 <div style="font-size: 11px; color: #A7AD9F; letter-spacing: 0.08em">RATING RANGE <span data-bind="ratingRange" style="font-family: 'Share Tech Mono', monospace">1,264–1,504</span></div>
-<div style="font-size: 11px; color: #A7AD9F">Widens every 10 s</div>
+<div style="font-size: 11px; color: #A7AD9F" data-bind="widens">Widens every 10 s</div>
 </div>
 </div>
 
 <div style="position: absolute; left: 0; right: 0; bottom: 74px; display: flex; justify-content: center; gap: 28px; font-size: 11px; letter-spacing: 0.12em; color: #A7AD9F">
 <span>EST. WAIT <span style="font-family: 'Share Tech Mono', monospace; color: #EDEFE8" data-bind="wait">0:20</span></span>
-<span>REGION <span style="font-family: 'Share Tech Mono', monospace; color: #EDEFE8">EU-WEST · 38 ms</span></span>
+<span>REGION <span data-bind="region" style="font-family: 'Share Tech Mono', monospace; color: #EDEFE8">EU-WEST · 38 ms</span></span>
 <span>FORMAT <span style="font-family: 'Share Tech Mono', monospace; color: #EDEFE8">BEST OF 3</span></span>
 </div>
 
 <div style="position: absolute; left: 0; right: 0; bottom: 18px; display: flex; justify-content: center; gap: 10px">
 <button data-on="cancel" style="width: 200px; height: 46px; border: 1px solid rgba(237,239,232,0.35); background: rgba(10,12,11,0.5); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 17px; letter-spacing: 0.18em">CANCEL</button>
-<button data-on="bot" style="width: 200px; height: 46px; border: 1px solid rgba(237,239,232,0.2); background: rgba(10,12,11,0.5); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 17px; letter-spacing: 0.14em; color: #A7AD9F">PLAY BOT WHILE WAITING</button>
+<button data-on="bot" data-bind="bot" style="width: 200px; height: 46px; border: 1px solid rgba(237,239,232,0.2); background: rgba(10,12,11,0.5); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 17px; letter-spacing: 0.14em; color: #A7AD9F">PLAY BOT WHILE WAITING</button>
 </div>
 </div>

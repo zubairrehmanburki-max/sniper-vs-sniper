@@ -28,6 +28,11 @@ namespace SniperDuel.Game
 
         public MatchState State = null!;
         public event Action<MatchState>? Finished;
+        /// <summary>Your last shot and last hit of the match, with bullet cam captions, for a replay from the results.</summary>
+        public ShotOutcome? LastShot { get; private set; }
+        public string LastShotWho { get; private set; } = "";
+        public ShotOutcome? LastHit { get; private set; }
+        public string LastHitWho { get; private set; } = "";
 
         double time;
         readonly List<MatchInput> botQueue = new List<MatchInput>();
@@ -71,7 +76,7 @@ namespace SniperDuel.Game
             var botRifle = cfg.Rifles.Count > 1 ? cfg.Rifles[1].Id : rifleId;
             d.State = Match.CreateMatch(seed, arena.Map.Id, new PerSide<PlayerSetup>(
                 new PlayerSetup(playerName, rifleId),
-                new PlayerSetup(BotName(bot), botRifle, bot)), 0, cfg);
+                new PlayerSetup(Catalog.BotName(bot), botRifle, bot)), 0, cfg);
             d.zoom = (int)Math.Round((cfg.Scope.MinZoom + cfg.Scope.MaxZoom) / 2);
             d.BindScreens();
             d.EnterPhase();
@@ -79,13 +84,6 @@ namespace SniperDuel.Game
             d.ShowHud();
             return d;
         }
-
-        static string BotName(BotDifficulty d) => d switch
-        {
-            BotDifficulty.Easy => "RECRUIT",
-            BotDifficulty.Hard => "GHOSTWIND",
-            _ => "VIPER",
-        };
 
         // ---- screens -------------------------------------------------------
 
@@ -102,6 +100,7 @@ namespace SniperDuel.Game
             hud.OnHold("breath", SetBreath);
             Look(hud.Root);
             ApplyHudSettings(hud);
+            HudLayoutMenu.ApplyTo(hud);
 
             var scope = ui.Get("Scope");
             scope.On("exit", () => SetScoped(false));
@@ -308,6 +307,11 @@ namespace SniperDuel.Game
                 else CheckPhase();
             };
             resumeAt = time + (mine ? tof + 0.6 : 0.4);
+            if (mine && o.Trajectory.Points.Count > 1)
+            {
+                LastShot = o;
+                LastShotWho = $"ROUND {before.Round + 1} · {before.Players[Me].Name} → {before.Players[Side.B].Name}";
+            }
             if (cinematic) PlayBulletCam(o, before);
         }
 
@@ -318,10 +322,22 @@ namespace SniperDuel.Game
             resume = () => { };
             resumeAt = double.MaxValue;
             director = true;
+            LastHit = o;
+            LastHitWho = LastShotWho;
+            Replay(ui, rig, arena, o, LastHitWho, () =>
+            {
+                director = false;
+                SetScoped(scoped);
+                resume = next;
+                resumeAt = time;
+            });
+        }
+
+        /// <summary>Plays the bullet cam for one shot on the Killcam screen; done runs when it ends or is skipped.</summary>
+        public static BulletCam Replay(UiHost ui, CameraRig rig, Arena arena, ShotOutcome o, string who, Action done)
+        {
             var k = ui.Show("Killcam");
-            var a = before.Players[Me];
-            var b = before.Players[Side.B];
-            k.Text("who", $"ROUND {before.Round + 1} · {a.Name} → {b.Name}");
+            k.Text("who", who);
             var last = o.Trajectory.Points[o.Trajectory.Points.Count - 1];
             k.Text("tof", $"{o.Impact.T:0.00} s");
             k.Text("energy", $"{o.Impact.Energy / 1000:0.0} kJ");
@@ -335,15 +351,10 @@ namespace SniperDuel.Game
                 if (k.Has("knob")) k["knob"].style.left = Length.Percent(f * 100);
                 k.Text("speed", $"{speed:0.00}×");
                 k.Text("distance", $"{dist * f:0} / {dist:0} m");
-            }, () =>
-            {
-                director = false;
-                SetScoped(scoped);
-                resume = next;
-                resumeAt = time;
-            }, arena.Enemy);
+            }, done, arena.Enemy);
             k.On("skip", cam.Finish);
             k.On("pause", () => cam.Paused = !cam.Paused);
+            return cam;
         }
 
         void Pause(double seconds, Action next)
