@@ -37,7 +37,19 @@ namespace SniperDuel.Game.World
                 float w = name.Contains("Spine") || name == "Neck" ? 0.045f : name.Contains("Leg") ? 0.04f : name.Contains("Arm") ? 0.03f : 0.022f;
                 bone.Beam(pt.position, t.position, w, w);
             }
-            Bones(target, "Head", b => bone.Box(b.position + b.up * 0.09f, new Vector3(0.15f, 0.19f, 0.17f), b.rotation));
+            // Skull: three hoops round an egg from the neck to the crown, and a jaw bar.
+            Bones(target, "Head", b =>
+            {
+                var crown = target.Bones.TryGetValue("HeadTop_End", out var ht) ? ht.position : b.position + b.up * 0.2f;
+                var up = (crown - b.position).normalized;
+                var c = Vector3.Lerp(b.position, crown, 0.5f);
+                var side = Vector3.ProjectOnPlane(b.right, up).normalized;
+                var front = Vector3.Cross(side, up);
+                Hoop(bone, c, up, side, front, 0.075f, 0.09f, 0.012f);
+                Hoop(bone, c, side, up, front, 0.1f, 0.09f, 0.012f);
+                Hoop(bone, c, front, side, up, 0.075f, 0.1f, 0.012f);
+                bone.Beam(c - up * 0.07f + front * 0.07f - side * 0.04f, c - up * 0.07f + front * 0.07f + side * 0.04f, 0.02f, 0.02f);
+            });
             // Rib cage: pairs of ribs curving from the spine round to the breastbone, sloping down
             // toward the front, with a gap at the sternum.
             Bones(target, "Spine1", s1 =>

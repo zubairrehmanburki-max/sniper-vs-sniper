@@ -232,16 +232,81 @@ namespace SniperDuel.Game.World
             var inner = new GameObject("Rifle").transform;
             inner.SetParent(parent, false);
             rifle.transform.SetParent(inner, false);
+            if (hd) Freeze(rifle);
             var rb = Library.BoundsOf(rifle);
             // The long axis may run along x; turn it so it runs along z.
             if (rb.size.x > rb.size.z) rifle.transform.localRotation = Quaternion.Euler(0, 90, 0);
             rb = Library.BoundsOf(rifle);
             float len = Mathf.Max(rb.size.x, rb.size.z);
             if (hd && len > 1e-3f) rifle.transform.localScale *= 1.3f / len;
+            // The barrel end is the slim one: if the bulk (stock) is at +z, turn it round.
+            if (hd && StockAhead(rifle, inner)) rifle.transform.localRotation = Quaternion.Euler(0, 180, 0) * rifle.transform.localRotation;
             rb = Library.BoundsOf(rifle);
             // Centre it on its parent.
             rifle.transform.position -= rb.center - inner.position;
             return inner.gameObject;
+        }
+
+        /// <summary>
+        /// Turns a model's skinned meshes into static ones (they draw nothing in the capture build)
+        /// and gives every renderer a URP Lit material in its imported colour and texture.
+        /// </summary>
+        static void Freeze(GameObject go)
+        {
+            foreach (var r in go.GetComponentsInChildren<Renderer>())
+            {
+                var mats = new Material[r.sharedMaterials.Length];
+                for (int i = 0; i < mats.Length; i++)
+                {
+                    var src = r.sharedMaterials[i];
+                    var m = new Material(Library.Template("Lit")) { name = "Rifle " + r.name };
+                    var tex = src == null ? null : src.HasProperty("baseColorTexture") ? src.GetTexture("baseColorTexture") : src.mainTexture;
+                    m.SetTexture("_BaseMap", tex);
+                    m.SetColor("_BaseColor", src != null && src.HasProperty("baseColorFactor") ? src.GetColor("baseColorFactor") : Color.white);
+                    m.SetTexture("_MetallicGlossMap", NonMetal);
+                    m.SetFloat("_Metallic", 0);
+                    m.SetFloat("_Smoothness", 0.35f);
+                    mats[i] = m;
+                }
+                if (r is SkinnedMeshRenderer skin)
+                {
+                    var mesh = new Mesh { name = skin.name + " (frozen)" };
+                    skin.BakeMesh(mesh, true);
+                    mesh.RecalculateBounds();
+                    var host = skin.gameObject;
+                    DestroyImmediate(skin);
+                    host.AddComponent<MeshFilter>().sharedMesh = mesh;
+                    host.AddComponent<MeshRenderer>().sharedMaterials = mats;
+                }
+                else r.sharedMaterials = mats;
+            }
+        }
+
+        /// <summary>Whether the deeper (stock) end of a model lies toward +z of `frame`.</summary>
+        static bool StockAhead(GameObject go, Transform frame)
+        {
+            float zMin = float.MaxValue, zMax = float.MinValue;
+            var pts = new List<Vector3>();
+            foreach (var mf in go.GetComponentsInChildren<MeshFilter>())
+            {
+                if (mf.sharedMesh == null || !mf.sharedMesh.isReadable) continue;
+                foreach (var v in mf.sharedMesh.vertices)
+                {
+                    var p = frame.InverseTransformPoint(mf.transform.TransformPoint(v));
+                    pts.Add(p);
+                    zMin = Mathf.Min(zMin, p.z);
+                    zMax = Mathf.Max(zMax, p.z);
+                }
+            }
+            if (pts.Count == 0) return false;
+            float cut = (zMax - zMin) * 0.12f;
+            float loA = float.MaxValue, hiA = float.MinValue, loB = float.MaxValue, hiB = float.MinValue;
+            foreach (var p in pts)
+            {
+                if (p.z < zMin + cut) { loA = Mathf.Min(loA, p.y); hiA = Mathf.Max(hiA, p.y); }
+                if (p.z > zMax - cut) { loB = Mathf.Min(loB, p.y); hiB = Mathf.Max(hiB, p.y); }
+            }
+            return hiB - loB > hiA - loA;
         }
 
         static readonly System.Text.RegularExpressions.Regex Suffix = new System.Text.RegularExpressions.Regex(@"_\d+$");
