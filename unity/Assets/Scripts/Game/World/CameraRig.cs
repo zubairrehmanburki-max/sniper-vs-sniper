@@ -5,7 +5,7 @@ namespace SniperDuel.Game.World
     /// <summary>
     /// The one camera. Menus get a slow cinematic drift along the river beside the player's bridge;
     /// in a duel it sits at the player's eye, looking down-lane, with the field of view set by the
-    /// scope's magnification (a 1× eye is 55° vertical; N× divides the tangent by N).
+    /// duel (the bare eye, or the scope's magnification).
     /// </summary>
     public sealed class CameraRig : MonoBehaviour
     {
@@ -16,7 +16,8 @@ namespace SniperDuel.Game.World
         public Vector3 Eye;
         /// <summary>Look direction in degrees: yaw clockwise from +z, pitch up.</summary>
         public float Yaw, Pitch;
-        public float Zoom = 1;
+        /// <summary>Vertical field of view in the eye mode, degrees.</summary>
+        public float Fov = EyeFov;
         public Vector3 MenuFocus;
         float clock;
 
@@ -31,9 +32,6 @@ namespace SniperDuel.Game.World
             cam.clearFlags = CameraClearFlags.Skybox;
             return rig;
         }
-
-        public static float FovFor(float zoom) =>
-            2 * Mathf.Atan(Mathf.Tan(EyeFov * 0.5f * Mathf.Deg2Rad) / Mathf.Max(1, zoom)) * Mathf.Rad2Deg;
 
         void LateUpdate()
         {
@@ -52,7 +50,7 @@ namespace SniperDuel.Game.World
             {
                 Cam.transform.position = Eye;
                 Cam.transform.rotation = Quaternion.Euler(-Pitch, Yaw, 0);
-                Cam.fieldOfView = FovFor(Zoom);
+                Cam.fieldOfView = Fov;
             }
         }
     }

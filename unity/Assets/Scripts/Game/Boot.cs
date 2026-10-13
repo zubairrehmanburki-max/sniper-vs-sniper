@@ -65,6 +65,7 @@ namespace SniperDuel.Game
                 yield return CaptureAll(capture);
                 yield break;
             }
+            Flow.Create(Config, ui, rig, arena);
             Frame("Title");
             ui.Show("Title");
         }
@@ -89,7 +90,7 @@ namespace SniperDuel.Game
         {
             bool world = Array.IndexOf(InWorld, screen) >= 0;
             rig.Current = world ? CameraRig.Mode.Eye : CameraRig.Mode.Menu;
-            rig.Zoom = screen == "Scope" ? 12 : 1;
+            rig.Fov = screen == "Scope" ? (float)(Config.Scope.FovAt1xDeg / 12) : (float)Config.Scope.EyeFovDeg;
         }
 
         IEnumerator CaptureAll(string dir)

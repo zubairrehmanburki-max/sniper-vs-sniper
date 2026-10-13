@@ -87,6 +87,9 @@ namespace SniperDuel.Game.Ui
     /// <summary>Builds UI Toolkit trees from the mockup markup (see Html and Css).</summary>
     public static class Layout
     {
+        /// <summary>Class on every pressable element, so a look-drag can tell them from the background.</summary>
+        public const string ActionClass = "act";
+
         static readonly HashSet<string> Inline = new HashSet<string> { "span", "b", "strong", "em", "i", "a", "small", "#text" };
 
         public static UiScreen Load(string name)
@@ -234,7 +237,11 @@ namespace SniperDuel.Game.Ui
                 e.RegisterCallback<PointerUpEvent>(_ => screen.Hold(hold, false));
                 e.RegisterCallback<PointerLeaveEvent>(_ => screen.Hold(hold, false));
             }
-            if (node.Tag == "button" || on != null || hold != null) PressFeedback(e);
+            if (node.Tag == "button" || on != null || hold != null)
+            {
+                e.AddToClassList(ActionClass);
+                PressFeedback(e);
+            }
             else if (!isRoot && h.Background == null && !(decl.ContainsKey("border") || decl.Keys.Any(k => k.StartsWith("border-", StringComparison.Ordinal) && k != "border-radius")))
                 e.pickingMode = PickingMode.Ignore;
             if (h.Hidden) e.style.display = DisplayStyle.None;
