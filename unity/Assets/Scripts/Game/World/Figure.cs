@@ -75,35 +75,60 @@ namespace SniperDuel.Game.World
             var body = new GameObject("Body").transform;
             body.SetParent(root.transform, false);
             fig.Body = body;
-            var prefab = Resources.Load<GameObject>("Characters/Soldier");
+            // The detailed CC-BY soldier when the asset set has it, else the bundled low-detail one.
+            var hd = Library.Model("soldier_tactical");
+            var prefab = hd != null ? hd : Resources.Load<GameObject>("Characters/Soldier");
             if (prefab != null)
             {
                 var model = Instantiate(prefab, body);
                 model.name = "Soldier";
                 foreach (var anim in model.GetComponentsInChildren<Animation>()) anim.enabled = false;
                 foreach (var animator in model.GetComponentsInChildren<Animator>()) animator.enabled = false;
+                if (hd != null) Retarget(model.transform, body);
                 foreach (var t in model.GetComponentsInChildren<Transform>())
                 {
-                    string n = t.name.Replace("mixamorig:", "").Replace("mixamorig", "");
+                    string n = BoneName(t.name);
                     if (!fig.bones.ContainsKey(n)) { fig.bones[n] = t; fig.rest[n] = t.localRotation; }
                 }
                 foreach (var r in model.GetComponentsInChildren<SkinnedMeshRenderer>())
                 {
-                    // Olive drab over the original texture, on the same URP Lit template as the
-                    // structures: the imported glTF materials draw nothing on some renderers.
-                    var tex = r.sharedMaterial == null ? null
-                        : r.sharedMaterial.HasProperty("baseColorTexture") ? r.sharedMaterial.GetTexture("baseColorTexture")
-                        : r.sharedMaterial.mainTexture;
-                    var mat = new Material(Library.Template("Lit")) { name = "Soldier " + r.name };
-                    mat.SetTexture("_BaseMap", tex);
-                    mat.SetColor("_BaseColor", r.name.Contains("visor") ? new Color(0.17f, 0.19f, 0.17f) : tint);
-                    mat.SetFloat("_Smoothness", 0.12f);
-                    mat.SetFloat("_Metallic", 0);
-                    r.sharedMaterials = new[] { mat };
+                    // On the same URP Lit template as the structures: the imported glTF materials
+                    // draw nothing on some renderers. The old soldier is tinted olive drab; the detailed
+                    // one keeps its own colours and normal maps.
+                    var mats = new Material[r.sharedMaterials.Length];
+                    for (int i = 0; i < mats.Length; i++)
+                    {
+                        var src = r.sharedMaterials[i];
+                        var tex = src == null ? null : src.HasProperty("baseColorTexture") ? src.GetTexture("baseColorTexture") : src.mainTexture;
+                        var mat = new Material(Library.Template("Lit")) { name = "Soldier " + r.name };
+                        mat.SetTexture("_BaseMap", tex);
+                        mat.SetFloat("_Metallic", 0);
+                        if (hd != null)
+                        {
+                            var nor = src != null && src.HasProperty("normalTexture") ? src.GetTexture("normalTexture") : null;
+                            if (nor != null) mat.SetTexture("_BumpMap", nor);
+                            var factor = src != null && src.HasProperty("baseColorFactor") ? src.GetColor("baseColorFactor") : Color.white;
+                            mat.SetColor("_BaseColor", factor * Color.Lerp(Color.white, tint * 1.5f, 0.25f));
+                            mat.SetFloat("_Smoothness", 0.22f);
+                            if (src != null && src.HasProperty("alphaCutoff") && src.renderQueue >= 2450)
+                            {
+                                mat.SetFloat("_AlphaClip", 1);
+                                mat.SetFloat("_Cutoff", 0.5f);
+                                mat.EnableKeyword("_ALPHATEST_ON");
+                            }
+                        }
+                        else
+                        {
+                            mat.SetColor("_BaseColor", r.name.Contains("visor") ? new Color(0.17f, 0.19f, 0.17f) : tint);
+                            mat.SetFloat("_Smoothness", 0.12f);
+                        }
+                        mats[i] = mat;
+                    }
+                    r.sharedMaterials = mats;
                     fig.skins.Add(r);
                 }
             }
-            else Debug.LogWarning("[Figure] Characters/Soldier did not load");
+            else Debug.LogWarning("[Figure] no soldier model loaded");
             Debug.Log($"[Figure] {stance}: {fig.bones.Count} bones, {root.GetComponentsInChildren<Renderer>().Length} renderers");
             fig.bones.TryGetValue("Hips", out fig.hips);
             if (fig.hips != null) fig.hipsRest = fig.hips.localPosition;
@@ -118,11 +143,9 @@ namespace SniperDuel.Game.World
             }
             body.localPosition += fig.pose.Shift;
 
-            var rifle = Library.Place("bolt_action_rifle_7_62", Vector3.zero, 0, 1, root.transform);
+            var rifle = Rifle(root.transform);
             rifle.transform.localPosition = fig.pose.RifleAt;
-            // The scanned rifle's long axis may run along x; turn it so the barrel points ahead (+z).
-            var rb = Library.BoundsOf(rifle);
-            float yaw = rb.size.x > rb.size.z ? 90 : 0;
+            float yaw = rifle.transform.localEulerAngles.y;
             rifle.transform.localRotation = Quaternion.Euler(fig.pose.RifleTilt, yaw, 0);
             if (fig.pose.Lie.HasValue)
             {
@@ -141,6 +164,88 @@ namespace SniperDuel.Game.World
                 body.position += new Vector3(0, lift, 0);
             }
             return fig;
+        }
+
+        /// <summary>
+        /// The sniper rifle, 1.3 m long with its barrel along +z: the detailed L115A3 when the asset
+        /// set has it, else the scanned bolt-action rifle. Used by the figures and the first-person view.
+        /// </summary>
+        public static GameObject Rifle(Transform parent)
+        {
+            bool hd = Library.Model("rifle_l115a3") != null;
+            var rifle = Library.Place(hd ? "rifle_l115a3" : "bolt_action_rifle_7_62", Vector3.zero, 0, 1, parent);
+            var inner = new GameObject("Rifle").transform;
+            inner.SetParent(parent, false);
+            rifle.transform.SetParent(inner, false);
+            var rb = Library.BoundsOf(rifle);
+            // The long axis may run along x; turn it so it runs along z.
+            if (rb.size.x > rb.size.z) rifle.transform.localRotation = Quaternion.Euler(0, 90, 0);
+            rb = Library.BoundsOf(rifle);
+            float len = Mathf.Max(rb.size.x, rb.size.z);
+            if (hd && len > 1e-3f) rifle.transform.localScale *= 1.3f / len;
+            rb = Library.BoundsOf(rifle);
+            // Centre it on its parent.
+            rifle.transform.position -= rb.center - inner.position;
+            return inner.gameObject;
+        }
+
+        static readonly System.Text.RegularExpressions.Regex Suffix = new System.Text.RegularExpressions.Regex(@"_\d+$");
+
+        /// <summary>A joint's Mixamo name without prefix or the "_12" index Sketchfab exports add.</summary>
+        static string BoneName(string n)
+        {
+            int i = n.IndexOf("mixamorig", System.StringComparison.Ordinal);
+            if (i >= 0) n = n.Substring(i + 9).TrimStart(':');
+            return Suffix.Replace(n, "");
+        }
+
+        static Dictionary<string, Quaternion>? refRotations;
+        static Vector3 refHips;
+        static float refSpan;
+
+        /// <summary>
+        /// Puts a different Mixamo-rigged model into the bundled soldier's rest pose, at its size and
+        /// place, so the stance poses (offsets from that rest pose) work on it unchanged. Copies each
+        /// joint's orientation relative to the body, parents first.
+        /// </summary>
+        static void Retarget(Transform model, Transform body)
+        {
+            if (refRotations == null)
+            {
+                refRotations = new Dictionary<string, Quaternion>();
+                var refPrefab = Resources.Load<GameObject>("Characters/Soldier");
+                if (refPrefab == null) return;
+                var tmp = Instantiate(refPrefab);
+                tmp.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+                tmp.transform.localScale = Vector3.one;
+                Transform? h = null, head = null;
+                foreach (var t in tmp.GetComponentsInChildren<Transform>())
+                {
+                    string n = BoneName(t.name);
+                    if (refRotations.ContainsKey(n)) continue;
+                    refRotations[n] = t.rotation;
+                    if (n == "Hips") h = t;
+                    if (n == "Head") head = t;
+                }
+                if (h != null && head != null) { refHips = h.position; refSpan = Vector3.Distance(h.position, head.position); }
+                DestroyImmediate(tmp);
+            }
+            Transform? hips = null, top = null;
+            foreach (var t in model.GetComponentsInChildren<Transform>())
+            {
+                string n = BoneName(t.name);
+                if (n == "Hips" && hips == null) hips = t;
+                if (n == "Head" && top == null) top = t;
+                // Only real joints (from the hips down) take the reference pose; the wrapper nodes
+                // above them keep whatever turns the model upright.
+                if (hips == null || !t.IsChildOf(hips)) continue;
+                if (refRotations.TryGetValue(n, out var q)) t.rotation = body.rotation * q;
+            }
+            if (hips == null || top == null || refSpan <= 0) return;
+            float span = Vector3.Distance(hips.position, top.position) / body.lossyScale.y;
+            if (span > 1e-4f) model.localScale *= refSpan / span;
+            model.position += body.TransformPoint(refHips) - hips.position;
+            Debug.Log($"[Figure] retargeted: span {span:0.000} -> {refSpan:0.000}");
         }
 
         /// <summary>

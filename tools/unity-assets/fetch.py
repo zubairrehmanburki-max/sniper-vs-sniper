@@ -1,21 +1,28 @@
 #!/usr/bin/env python3
 """
 Downloads the free third-party assets listed in unity/assets.json into an output folder, with a
-CREDITS.md. Everything is CC0 (Poly Haven) or OFL (Google Fonts). Run by the unity-assets action on
+CREDITS.md. Everything is CC0 (Poly Haven), OFL (Google Fonts) or CC-BY (Sketchfab, credited; needs
+SKETCHFAB_API_TOKEN). Run by the unity-assets action on
 a GitHub runner; the result is cached as a release so builds don't hit the sources every time.
 
 usage: fetch.py unity/assets.json OUT_DIR
 """
-import json, os, sys, urllib.request
+import json, os, sys, time, urllib.request
 
 API = "https://api.polyhaven.com"
 UA = {"User-Agent": "sniper-vs-sniper-asset-fetch"}
 
 
-def get(url):
-    req = urllib.request.Request(url, headers=UA)
-    with urllib.request.urlopen(req, timeout=120) as r:
-        return r.read()
+def get(url, headers=None):
+    for attempt in range(5):
+        req = urllib.request.Request(url, headers={**UA, **(headers or {})})
+        try:
+            with urllib.request.urlopen(req, timeout=300) as r:
+                return r.read()
+        except urllib.error.HTTPError as e:
+            if e.code != 429 or attempt == 4:
+                raise
+            time.sleep(30 * (attempt + 1))  # Sketchfab rate limit
 
 
 def save(url, path):
@@ -59,6 +66,29 @@ def polyhaven(kind, item, out, credits, problems, max_mb):
     credits.append(f"| {pid} | Poly Haven {kind} | {authors} | CC0 | https://polyhaven.com/a/{pid} |")
 
 
+def sketchfab(item, out, credits, problems):
+    """A CC-BY Sketchfab model as GLB, saved where Library.Model finds it (Models/<id>/<id>_1k.glb)."""
+    token = os.environ.get("SKETCHFAB_API_TOKEN", "")
+    if not token:
+        problems.append(f"{item['id']}: SKETCHFAB_API_TOKEN not set; skipped")
+        return
+    uid, mid = item["uid"], item["id"]
+    try:
+        auth = {"Authorization": f"Token {token}"}
+        info = json.loads(get(f"https://api.sketchfab.com/v3/models/{uid}", auth))
+        lic = (info.get("license") or {}).get("slug")
+        if lic not in ("by", "cc0"):
+            problems.append(f"{mid}: licence {lic} not allowed; skipped")
+            return
+        dl = json.loads(get(f"https://api.sketchfab.com/v3/models/{uid}/download", auth))
+        save(dl["glb"]["url"], os.path.join(out, "Models", mid, f"{mid}_1k.glb"))
+    except Exception as e:
+        problems.append(f"{mid}: {e}")
+        return
+    author = info.get("user", {}).get("displayName") or info.get("user", {}).get("username", "")
+    credits.append(f"| {info.get('name', mid)} | Sketchfab model | {author} | CC-BY 4.0 | {info.get('viewerUrl', '')} |")
+
+
 def main():
     manifest_path, out = sys.argv[1], sys.argv[2]
     manifest = json.load(open(manifest_path))
@@ -69,6 +99,9 @@ def main():
         for item in manifest.get(kind + "s", []):
             print(f"{kind}: {item['id']}")
             polyhaven(kind, item, out, credits, problems, manifest.get("maxModelMB", 1e9))
+    for item in manifest.get("sketchfab", []):
+        print(f"sketchfab: {item['id']}")
+        sketchfab(item, out, credits, problems)
     for item in manifest.get("files", []):
         print(f"file: {item['dest']}")
         try:

@@ -1,5 +1,5 @@
 {
-  "$comment": "Free third-party assets fetched by tools/unity-assets/fetch.py at build time (not committed). Poly Haven assets are CC0; fonts are OFL. Models over maxModelMB (sum of files) are skipped and reported in PROBLEMS.txt.",
+  "$comment": "Free third-party assets fetched by tools/unity-assets/fetch.py at build time (not committed). Poly Haven assets are CC0; Sketchfab models are CC-BY (credited, need SKETCHFAB_API_TOKEN); fonts are OFL. Models over maxModelMB (sum of files) are skipped and reported in PROBLEMS.txt.",
   "hdris": [
     {
       "id": "belfast_sunset_puresky",
@@ -312,5 +312,17 @@
       "license": "OFL"
     }
   ],
-  "maxModelMB": 120
+  "maxModelMB": 120,
+  "sketchfab": [
+    {
+      "id": "soldier_tactical",
+      "uid": "ef698ce36b1545a78ce592dd3db4c7ed",
+      "name": "Military tactical suit (LowPolyGameReady)"
+    },
+    {
+      "id": "rifle_l115a3",
+      "uid": "a795adf5f8dd4a2294210d427cbb0e58",
+      "name": "Low-Poly L115A3"
+    }
+  ]
 }

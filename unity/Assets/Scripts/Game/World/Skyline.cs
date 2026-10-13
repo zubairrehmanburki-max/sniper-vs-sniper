@@ -48,8 +48,19 @@ namespace SniperDuel.Game.World
                 height = Mathf.Max(2, Mathf.Round(height / FloorM)) * FloorM;
                 int kind = rng.Next(builders.Length);
                 float baseY = yMin - 3;
-                builders[kind].Box(new Vector3(x, baseY + (height + 3) / 2, s), new Vector3(width, height + 3, depth));
                 float top = baseY + height + 3;
+                if (height > 45 && rng.NextDouble() < 0.6)
+                {
+                    // Tall towers step back: a broad podium, then a slimmer shaft in another finish.
+                    float podium = Mathf.Round(height * (0.25f + (float)rng.NextDouble() * 0.2f) / FloorM) * FloorM;
+                    builders[kind].Box(new Vector3(x, baseY + (podium + 3) / 2, s), new Vector3(width, podium + 3, depth));
+                    roofs.Box(new Vector3(x, baseY + podium + 3.5f, s), new Vector3(width + 0.4f, 1f, depth + 0.4f));
+                    width *= 0.62f + (float)rng.NextDouble() * 0.2f;
+                    depth *= 0.62f + (float)rng.NextDouble() * 0.2f;
+                    int shaft = (kind + 1 + rng.Next(builders.Length - 1)) % builders.Length;
+                    builders[shaft].Box(new Vector3(x, baseY + podium + 3 + (height - podium) / 2, s), new Vector3(width, height - podium, depth));
+                }
+                else builders[kind].Box(new Vector3(x, baseY + (height + 3) / 2, s), new Vector3(width, height + 3, depth));
                 // Parapet and rooftop plant.
                 roofs.Box(new Vector3(x, top + 0.5f, s), new Vector3(width + 0.4f, 1f, depth + 0.4f));
                 int plant = 1 + rng.Next(3);
