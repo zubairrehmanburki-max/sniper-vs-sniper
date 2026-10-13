@@ -1,0 +1,18 @@
+name: probe
+on:
+  push:
+    branches: [claude/project-thread-ux5zt1]
+    paths: [.github/workflows/probe.yml]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Unity package versions
+        run: |
+          for p in com.unity.render-pipelines.universal com.unity.inputsystem com.unity.nuget.newtonsoft-json com.unity.test-framework com.unity.ugui com.unity.cinemachine com.unity.timeline com.unity.shadergraph com.unity.recorder com.unity.mobile.notifications com.unity.addressables com.unity.collections com.unity.burst com.unity.mathematics com.unity.terrain-tools com.unity.formats.fbx com.unity.cloud.gltfast; do
+            curl -s https://packages.unity.com/$p | python3 -c "import json,sys; d=json.load(sys.stdin); v=list(d['versions']); print('$p', d.get('dist-tags'), v[-6:])"
+          done
+      - name: Asset sources
+        run: |
+          for u in https://api.polyhaven.com/assets?t=models https://ambientcg.com/api/v2/full_json?limit=1 https://quaternius.com https://kenney.nl https://sketchfab.com https://opengameart.org https://www.mixamo.com; do printf "%s " "$u"; curl -s -o /dev/null -w "%{http_code}\n" -m 20 "$u"; done
+          curl -s "https://api.polyhaven.com/assets?t=models" | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d)); print(sorted(d)[:400])"
