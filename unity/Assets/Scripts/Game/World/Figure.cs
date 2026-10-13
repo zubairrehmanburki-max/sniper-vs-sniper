@@ -120,9 +120,11 @@ namespace SniperDuel.Game.World
             fig.Bake();
             if (fig.pose.Lie.HasValue)
             {
-                // Rest the lowest point of the lying body just on the ground (the road sits 4 cm proud).
-                var b = Library.BoundsOf(body.gameObject);
-                body.position += new Vector3(0, root.transform.position.y + 0.04f - b.min.y, 0);
+                // Rest the hips a hand's depth above the ground (the road sits 4 cm proud) so the torso
+                // lies flat; grounding the lowest point instead props him up on his hands.
+                float ground = root.transform.position.y + 0.04f;
+                float lift = fig.hips != null ? ground + 0.16f - fig.hips.position.y : ground - Library.BoundsOf(body.gameObject).min.y;
+                body.position += new Vector3(0, lift, 0);
             }
             return fig;
         }
