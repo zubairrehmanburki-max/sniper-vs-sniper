@@ -9,10 +9,17 @@ jobs:
     steps:
       - name: Unity package versions
         run: |
-          for p in com.unity.render-pipelines.universal com.unity.inputsystem com.unity.nuget.newtonsoft-json com.unity.test-framework com.unity.ugui com.unity.cinemachine com.unity.timeline com.unity.shadergraph com.unity.recorder com.unity.mobile.notifications com.unity.addressables com.unity.collections com.unity.burst com.unity.mathematics com.unity.terrain-tools com.unity.formats.fbx com.unity.cloud.gltfast; do
-            curl -s https://packages.unity.com/$p | python3 -c "import json,sys; d=json.load(sys.stdin); v=list(d['versions']); print('$p', d.get('dist-tags'), v[-6:])"
+          for p in com.unity.render-pipelines.universal com.unity.shadergraph com.unity.inputsystem com.unity.ugui com.unity.test-framework com.unity.cinemachine com.unity.cloud.gltfast com.unity.nuget.newtonsoft-json com.unity.timeline com.unity.burst com.unity.collections com.unity.mathematics com.unity.ai.navigation com.unity.modules.terrain com.unity.ide.rider; do
+            curl -s https://packages.unity.com/$p | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)
+          vs=d['versions']
+          ok=[v for v,m in vs.items() if str(m.get('unity','')).startswith('6000') or v.startswith('17.')]
+          print('$p', 'latest', d.get('dist-tags',{}).get('latest'), 'u6:', sorted(ok)[-8:])
+          print('   recent:', sorted(vs, key=lambda v: d.get('time',{}).get(v,''))[-6:], {v: vs[v].get('unity') for v in sorted(vs, key=lambda v: d.get('time',{}).get(v,''))[-4:]})
+          "
           done
-      - name: Asset sources
+      - name: Poly Haven models
         run: |
-          for u in https://api.polyhaven.com/assets?t=models https://ambientcg.com/api/v2/full_json?limit=1 https://quaternius.com https://kenney.nl https://sketchfab.com https://opengameart.org https://www.mixamo.com; do printf "%s " "$u"; curl -s -o /dev/null -w "%{http_code}\n" -m 20 "$u"; done
-          curl -s "https://api.polyhaven.com/assets?t=models" | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d)); print(sorted(d)[:400])"
+          curl -s "https://api.polyhaven.com/assets?t=models" | python3 -c "import json,sys; d=json.load(sys.stdin); print(sorted(d)[400:])"
+          curl -s "https://api.polyhaven.com/files/bolt_action_rifle_7_62" | python3 -c "import json,sys; d=json.load(sys.stdin); print(list(d)); print(json.dumps(d.get('gltf',{}))[:1500])"
