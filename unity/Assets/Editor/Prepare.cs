@@ -36,6 +36,8 @@ namespace SniperDuel.EditorTools
         {
             Template("Lit", "Universal Render Pipeline/Lit", "_NORMALMAP", "_METALLICSPECGLOSSMAP", "_OCCLUSIONMAP");
             Template("LitPlain", "Universal Render Pipeline/Lit");
+            // Emissive variants (lit windows, warning lights) are stripped unless a material uses them.
+            Template("LitEmissive", "Universal Render Pipeline/Lit", "_EMISSION");
             var water = Template("Water", "Universal Render Pipeline/Lit", "_NORMALMAP", "_DETAIL_MULX2");
             if (water != null)
             {

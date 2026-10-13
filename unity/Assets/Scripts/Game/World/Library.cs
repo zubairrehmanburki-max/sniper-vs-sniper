@@ -64,6 +64,16 @@ namespace SniperDuel.Game.World
             return mat;
         }
 
+        /// <summary>A self-lit colour for lamps and warning lights (HDR, so it blooms).</summary>
+        public static Material Glow(Color color, Color emission)
+        {
+            var mat = new Material(Template("LitEmissive"));
+            mat.SetColor("_BaseColor", color);
+            mat.EnableKeyword("_EMISSION");
+            mat.SetColor("_EmissionColor", emission);
+            return mat;
+        }
+
         public static T? Load<T>(string path) where T : Object
         {
             var a = Resources.Load<T>(path);

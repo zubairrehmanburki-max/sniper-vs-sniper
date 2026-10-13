@@ -115,9 +115,7 @@ namespace SniperDuel.Game.World
             // Red aviation lights on the pylon tops.
             var lights = new MeshBuilder();
             foreach (var p in aviation) lights.Box(p, new Vector3(0.5f, 0.5f, 0.5f));
-            var red = Library.Plain(new Color(0.3f, 0.02f, 0.02f), 0.6f);
-            red.EnableKeyword("_EMISSION");
-            red.SetColor("_EmissionColor", new Color(4f, 0.25f, 0.15f));
+            var red = Library.Glow(new Color(0.3f, 0.02f, 0.02f), new Color(4f, 0.25f, 0.15f));
             lights.Object("Aviation lights", red, root, shadows: false);
 
             var road = new MeshBuilder();

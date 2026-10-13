@@ -81,9 +81,7 @@ namespace SniperDuel.Game.World
             for (int k = 0; k < builders.Length; k++)
                 if (builders[k].VertexCount > 0) builders[k].Object("Blocks " + k, facades[k], root);
             roofs.Object("Rooftops", Library.Plain(new Color(0.32f, 0.32f, 0.31f), 0.2f), root);
-            var red = Library.Plain(new Color(0.3f, 0.02f, 0.02f), 0.6f);
-            red.EnableKeyword("_EMISSION");
-            red.SetColor("_EmissionColor", new Color(5f, 0.3f, 0.2f));
+            var red = Library.Glow(new Color(0.3f, 0.02f, 0.02f), new Color(5f, 0.3f, 0.2f));
             if (beacons.VertexCount > 0) beacons.Object("Beacons", red, root, shadows: false);
         }
 
@@ -126,7 +124,7 @@ namespace SniperDuel.Game.World
             glow.SetPixels32(e);
             glow.Apply(true);
 
-            var mat = new Material(Library.Template("Lit")) { name = "Facade" };
+            var mat = new Material(Library.Template("LitEmissive")) { name = "Facade" };
             mat.SetTexture("_BaseMap", albedo);
             mat.SetColor("_BaseColor", Color.white);
             mat.SetFloat("_Smoothness", 0.45f);
