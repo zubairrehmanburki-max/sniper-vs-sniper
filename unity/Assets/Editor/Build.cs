@@ -33,6 +33,7 @@ namespace SniperDuel.EditorTools
         {
             ConfigurePlayer();
             EnsurePipeline();
+            Prepare.All();
             EnsureScene();
             AssetDatabase.SaveAssets();
         }
@@ -169,7 +170,7 @@ namespace SniperDuel.EditorTools
     {
         void OnPreprocessTexture()
         {
-            if (!assetPath.Contains("/Resources/TP/")) return;
+            if (!assetPath.Contains("/Resources/TP/") && !assetPath.Contains("/Resources/Generated/")) return;
             var ti = (TextureImporter)assetImporter;
             string name = Path.GetFileNameWithoutExtension(assetPath).ToLowerInvariant();
             if (assetPath.Contains("/Hdris/"))
@@ -183,8 +184,8 @@ namespace SniperDuel.EditorTools
             }
             ti.maxTextureSize = 2048;
             if (name.Contains("_nor_gl") || name.Contains("_normal")) ti.textureType = TextureImporterType.NormalMap;
-            if (name.Contains("_arm") || name.Contains("_rough") || name.Contains("_ao") || name.Contains("_metal")) ti.sRGBTexture = false;
-            if (assetPath.Contains("/Textures/")) ti.wrapMode = TextureWrapMode.Repeat;
+            if (name.Contains("_arm") || name.Contains("_rough") || name.Contains("_ao") || name.Contains("_metal") || name.Contains("_mask")) ti.sRGBTexture = false;
+            if (assetPath.Contains("/Textures/") || assetPath.Contains("/Generated/")) ti.wrapMode = TextureWrapMode.Repeat;
             ti.anisoLevel = 8;
         }
     }
