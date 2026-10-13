@@ -60,6 +60,7 @@ namespace SniperDuel.Game.World
         Transform? hips;
         Vector3 hipsRest;
         float clock;
+        readonly List<SkinnedMeshRenderer> skins = new List<SkinnedMeshRenderer>();
 
         public static Figure Create(Stance stance, float heightM, Transform parent, Color tint)
         {
@@ -83,15 +84,17 @@ namespace SniperDuel.Game.World
                 }
                 foreach (var r in model.GetComponentsInChildren<SkinnedMeshRenderer>())
                 {
-                    r.updateWhenOffscreen = true;
-                    // Olive drab over the original texture.
-                    var mats = r.materials;
-                    foreach (var m in mats)
-                    {
-                        if (m.HasProperty("baseColorFactor")) m.SetColor("baseColorFactor", r.name.Contains("visor") ? new Color(0.17f, 0.19f, 0.17f) : tint);
-                        if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", r.name.Contains("visor") ? new Color(0.17f, 0.19f, 0.17f) : tint);
-                    }
-                    r.materials = mats;
+                    // Olive drab over the original texture, on the same URP Lit template as the
+                    // structures: the imported glTF materials draw nothing on some renderers.
+                    var tex = r.sharedMaterial == null ? null
+                        : r.sharedMaterial.HasProperty("baseColorTexture") ? r.sharedMaterial.GetTexture("baseColorTexture")
+                        : r.sharedMaterial.mainTexture;
+                    var mat = new Material(Library.Template("Lit")) { name = "Soldier " + r.name };
+                    mat.SetTexture("_BaseMap", tex);
+                    mat.SetColor("_BaseColor", r.name.Contains("visor") ? new Color(0.17f, 0.19f, 0.17f) : tint);
+                    mat.SetFloat("_Smoothness", 0.25f);
+                    r.sharedMaterials = new[] { mat };
+                    fig.skins.Add(r);
                 }
             }
             else Debug.LogWarning("[Figure] Characters/Soldier did not load");
@@ -113,7 +116,30 @@ namespace SniperDuel.Game.World
             rifle.transform.localPosition = fig.pose.RifleAt;
             rifle.transform.localRotation = Quaternion.Euler(fig.pose.RifleTilt, 0, 0);
             fig.LateUpdate();
+            fig.Bake();
             return fig;
+        }
+
+        /// <summary>
+        /// Freezes the posed soldier into plain meshes. The pose never changes while it is shown,
+        /// and skinned meshes rendered nothing in testing, so each skin becomes a static mesh.
+        /// </summary>
+        void Bake()
+        {
+            foreach (var r in skins)
+            {
+                var mesh = new Mesh { name = r.name + " (posed)" };
+                r.BakeMesh(mesh, true);
+                mesh.RecalculateBounds();
+                var go = r.gameObject;
+                var mats = r.sharedMaterials;
+                // A GameObject holds one renderer, so the skin goes before the mesh renderer arrives.
+                DestroyImmediate(r);
+                go.AddComponent<MeshFilter>().sharedMesh = mesh;
+                go.AddComponent<MeshRenderer>().sharedMaterials = mats;
+            }
+            skins.Clear();
+            enabled = false;
         }
 
         /// <summary>three.js XYZ Euler (degrees, right-handed) to a Unity local rotation (glTF X flipped).</summary>
