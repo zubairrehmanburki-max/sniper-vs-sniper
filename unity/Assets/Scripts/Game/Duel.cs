@@ -52,6 +52,7 @@ namespace SniperDuel.Game
         int? lookPointer;
         Vector2 lookLast;
         bool zoomDragging;
+        bool director;
 
         public static Duel Begin(GameConfig cfg, UiHost ui, CameraRig rig, Arena arena, string playerName, string rifleId, BotDifficulty bot)
         {
@@ -239,7 +240,8 @@ namespace SniperDuel.Game
             var shooter = before.Actor ?? Me;
             bool mine = shooter == Me;
             float tof = (float)o.Impact.T;
-            World.Effects.Shot(o, mine, arena, cfg.RifleById(before.Players[shooter].RifleId));
+            bool cinematic = mine && o.Verdict != Verdict.Miss && o.Trajectory.Points.Count > 1;
+            World.Effects.Shot(o, mine, arena, tracer: !cinematic);
             if (mine)
             {
                 recoil = 0.004;
@@ -264,6 +266,42 @@ namespace SniperDuel.Game
                 else CheckPhase();
             };
             resumeAt = time + (mine ? tof + 0.6 : 0.4);
+            if (cinematic) PlayBulletCam(o, before);
+        }
+
+        /// <summary>Every hit you land replays from behind the bullet; the match waits for it.</summary>
+        void PlayBulletCam(ShotOutcome o, MatchState before)
+        {
+            var next = resume;
+            resume = () => { };
+            resumeAt = double.MaxValue;
+            director = true;
+            var k = ui.Show("Killcam");
+            var a = before.Players[Me];
+            var b = before.Players[Side.B];
+            k.Text("who", $"ROUND {before.Round + 1} · {a.Name} → {b.Name}");
+            var last = o.Trajectory.Points[o.Trajectory.Points.Count - 1];
+            k.Text("tof", $"{o.Impact.T:0.00} s");
+            k.Text("energy", $"{o.Impact.Energy / 1000:0.0} kJ");
+            k.Text("velocity", $"{o.Impact.Speed:0} m/s");
+            k.Text("drop", $"{Math.Abs(last.Y):0.00} m");
+            k.Text("drift", $"{Math.Abs(last.Z):0.00} m {(last.Z >= 0 ? "R" : "L")}");
+            double dist = Math.Sqrt(Sq(o.Impact.Point.X - o.Eye.X) + Sq(o.Impact.Point.Z - o.Eye.Z));
+            var cam = BulletCam.Play(o, rig, arena.Root, (f, speed) =>
+            {
+                k.Fill("progress", f);
+                if (k.Has("knob")) k["knob"].style.left = Length.Percent(f * 100);
+                k.Text("speed", $"{speed:0.00}×");
+                k.Text("distance", $"{dist * f:0} / {dist:0} m");
+            }, () =>
+            {
+                director = false;
+                SetScoped(scoped);
+                resume = next;
+                resumeAt = time;
+            });
+            k.On("skip", cam.Finish);
+            k.On("pause", () => cam.Paused = !cam.Paused);
         }
 
         void Pause(double seconds, Action next)
@@ -386,7 +424,7 @@ namespace SniperDuel.Game
             }
 
             var aim = TrueAim();
-            rig.Current = CameraRig.Mode.Eye;
+            if (!director) rig.Current = CameraRig.Mode.Eye;
             rig.Eye = Library.ToUnity(Eye());
             rig.Yaw = (float)(aim.Yaw * Mathf.Rad2Deg);
             rig.Pitch = (float)(aim.Pitch * Mathf.Rad2Deg);

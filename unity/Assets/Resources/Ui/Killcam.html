@@ -1,32 +1,20 @@
-<div style="width: 932px; height: 430px; position: relative; overflow: hidden; background: #0b0d0c; color: #EDEFE8; font-family: 'Barlow', 'Helvetica Neue', sans-serif">
+<div style="width: 932px; height: 430px; position: relative; overflow: hidden; color: #EDEFE8; font-family: 'Barlow', 'Helvetica Neue', sans-serif">
 <div style="position: absolute; inset: 0; background: radial-gradient(ellipse at 52% 50%, rgba(8,10,9,0) 18%, rgba(8,10,9,0.78) 78%)"></div>
-<svg width="932" height="430" viewBox="0 0 932 430" aria-hidden="true" style="position: absolute; inset: 0">
-<g stroke="rgba(237,239,232,0.35)" stroke-width="1"><path d="M60 120 L330 196"></path><path d="M30 240 L330 222"></path><path d="M90 330 L340 236"></path><path d="M120 60 L350 190"></path><path d="M10 190 L320 210"></path><path d="M200 400 L360 240"></path></g>
-<g stroke="rgba(242,179,61,0.45)" stroke-width="1.5"><path d="M140 214 L380 214"></path><path d="M180 206 L370 210"></path><path d="M170 222 L372 218"></path></g>
-<g transform="translate(372,196)">
-<path d="M0 6 L62 6 Q92 8 104 18 Q92 28 62 30 L0 30 Z" fill="#a9772e"></path>
-<path d="M0 6 L62 6 Q92 8 104 18 L0 18 Z" fill="#d9a249"></path>
-<path d="M2 9 L60 9" stroke="#f3cf87" stroke-width="2"></path>
-<path d="M18 6 V30 M28 6 V30" stroke="#7a5420" stroke-width="1.5"></path>
-<rect x="-6" y="7" width="8" height="22" fill="#5a3f19"></rect>
-</g>
-<g fill="none" stroke="rgba(237,239,232,0.22)"><ellipse cx="420" cy="214" rx="90" ry="40"></ellipse><ellipse cx="420" cy="214" rx="140" ry="64"></ellipse></g>
-</svg>
 
 <div style="position: absolute; left: 20px; top: 16px; display: flex; align-items: center; gap: 10px">
 <span style="width: 10px; height: 10px; border-radius: 50%; background: #E5483B"></span>
 <span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: 0.2em">BULLET CAM</span>
-<span style="font-family: 'Share Tech Mono', monospace; font-size: 12px; color: #A7AD9F">ROUND 3 · ZUBAIR_ACTUAL → GHOSTWIND</span>
+<span style="font-family: 'Share Tech Mono', monospace; font-size: 12px; color: #A7AD9F" data-bind="who">ROUND 3 · ZUBAIR_ACTUAL → GHOSTWIND</span>
 </div>
-<button style="position: absolute; right: 20px; top: 12px; height: 44px; padding: 0 18px; border: 1px solid rgba(237,239,232,0.35); background: rgba(10,12,11,0.55); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.16em; display: flex; align-items: center; gap: 8px">SKIP<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="2" aria-hidden="true"><path d="M5 5l9 7-9 7zM18 5v14"></path></svg></button>
+<button data-on="skip" style="position: absolute; right: 20px; top: 12px; height: 44px; padding: 0 18px; border: 1px solid rgba(237,239,232,0.35); background: rgba(10,12,11,0.55); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.16em; display: flex; align-items: center; gap: 8px">SKIP<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="2" aria-hidden="true"><path d="M5 5l9 7-9 7zM18 5v14"></path></svg></button>
 
 <div style="position: absolute; right: 20px; top: 80px; width: 190px; padding: 10px 12px; background: rgba(10,12,11,0.68); border-top: 2px solid #F2B33D; display: flex; flex-direction: column; gap: 7px">
-<div style="display: flex; justify-content: space-between; font-size: 11px"><span style="color: #A7AD9F">Velocity</span><span style="font-family: 'Share Tech Mono', monospace">682 m/s</span></div>
-<div style="display: flex; justify-content: space-between; font-size: 11px"><span style="color: #A7AD9F">Time of flight</span><span style="font-family: 'Share Tech Mono', monospace">0.82 s</span></div>
-<div style="display: flex; justify-content: space-between; font-size: 11px"><span style="color: #A7AD9F">Drop</span><span style="font-family: 'Share Tech Mono', monospace">2.94 m</span></div>
-<div style="display: flex; justify-content: space-between; font-size: 11px"><span style="color: #A7AD9F">Wind drift</span><span style="font-family: 'Share Tech Mono', monospace">0.31 m R</span></div>
-<div style="display: flex; justify-content: space-between; font-size: 11px"><span style="color: #A7AD9F">Energy</span><span style="font-family: 'Share Tech Mono', monospace; color: #F2B33D">3.8 kJ</span></div>
-<div style="display: flex; justify-content: space-between; font-size: 11px"><span style="color: #A7AD9F">Distance</span><span style="font-family: 'Share Tech Mono', monospace">512 / 641 m</span></div>
+<div style="display: flex; justify-content: space-between; font-size: 11px"><span style="color: #A7AD9F">Velocity</span><span style="font-family: 'Share Tech Mono', monospace" data-bind="velocity">682 m/s</span></div>
+<div style="display: flex; justify-content: space-between; font-size: 11px"><span style="color: #A7AD9F">Time of flight</span><span style="font-family: 'Share Tech Mono', monospace" data-bind="tof">0.82 s</span></div>
+<div style="display: flex; justify-content: space-between; font-size: 11px"><span style="color: #A7AD9F">Drop</span><span style="font-family: 'Share Tech Mono', monospace" data-bind="drop">2.94 m</span></div>
+<div style="display: flex; justify-content: space-between; font-size: 11px"><span style="color: #A7AD9F">Wind drift</span><span style="font-family: 'Share Tech Mono', monospace" data-bind="drift">0.31 m R</span></div>
+<div style="display: flex; justify-content: space-between; font-size: 11px"><span style="color: #A7AD9F">Energy</span><span style="font-family: 'Share Tech Mono', monospace; color: #F2B33D" data-bind="energy">3.8 kJ</span></div>
+<div style="display: flex; justify-content: space-between; font-size: 11px"><span style="color: #A7AD9F">Distance</span><span style="font-family: 'Share Tech Mono', monospace" data-bind="distance">512 / 641 m</span></div>
 </div>
 
 <div style="position: absolute; left: 20px; bottom: 66px; width: 260px; height: 80px; padding: 8px 10px; box-sizing: border-box; background: rgba(10,12,11,0.6)">
@@ -35,8 +23,8 @@
 </div>
 
 <div style="position: absolute; left: 20px; right: 20px; bottom: 18px; display: flex; align-items: center; gap: 12px">
-<button aria-label="Pause replay" style="width: 44px; height: 44px; border: none; background: none; display: grid; place-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="2.4" aria-hidden="true"><path d="M8 5v14M16 5v14"></path></svg></button>
-<div style="flex: 1; height: 4px; background: rgba(237,239,232,0.2); position: relative"><div style="width: 80%; height: 4px; background: #EDEFE8"></div><div style="position: absolute; left: 80%; top: -6px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: #F2B33D"></div></div>
-<span style="font-family: 'Share Tech Mono', monospace; font-size: 12px; color: #F2B33D; padding: 3px 8px; border: 1px solid #F2B33D">0.05×</span>
+<button data-on="pause" aria-label="Pause replay" style="width: 44px; height: 44px; border: none; background: none; display: grid; place-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="2.4" aria-hidden="true"><path d="M8 5v14M16 5v14"></path></svg></button>
+<div style="flex: 1; height: 4px; background: rgba(237,239,232,0.2); position: relative"><div data-bind="progress" style="width: 80%; height: 4px; background: #EDEFE8"></div><div data-bind="knob" style="position: absolute; left: 80%; top: -6px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: #F2B33D"></div></div>
+<span style="font-family: 'Share Tech Mono', monospace; font-size: 12px; color: #F2B33D; padding: 3px 8px; border: 1px solid #F2B33D" data-bind="speed">0.05×</span>
 </div>
 </div>

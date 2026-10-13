@@ -9,7 +9,7 @@ namespace SniperDuel.Game.World
     /// </summary>
     public sealed class CameraRig : MonoBehaviour
     {
-        public enum Mode { Menu, Eye }
+        public enum Mode { Menu, Eye, Director }
 
         public Camera Cam = null!;
         public Mode Current = Mode.Menu;
@@ -46,7 +46,7 @@ namespace SniperDuel.Game.World
                 Cam.transform.rotation = Quaternion.LookRotation(target - pos);
                 Cam.fieldOfView = 50;
             }
-            else
+            else if (Current == Mode.Eye)
             {
                 Cam.transform.position = Eye;
                 Cam.transform.rotation = Quaternion.Euler(-Pitch, Yaw, 0);

@@ -10,14 +10,13 @@ namespace SniperDuel.Game.World
     /// </summary>
     public static class Effects
     {
-        public static void Shot(ShotOutcome o, bool mine, Arena arena, RifleConfig rifle)
+        public static void Shot(ShotOutcome o, bool mine, Arena arena, bool tracer = true)
         {
             var root = new GameObject("Shot").transform;
             root.SetParent(arena.Root, false);
             var muzzle = Library.ToUnity(o.Eye) + Quaternion.Euler(0, (float)(o.Yaw * Mathf.Rad2Deg), 0) * new Vector3(0, -0.1f, 0.9f);
             Flash(muzzle, root, mine ? 0.06f : 0.12f);
-            var tracer = root.gameObject.AddComponent<Tracer>();
-            tracer.Init(o, (float)(arena.Map.Water ?? -1000));
+            if (tracer) root.gameObject.AddComponent<Tracer>().Init(o, (float)(arena.Map.Water ?? -1000));
             Object.Destroy(root.gameObject, (float)o.Impact.T + 4);
         }
 
