@@ -24,11 +24,12 @@ namespace SniperDuel.Game.World
             // Five facade tones from pale limestone to dark glass, so the blocks don't read as one colour.
             var facades = new[]
             {
-                Facade(rng, new Color(0.50f, 0.50f, 0.50f), 0.08f),
-                Facade(rng, new Color(0.38f, 0.36f, 0.34f), 0.06f),
-                Facade(rng, new Color(0.24f, 0.28f, 0.32f), 0.05f),
-                Facade(rng, new Color(0.45f, 0.40f, 0.34f), 0.07f),
-                Facade(rng, new Color(0.18f, 0.20f, 0.22f), 0.04f),
+                Facade(rng, new Color(0.50f, 0.50f, 0.50f), 0.03f, false),
+                Facade(rng, new Color(0.38f, 0.36f, 0.34f), 0.03f, false),
+                Facade(rng, new Color(0.20f, 0.25f, 0.30f), 0.02f, true),
+                Facade(rng, new Color(0.45f, 0.40f, 0.34f), 0.03f, false),
+                Facade(rng, new Color(0.14f, 0.17f, 0.2f), 0.02f, true),
+                Facade(rng, new Color(0.26f, 0.3f, 0.28f), 0.02f, true),
             };
             var builders = new MeshBuilder[facades.Length];
             for (int k = 0; k < builders.Length; k++) builders[k] = new MeshBuilder();
@@ -118,8 +119,11 @@ namespace SniperDuel.Game.World
             if (beacons.VertexCount > 0) beacons.Object("Beacons", red, root, shadows: false);
         }
 
-        /// <summary>A window-grid facade: wall colour, glazing with sky reflection, some windows lit.</summary>
-        static Material Facade(System.Random rng, Color wall, float litShare)
+        /// <summary>
+        /// A window-grid facade: wall colour, glazing with sky reflection, some windows lit. A curtain
+        /// wall is glass from floor to floor between thin mullions, and shinier.
+        /// </summary>
+        static Material Facade(System.Random rng, Color wall, float litShare, bool curtain)
         {
             const int Px = 32; // pixels per bay and per floor
             int w = Bays * Px, h = Floors * Px;
@@ -140,10 +144,13 @@ namespace SniperDuel.Game.World
                         for (int x = 0; x < Px; x++)
                         {
                             // Window opening: 70 % of the bay wide, 55 % of the floor high, with a sill.
-                            bool window = x > Px * 0.15f && x < Px * 0.85f && y > Px * 0.25f && y < Px * 0.8f;
+                            bool window = curtain
+                                ? x > 0 && x < Px - 1 && y > Px * 0.1f && y < Px * 0.95f
+                                : x > Px * 0.15f && x < Px * 0.85f && y > Px * 0.25f && y < Px * 0.8f;
                             bool mullion = window && Mathf.Abs(x - Px / 2) < 1;
                             float grain = 0.93f + 0.07f * Mathf.PerlinNoise((bx * Px + x) * 0.3f, (fy * Px + y) * 0.3f);
-                            Color c = window && !mullion ? (lit ? light * 0.8f : glass * (0.85f + 0.3f * y / Px)) : wall * grain;
+                            Color pane = curtain ? Color.Lerp(wall, new Color(0.35f, 0.45f, 0.55f), 0.25f + 0.2f * y / Px) * shade : glass * (0.85f + 0.3f * y / Px);
+                            Color c = window && !mullion ? (lit ? light * 0.8f : pane) : (curtain ? wall * 0.6f : wall * grain);
                             if (!window && y < Px * 0.25f && y > Px * 0.2f) c *= 0.8f; // sill shadow
                             int i = (fy * Px + y) * w + bx * Px + x;
                             a[i] = c;
@@ -160,7 +167,7 @@ namespace SniperDuel.Game.World
             var mat = new Material(Library.Template("LitEmissive")) { name = "Facade" };
             mat.SetTexture("_BaseMap", albedo);
             mat.SetColor("_BaseColor", Color.white);
-            mat.SetFloat("_Smoothness", 0.45f);
+            mat.SetFloat("_Smoothness", curtain ? 0.8f : 0.4f);
             mat.EnableKeyword("_EMISSION");
             mat.SetTexture("_EmissionMap", glow);
             mat.SetColor("_EmissionColor", Color.white * 0.9f);
