@@ -74,10 +74,10 @@ jobs:
           sudo docker image prune --all --force > /dev/null || true
           df -h /
       - uses: ./.github/actions/unity-assets
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
         with:
           path: unity/Library
-          key: library-linux-${{ hashFiles('unity/Packages/manifest.json', 'unity/ProjectSettings/ProjectVersion.txt', 'unity/assets.json') }}
+          key: library-linux-${{ hashFiles('unity/Packages/manifest.json', 'unity/ProjectSettings/ProjectVersion.txt', 'unity/assets.json') }}-${{ github.run_id }}
           restore-keys: library-linux-
       - uses: game-ci/unity-builder@v4
         env:
@@ -91,18 +91,24 @@ jobs:
           buildsPath: build
           buildName: SniperDuel
           allowDirtyBuild: true
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: unity/Library
+          key: library-linux-${{ hashFiles('unity/Packages/manifest.json', 'unity/ProjectSettings/ProjectVersion.txt', 'unity/assets.json') }}-${{ github.run_id }}
       - name: Capture every screen
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq xvfb mesa-utils libgl1-mesa-dri > /dev/null
           sudo chown -R "$USER" build
           chmod +x build/StandaloneLinux64/SniperDuel
           mkdir -p shots
-          xvfb-run -a -s "-screen 0 1864x860x24" build/StandaloneLinux64/SniperDuel \
+          timeout 1500 xvfb-run -a -s "-screen 0 1864x860x24" build/StandaloneLinux64/SniperDuel \
             -screen-fullscreen 0 -screen-width 1864 -screen-height 860 -force-glcore \
-            -logFile shots/player.log -capture-all "$PWD/shots" || true
+            -logFile "$PWD/shots/player.log" -capture-all "$PWD/shots" || true
           grep -E "Capture|Exception|Error|error" shots/player.log | head -80 || true
-          tail -30 shots/player.log
+          tail -30 shots/player.log || true
           ls -la shots
+          ls shots/*.png > /dev/null
       - name: Publish to the screens branch
         run: |
           git config user.name "github-actions[bot]"
@@ -132,10 +138,10 @@ jobs:
           sudo docker image prune --all --force > /dev/null || true
           df -h /
       - uses: ./.github/actions/unity-assets
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
         with:
           path: unity/Library
-          key: library-ios-${{ hashFiles('unity/Packages/manifest.json', 'unity/ProjectSettings/ProjectVersion.txt', 'unity/assets.json') }}
+          key: library-ios-${{ hashFiles('unity/Packages/manifest.json', 'unity/ProjectSettings/ProjectVersion.txt', 'unity/assets.json') }}-${{ github.run_id }}
           restore-keys: library-ios-
       - uses: game-ci/unity-builder@v4
         env:
@@ -150,6 +156,11 @@ jobs:
           buildsPath: build
           buildName: SniperDuel
           allowDirtyBuild: true
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: unity/Library
+          key: library-ios-${{ hashFiles('unity/Packages/manifest.json', 'unity/ProjectSettings/ProjectVersion.txt', 'unity/assets.json') }}-${{ github.run_id }}
       - name: Pack the Xcode project
         run: ls build/iOS/SniperDuel && sudo tar -czf xcode.tgz -C build/iOS SniperDuel
       - uses: actions/upload-artifact@v4
