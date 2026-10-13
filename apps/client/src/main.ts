@@ -1,5 +1,6 @@
 import { config, DEFAULT_MAP, makeCode, MAPS, type BotDifficulty, type MatchView } from '@svs/shared';
 import { DuelMode } from './duelMode.ts';
+import { preloadAssets } from './gfx/assets.ts';
 import { fetchRating, OnlineLink, playerId, serverUrl } from './net.ts';
 import { PracticeMode } from './practiceMode.ts';
 import { $, Shooter } from './shooter.ts';
@@ -41,6 +42,22 @@ function menu(): void {
   shooter.inputEnabled = false;
   shooter.setScoped(false);
 }
+
+// Nothing can start until the skies, textures and the soldier model are in.
+const PLAY_BUTTONS = ['play-range', 'play-hotseat', 'play-bot', 'play-quick', 'play-create', 'play-join'];
+for (const id of PLAY_BUTTONS) $<HTMLButtonElement>(id).disabled = true;
+const loadingEl = $('loading');
+loadingEl.hidden = false;
+void preloadAssets((done, total) => {
+  loadingEl.textContent = `Loading the world… ${Math.round((done / total) * 100)}%`;
+})
+  .then(() => {
+    loadingEl.hidden = true;
+    for (const id of PLAY_BUTTONS) $<HTMLButtonElement>(id).disabled = false;
+  })
+  .catch((e: unknown) => {
+    loadingEl.textContent = `Could not load the game's art: ${e instanceof Error ? e.message : String(e)}`;
+  });
 
 function begin(): void {
   shooter.audio.unlock();

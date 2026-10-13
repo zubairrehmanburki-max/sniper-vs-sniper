@@ -43,4 +43,4 @@ pnpm typecheck
   - [ ] Store submission (needs Apple and Google developer accounts)
 - [ ] Phase 6: polish
   - [x] Fixed-position maps: Twin Bridges, Watchtowers, Oil Rigs (default), with no move phases
-  - [x] 3D look: physical sky and lighting, shadows, open water, procedural textures, bridges, towers, rigs, trees, soldier figures
+  - [x] 3D look: photographic HDRI skies lighting everything, reflective water, real grass/concrete/asphalt textures, a rigged soldier model posed per stance, painted tree billboards, bloom and scope post-processing

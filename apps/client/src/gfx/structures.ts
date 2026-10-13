@@ -1,11 +1,12 @@
 /**
  * The platforms players stand on: cable-stayed road bridges, concrete watchtowers and offshore
- * rigs, all built from primitives with procedural textures. The hit model only knows their tops;
+ * rigs, built from primitives with photographic textures. The hit model only knows their tops;
  * railings and furniture are dressing and never stop a bullet.
  */
 import * as THREE from 'three';
 import type { Ground, Structure } from '@svs/shared';
-import { concreteTexture, helipadTexture, roadTexture, rustTexture, steelTexture } from './textures.ts';
+import { assets } from './assets.ts';
+import { helipadTexture, steelTexture } from './textures.ts';
 
 export interface StructureMaterials {
   concrete: THREE.MeshStandardMaterial;
@@ -18,18 +19,22 @@ export interface StructureMaterials {
 }
 
 export function structureMaterials(): StructureMaterials {
-  const concreteMap = concreteTexture();
-  concreteMap.repeat.set(4, 4);
-  const steelMap = steelTexture();
-  const rustMap = rustTexture();
-  rustMap.repeat.set(3, 3);
+  const a = assets();
+  const tiled = (name: Parameters<typeof a.texture>[0], rx: number, ry: number): THREE.Texture => {
+    const t = a.texture(name).clone();
+    t.repeat.set(rx, ry);
+    t.needsUpdate = true;
+    return t;
+  };
+  const concrete = tiled('concrete', 3, 3);
+  const concreteN = tiled('concreteNormal', 3, 3);
   return {
-    concrete: new THREE.MeshStandardMaterial({ map: concreteMap, roughness: 0.92, metalness: 0 }),
-    road: new THREE.MeshStandardMaterial({ map: roadTexture(), roughness: 0.95, metalness: 0 }),
-    steel: new THREE.MeshStandardMaterial({ map: steelMap, color: '#9aa3ab', roughness: 0.45, metalness: 0.75 }),
-    paint: new THREE.MeshStandardMaterial({ color: '#3f5a4a', roughness: 0.55, metalness: 0.35 }),
-    rust: new THREE.MeshStandardMaterial({ map: rustMap, roughness: 0.8, metalness: 0.35 }),
-    dark: new THREE.MeshStandardMaterial({ color: '#2a2d30', roughness: 0.7, metalness: 0.4 }),
+    concrete: new THREE.MeshStandardMaterial({ map: concrete, normalMap: concreteN, roughness: 0.9, metalness: 0 }),
+    road: new THREE.MeshStandardMaterial({ map: tiled('asphalt', 1, 1), normalMap: tiled('asphaltNormal', 1, 1), roughness: 0.95, metalness: 0 }),
+    steel: new THREE.MeshStandardMaterial({ map: steelTexture(), color: '#9aa3ab', roughness: 0.4, metalness: 0.8 }),
+    paint: new THREE.MeshStandardMaterial({ color: '#3f5a4a', roughness: 0.5, metalness: 0.4 }),
+    rust: new THREE.MeshStandardMaterial({ map: tiled('rust', 4, 4), roughness: 0.75, metalness: 0.4 }),
+    dark: new THREE.MeshStandardMaterial({ color: '#2a2d30', roughness: 0.6, metalness: 0.5 }),
     helipad: new THREE.MeshStandardMaterial({ map: helipadTexture(), roughness: 0.9, metalness: 0 }),
   };
 }
@@ -111,8 +116,11 @@ export function addBridge(group: THREE.Group, spec: Extract<Structure, { kind: '
   // Deck: road on top, concrete sides and underside.
   const road = mats.road.clone();
   road.map = mats.road.map!.clone();
-  road.map.repeat.set(span / 12, 1);
+  road.map.repeat.set(span / 6, width / 6);
   road.map.needsUpdate = true;
+  road.normalMap = mats.road.normalMap!.clone();
+  road.normalMap.repeat.copy(road.map.repeat);
+  road.normalMap.needsUpdate = true;
   const deckGeo = new THREE.BoxGeometry(span, deckThick, width);
   const deck = new THREE.Mesh(deckGeo, [mats.concrete, mats.concrete, road, mats.concrete, mats.concrete, mats.concrete]);
   deck.position.set(0, spec.deckY - deckThick / 2, z);
