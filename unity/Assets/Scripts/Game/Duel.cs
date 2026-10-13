@@ -351,6 +351,8 @@ namespace SniperDuel.Game
                 Seed = swaySeed,
                 Penalty = p.Wounds > 0 ? cfg.Player.Wound.SwayFactor : 1,
             }, time, cfg);
+            // The eye drifts behind the scope with the wobble; recoil throws it up and off the axis.
+            if (scoped) ScopeMask.EyeOffset = new Vector2((float)(s.Right * 9), (float)(-s.Up * 9 - recoil * 6000));
             return new Aim { Yaw = yaw + s.Right / 1000, Pitch = pitch + s.Up / 1000 + recoil };
         }
 
