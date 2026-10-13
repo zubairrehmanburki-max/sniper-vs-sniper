@@ -91,9 +91,17 @@ namespace SniperDuel.Game.World
             foreach (float side in new[] { -1f, 1f })
             {
                 float z = side * (hw - 0.15f);
-                for (float x = -reach; x <= reach; x += 2.5f) rail.Box(new Vector3(x, deck + 0.75f, z), new Vector3(0.08f, 1.1f, 0.08f));
-                rail.Box(new Vector3(0, deck + 1.28f, z), new Vector3(2 * reach, 0.07f, 0.1f));
-                rail.Box(new Vector3(0, deck + 0.7f, z), new Vector3(2 * reach, 0.05f, 0.06f));
+                // A 4 m gap at mid-span where the shooters lie, so nothing stands in the firing line.
+                const float Gap = 2;
+                for (float x = -reach; x <= reach; x += 2.5f)
+                    if (Mathf.Abs(x) > Gap) rail.Box(new Vector3(x, deck + 0.75f, z), new Vector3(0.08f, 1.1f, 0.08f));
+                foreach (float dir in new[] { -1f, 1f })
+                {
+                    float mid = dir * (Gap + reach) / 2, len = reach - Gap;
+                    rail.Box(new Vector3(mid, deck + 1.28f, z), new Vector3(len, 0.07f, 0.1f));
+                    rail.Box(new Vector3(mid, deck + 0.7f, z), new Vector3(len, 0.05f, 0.06f));
+                    rail.Box(new Vector3(dir * Gap, deck + 0.75f, z), new Vector3(0.1f, 1.1f, 0.1f));
+                }
                 // Lamp posts every 40 m.
                 for (float x = -reach + 20; x < reach; x += 40)
                 {
