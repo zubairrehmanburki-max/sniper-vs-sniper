@@ -111,9 +111,20 @@ namespace SniperDuel.Game
             }
             // Plain world views for review: the menu backdrop, the 1× eye and a 12× look at the enemy.
             ui.HideAll();
-            foreach (var (label, screen) in new[] { ("World-Menu", "Title"), ("World-Eye", "Hud"), ("World-Scope", "Scope") })
+            foreach (var (label, screen) in new[] { ("World-Menu", "Title"), ("World-Eye", "Hud"), ("World-Scope", "Scope"), ("World-Enemy", "") })
             {
                 Frame(screen);
+                if (screen == "" && arena?.Enemy != null)
+                {
+                    // Close look at the enemy figure: posing, scale and lighting.
+                    var e = arena.Enemy.transform.position;
+                    rig.Current = CameraRig.Mode.Director;
+                    rig.Cam.fieldOfView = 40;
+                    rig.Cam.transform.position = e + new Vector3(2.6f, 1.4f, -3.2f);
+                    rig.Cam.transform.LookAt(e + new Vector3(0, 0.3f, 0.3f));
+                    var b = Library.BoundsOf(arena.Enemy.gameObject);
+                    Debug.Log($"[Capture] enemy at {e} bounds {b.center} size {b.size}");
+                }
                 for (int f = 0; f < 6; f++) yield return null;
                 ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"{++n:00}-{label}.png"));
                 yield return null;

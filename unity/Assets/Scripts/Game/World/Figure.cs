@@ -94,6 +94,8 @@ namespace SniperDuel.Game.World
                     r.materials = mats;
                 }
             }
+            else Debug.LogWarning("[Figure] Characters/Soldier did not load");
+            Debug.Log($"[Figure] {stance}: {fig.bones.Count} bones, {root.GetComponentsInChildren<Renderer>().Length} renderers");
             fig.bones.TryGetValue("Hips", out fig.hips);
             if (fig.hips != null) fig.hipsRest = fig.hips.localPosition;
 
