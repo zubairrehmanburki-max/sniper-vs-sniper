@@ -77,6 +77,20 @@ namespace SniperDuel.EditorTools
             PlayerSettings.productName = "Sniper vs Sniper";
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.iOS, BundleId);
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Standalone, BundleId);
+            // App Store Connect rejects uploads without a 1024 px icon; one square icon fills every size.
+            var icon = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Art/AppIcon.png");
+            if (icon != null)
+            {
+                PlayerSettings.SetIcons(NamedBuildTarget.Unknown, new[] { icon }, IconKind.Any);
+                foreach (var kind in PlayerSettings.GetSupportedIconKinds(NamedBuildTarget.iOS))
+                {
+                    var icons = PlayerSettings.GetPlatformIcons(NamedBuildTarget.iOS, kind);
+                    foreach (var pi in icons)
+                        for (int layer = 0; layer < pi.maxLayerCount; layer++) pi.SetTexture(icon, layer);
+                    PlayerSettings.SetPlatformIcons(NamedBuildTarget.iOS, kind, icons);
+                }
+            }
+            else Debug.LogWarning("[Build] Assets/Art/AppIcon.png missing: the iOS upload will be rejected");
             // Version 2.x is the Unity game; build numbers come from the workflow run.
             PlayerSettings.bundleVersion = "2.0";
             PlayerSettings.iOS.buildNumber = Environment.GetEnvironmentVariable("BUILD_NUMBER") ?? "1";
@@ -106,9 +120,6 @@ namespace SniperDuel.EditorTools
             PlayerSettings.runInBackground = true;
             PlayerSettings.SplashScreen.show = false;
             PlayerSettings.SplashScreen.showUnityLogo = false;
-
-            var icon = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Art/Icon.png");
-            if (icon != null) PlayerSettings.SetIcons(NamedBuildTarget.Unknown, new[] { icon }, IconKind.Any);
         }
 
         /// <summary>URP with HDR, MSAA, soft shadows and post-processing, assigned to every quality level.</summary>
