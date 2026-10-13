@@ -17,6 +17,7 @@ import {
 } from '@svs/shared';
 import { RangeAudio } from './audio.ts';
 import { clickTurret, formatMil, pxPerMrad, scopeFov, windClock } from './format.ts';
+import { buildPostChain, type PostChain } from './gfx/post.ts';
 import { drawReticle } from './reticle.ts';
 import type { RangeView } from './scene.ts';
 import { haptics } from './haptics.ts';
@@ -48,6 +49,7 @@ export interface ShooterHooks {
 
 export class Shooter {
   readonly renderer: THREE.WebGLRenderer;
+  private readonly post: PostChain;
   readonly audio = new RangeAudio();
   private readonly reticleCtx: CanvasRenderingContext2D;
   view: RangeView | null = null;
@@ -84,6 +86,7 @@ export class Shooter {
     this.renderer.toneMappingExposure = 0.85;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
+    this.post = buildPostChain(this.renderer);
     this.reticleCtx = $<HTMLCanvasElement>('reticle').getContext('2d')!;
     this.bindInput();
     window.addEventListener('resize', () => this.resize());
@@ -94,6 +97,7 @@ export class Shooter {
   attach(view: RangeView, hooks: ShooterHooks): void {
     this.view = view;
     this.hooks = hooks;
+    this.post.setScene(view.scene, view.camera);
     this.resize();
   }
 
@@ -276,6 +280,7 @@ export class Shooter {
 
   setScoped(on: boolean): void {
     this.scoped = on;
+    this.post.setScoped(on ? 1 : 0);
     $('app').classList.toggle('scoped', on);
     $('scope').classList.toggle('on', on);
   }
@@ -347,6 +352,7 @@ export class Shooter {
     const w = window.innerWidth;
     const h = window.innerHeight;
     this.renderer.setSize(w, h, false);
+    this.post.setSize(w, h, this.renderer.getPixelRatio());
     if (this.view) {
       this.view.camera.aspect = w / h;
       this.view.camera.updateProjectionMatrix();
@@ -373,7 +379,7 @@ export class Shooter {
     if (this.view && this.hooks && this.director) {
       this.director(this.view.camera, dt);
       this.view.update(this.time, dt, (p) => this.hooks!.windAt(p));
-      this.renderer.render(this.view.scene, this.view.camera);
+      this.post.render(dt);
     } else if (this.view && this.hooks) {
       const cam = this.view.camera;
       const aim = this.trueAim();
@@ -390,7 +396,7 @@ export class Shooter {
       $('windmeter').textContent = `Wind ${wc.speed.toFixed(1)} m/s from ${wc.clock} o'clock`;
       this.audio.setWind(this.running ? wc.speed : 0);
       this.view.update(this.time, dt, (p) => this.hooks!.windAt(p));
-      this.renderer.render(this.view.scene, cam);
+      this.post.render(dt);
       if (this.scoped) {
         drawReticle(this.reticleCtx, window.innerWidth, window.innerHeight, pxPerMrad(window.innerHeight, fov));
       }

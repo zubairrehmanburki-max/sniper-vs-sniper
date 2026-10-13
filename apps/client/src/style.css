@@ -190,3 +190,5 @@ body.duel #call { top: 170px; }
 #killcam-stats b { color: var(--text); }
 body.killcam-on #duelbar, body.killcam-on #turrets, body.killcam-on #actions, body.killcam-on #mapview,
 body.killcam-on #waitview, body.killcam-on #call, body.killcam-on #side, body.killcam-on #crosshair { display: none !important; }
+
+.loading { color: #ffd27a; font-weight: 600; margin: 0 0 8px; }

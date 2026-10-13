@@ -27,6 +27,13 @@ Adding `?debug` to the URL exposes `window.svs` for automated playtests (`svs.de
 a perfect calculator solution on the 900 m plate; in a duel `svs.debugSolve()` aims at the enemy
 and `svs.debugState()` returns a one-line state summary).
 
+## Art assets
+
+Skies, textures and the soldier model live in `src/assets/` (credits in `src/assets/CREDITS.md`) and
+are fetched once at start-up by `src/gfx/assets.ts`. Each map picks a sky and a sun bearing in its
+palette (`packages/shared/src/maps.ts`). `VITE_INLINE_ASSETS=1 vite build` bakes every asset into
+the script as data: URLs, which is how the single-file playable is produced.
+
 ## iOS and Android apps (Phase 5)
 
 The same build runs inside native shells made with Capacitor (`capacitor.config.ts`, `android/`,

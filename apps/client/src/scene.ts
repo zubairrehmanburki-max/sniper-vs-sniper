@@ -1,15 +1,17 @@
 /**
  * The 3D world: terrain, sky, water, structures, cover, figures and every wind cue (grass by zone,
- * flags, dust and clouds drifting downwind), all driven by the real wind field. Everything is
- * procedural: no asset files.
+ * flags, dust drifting downwind), all driven by the real wind field. Lit by a photographic HDRI
+ * sky; surfaces carry real textures; the figures are a rigged soldier model (see gfx/).
  */
 import * as THREE from 'three';
 import type { Vec3 } from '@svs/ballistics';
 import type { Box, Ground, Palette, Silhouette, Stance, Structure } from '@svs/shared';
-import { buildFigure } from './gfx/figure.ts';
+import { assets } from './gfx/assets.ts';
+import { buildFigure, type Figure } from './gfx/figure.ts';
 import { buildDaylight } from './gfx/sky.ts';
 import { addBridge, addTower, structureMaterials } from './gfx/structures.ts';
-import { cloudTexture, concreteTexture, fbm, grainTexture, signTexture, softDotTexture, steelTexture, woodTexture } from './gfx/textures.ts';
+import { fbm, signTexture, softDotTexture, steelTexture, woodTexture } from './gfx/textures.ts';
+import { buildTrees, type TreeField } from './gfx/trees.ts';
 import { buildWater, type WaterSurface } from './gfx/water.ts';
 
 export interface WorldOptions {
@@ -34,7 +36,7 @@ export interface WorldOptions {
   laneHalfWidth?: number;
   flags?: Array<[number, number]>;
   palette?: Palette;
-  /** Needed to bake the sky into reflections; without it materials use flat ambient light. */
+  /** Needed to prefilter the sky for reflections; without it materials use the raw sky. */
   renderer?: THREE.WebGLRenderer;
 }
 
@@ -83,26 +85,26 @@ export function buildWorld(opts: WorldOptions): RangeView {
   const centre = new THREE.Vector3(0, 0, -laneLength / 2);
 
   // ---- light and air ----------------------------------------------------------------------
-  const daylight = buildDaylight(opts.renderer, { elevationDeg: 34, azimuthDeg: 52, turbidity: 3.2, rayleigh: 1.6 });
-  if (daylight.background) scene.background = daylight.background;
-  else {
-    daylight.sky.name = 'sky';
-    scene.add(daylight.sky);
-  }
-  if (daylight.env) {
-    scene.environment = daylight.env;
-    scene.environmentIntensity = 0.45;
-  }
-  const fogColor = pal.sky ? new THREE.Color(pal.sky).lerp(daylight.horizon, 0.5) : daylight.horizon;
-  const fog = new THREE.Fog(fogColor, 700, 6500);
+  const daylight = buildDaylight(opts.renderer, { sky: pal.sky ?? 'sunrise', sunAzimuthDeg: pal.sunAzimuthDeg ?? 125 });
+  scene.background = daylight.background;
+  scene.backgroundRotation.copy(daylight.rotation);
+  scene.environment = daylight.env;
+  scene.environmentRotation.copy(daylight.rotation);
+  scene.environmentIntensity = 0.8;
+  // Fog takes the colour of the sky just above the horizon, held to a sane brightness.
+  const fogColor = daylight.horizon.clone();
+  const fogLum = 0.2126 * fogColor.r + 0.7152 * fogColor.g + 0.0722 * fogColor.b;
+  if (fogLum > 1.6) fogColor.multiplyScalar(1.6 / fogLum);
+  const fog = new THREE.Fog(fogColor, 600, 7000);
   scene.fog = fog;
 
   const camera = new THREE.PerspectiveCamera(60, 1, 0.05, 9000);
   camera.rotation.order = 'YXZ';
 
-  const hemi = new THREE.HemisphereLight('#cfe0f5', '#6d6450', 0.55);
+  const hemi = new THREE.HemisphereLight(fogColor, '#5e5a4a', 0.25);
   scene.add(hemi);
-  const sun = new THREE.DirectionalLight('#fff1dc', 2.6);
+  // The sun's strength follows its height: a low sun is red and weak, a high one white and hard.
+  const sun = new THREE.DirectionalLight(daylight.sunColor, 1.2 + 2.6 * Math.sqrt(daylight.elevation));
   sun.name = 'sun';
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
@@ -115,7 +117,14 @@ export function buildWorld(opts: WorldOptions): RangeView {
   scene.add(sun, sun.target);
 
   // ---- terrain ----------------------------------------------------------------------------
+  // Vertex colours tint the grass texture: near white keeps it as photographed, a warm tint
+  // dries it out, a dark one is mud. The palette's lightness (around 0.4 for lush, 0.56 for dry)
+  // becomes a brightness multiplier and its hue a shift towards straw or moss.
   const c = new THREE.Color();
+  const tint = (hue: number, sat: number, light: number, n: number, out: THREE.Color): void => {
+    out.setHSL(hue, Math.min(0.5, sat * 0.6), Math.min(0.92, 0.55 + (light - 0.4) * 0.9 + n * 0.08));
+    out.multiplyScalar(1.25);
+  };
   const groundColor = (x: number, z: number, y: number, out: THREE.Color): void => {
     const inLane = Math.abs(x) < halfWidth && z < 10 && z > -laneLength - 20;
     const n = rand();
@@ -124,11 +133,11 @@ export function buildWorld(opts: WorldOptions): RangeView {
     if (water !== undefined && y < water - 0.3) {
       // Sea or river bed: dark, seen only through the shallows.
       const [wh, ws, wl] = pal.water ?? [0.55, 0.35, 0.3];
-      out.setHSL(wh, ws * 0.6, wl * 0.35);
+      out.setHSL(wh, ws * 0.5, wl * 0.3);
     } else if (water !== undefined && y < water + 1.5) {
-      out.setHSL(0.11, 0.3, 0.42 + n * 0.05); // wet sand and mud at the shore
-    } else if (inLane) out.setHSL(lh, ls, ll + n * 0.04);
-    else out.setHSL(oh + n * 0.04, os + n * 0.1, ol + n * 0.08);
+      out.setHSL(0.1, 0.25, 0.32 + n * 0.05); // wet sand and mud at the shore
+    } else if (inLane) tint(lh, ls, ll, n, out);
+    else tint(oh + n * 0.03, os, ol, n, out);
   };
   // Mountains ringing the far distance, past the playable terrain.
   const farRelief = (x: number, z: number): number => {
@@ -139,8 +148,17 @@ export function buildWorld(opts: WorldOptions): RangeView {
     const n = fbm(a / Math.PI, r / 9000, seed & 1023, 5, 3);
     return k * (120 + 520 * n * n);
   };
-  const grain = grainTexture(seed);
-  const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, map: grain, roughness: 1, metalness: 0 });
+  const grassTex = assets().texture('grass');
+  const grassNormal = assets().texture('grassNormal');
+  const terrainMat = new THREE.MeshStandardMaterial({
+    vertexColors: true,
+    map: grassTex,
+    normalMap: grassNormal,
+    normalScale: new THREE.Vector2(0.6, 0.6),
+    roughness: 1,
+    metalness: 0,
+  });
+  const TILE_M = 7; // metres per repeat of the grass texture
   const snowAbove = pal.snowAbove;
   const hillColor = new THREE.Color(pal.hills ?? '#7d8a6a');
   const snow = new THREE.Color('#eef2f5');
@@ -162,7 +180,6 @@ export function buildWorld(opts: WorldOptions): RangeView {
     const pos = geo.attributes.position!;
     const uv = geo.attributes.uv!;
     const colors: number[] = [];
-    const scale = far ? 7000 / 9 : laneW / 9;
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i);
       const z = pos.getZ(i);
@@ -176,7 +193,7 @@ export function buildWorld(opts: WorldOptions): RangeView {
       }
       colors.push(c.r, c.g, c.b);
       pos.setY(i, y);
-      uv.setXY(i, uv.getX(i) * scale, uv.getY(i) * scale);
+      uv.setXY(i, x / TILE_M, z / TILE_M); // world-space tiling, so the two meshes agree
     }
     geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     geo.computeVertexNormals();
@@ -188,20 +205,17 @@ export function buildWorld(opts: WorldOptions): RangeView {
 
   // ---- water ------------------------------------------------------------------------------
   let waterSurface: WaterSurface | null = null;
+  const reflectionSkips: THREE.Object3D[] = [];
   if (water !== undefined) {
     const [wh, ws, wl] = pal.water ?? [0.55, 0.35, 0.3];
-    waterSurface = buildWater(
-      water,
-      9000,
-      daylight.sunDir,
-      {
-        deep: new THREE.Color().setHSL(wh, ws, wl * 0.9),
-        shallow: new THREE.Color().setHSL(wh - 0.03, ws * 0.9, wl * 1.5),
-        horizon: fogColor.clone(),
-        zenith: new THREE.Color().setHSL(0.6, 0.5, 0.5),
-      },
-      fog,
-    );
+    waterSurface = buildWater({
+      level: water,
+      size: 9000,
+      sunDir: daylight.sunDir,
+      sunColor: daylight.sunColor,
+      color: new THREE.Color().setHSL(wh, ws, Math.max(0.3, wl * 0.9)),
+      skipInReflection: () => reflectionSkips,
+    });
     waterSurface.mesh.name = 'water';
     scene.add(waterSurface.mesh);
   }
@@ -237,9 +251,13 @@ export function buildWorld(opts: WorldOptions): RangeView {
   }
 
   // ---- cover: the boxes the hit test uses, drawn as boulders or the built things they are ----
-  const rockTex = concreteTexture(seed + 3);
-  rockTex.repeat.set(2, 2);
-  const rockMat = new THREE.MeshStandardMaterial({ color: pal.rocks ?? '#8e8a80', map: rockTex, roughness: 0.95, flatShading: true });
+  const rockMat = new THREE.MeshStandardMaterial({
+    color: pal.rocks ?? '#8e8a80',
+    map: assets().texture('concrete'),
+    normalMap: assets().texture('concreteNormal'),
+    roughness: 0.95,
+    flatShading: true,
+  });
   const builtMats: Record<string, THREE.Material> = {
     concrete: mats.concrete,
     metal: new THREE.MeshStandardMaterial({ map: steelTexture(), color: '#8a949c', roughness: 0.5, metalness: 0.6 }),
@@ -269,19 +287,19 @@ export function buildWorld(opts: WorldOptions): RangeView {
   }
 
   // ---- player figures (duel) --------------------------------------------------------------
-  const figures = new Map<string, THREE.Group>();
+  const figures = new Map<string, Figure>();
   const setFigure: RangeView['setFigure'] = (id, f) => {
     const old = figures.get(id);
     if (old) {
-      scene.remove(old);
+      scene.remove(old.group);
       figures.delete(id);
     }
     if (!f) return;
-    const g = buildFigure(f.stance, f.dims);
-    g.position.set(f.position.x, f.position.y, f.position.z);
-    g.rotation.y = -f.facingYaw;
-    scene.add(g);
-    figures.set(id, g);
+    const fig = buildFigure(f.stance, f.dims);
+    fig.group.position.set(f.position.x, f.position.y, f.position.z);
+    fig.group.rotation.y = -f.facingYaw;
+    scene.add(fig.group);
+    figures.set(id, fig);
   };
 
   // ---- steel silhouettes on posts (practice) ----------------------------------------------
@@ -390,60 +408,37 @@ export function buildWorld(opts: WorldOptions): RangeView {
   grass.count = placed;
   grass.name = 'grass';
   scene.add(grass);
+  reflectionSkips.push(grass);
 
-  // Trees (or shrubs) on the land around the lane: three stacked cones on a trunk, instanced.
+  // Trees (or shrubs) on the land around the lane, as painted billboards.
   const vegetation = pal.vegetation ?? 'pine';
+  let trees: TreeField | null = null;
   if (vegetation !== 'none') {
     const pine = vegetation === 'pine';
-    const foliageGeo = pine
-      ? (() => {
-          const g = new THREE.ConeGeometry(2.2, 5, 7);
-          const g2 = new THREE.ConeGeometry(1.7, 4.2, 7);
-          const g3 = new THREE.ConeGeometry(1.1, 3.4, 7);
-          g.translate(0, 4.5, 0);
-          g2.translate(0, 7.2, 0);
-          g3.translate(0, 9.6, 0);
-          const merged = new THREE.BufferGeometry();
-          const parts = [g, g2, g3];
-          const positions: number[] = [];
-          const normals: number[] = [];
-          for (const p of parts) {
-            const pg = p.toNonIndexed();
-            positions.push(...(pg.attributes.position!.array as Float32Array));
-            normals.push(...(pg.attributes.normal!.array as Float32Array));
-          }
-          merged.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-          merged.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
-          return merged;
-        })()
-      : new THREE.IcosahedronGeometry(1.4, 1).translate(0, 1.1, 0);
-    const foliageMat = new THREE.MeshStandardMaterial({ color: pine ? '#2f5a34' : '#5f6b3a', roughness: 1, flatShading: true });
-    const trunkGeo = new THREE.CylinderGeometry(0.25, 0.4, 4, 6).translate(0, 2, 0);
-    const trunkMat = new THREE.MeshStandardMaterial({ color: '#4a3a2a', roughness: 1 });
-    const foliage = new THREE.InstancedMesh(foliageGeo, foliageMat, TREE_COUNT);
-    const trunks = new THREE.InstancedMesh(trunkGeo, trunkMat, TREE_COUNT);
-    let n = 0;
-    for (let tries = 0; n < TREE_COUNT && tries < TREE_COUNT * 6; tries++) {
-      const r = 60 + rand() * 2100;
-      const a = rand() * Math.PI * 2;
-      const x = Math.sin(a) * r;
-      const z = centre.z + Math.cos(a) * r;
-      const inLane = Math.abs(x) < halfWidth + 12 && z < 30 && z > -laneLength - 40;
-      if (inLane || !onLand(x, z) || onPlatform(x, z)) continue;
-      const y = terrain(x, z) + farRelief(x, z);
-      if (snowAbove !== undefined && y > snowAbove - 40) continue;
-      q.setFromAxisAngle(up, rand() * Math.PI * 2);
-      const s = pine ? 0.7 + rand() * 1.1 : 0.6 + rand() * 0.9;
-      m4.compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(s, s * (0.9 + rand() * 0.3), s));
-      foliage.setMatrixAt(n, m4);
-      trunks.setMatrixAt(n, m4);
-      n++;
-    }
-    foliage.count = trunks.count = n;
-    foliage.name = 'trees';
-    trunks.name = 'trunks';
-    foliage.castShadow = trunks.castShadow = true;
-    scene.add(foliage, trunks);
+    trees = buildTrees(
+      pine ? 'pine' : 'shrub',
+      TREE_COUNT,
+      (r) => {
+        for (let tries = 0; tries < 8; tries++) {
+          const dist = 60 + r() * 2100;
+          const a = r() * Math.PI * 2;
+          const x = Math.sin(a) * dist;
+          const z = centre.z + Math.cos(a) * dist;
+          const inLane = Math.abs(x) < halfWidth + 12 && z < 30 && z > -laneLength - 40;
+          if (inLane || !onLand(x, z) || onPlatform(x, z)) continue;
+          const y = terrain(x, z) + farRelief(x, z);
+          if (snowAbove !== undefined && y > snowAbove - 40) continue;
+          // Pines are 14–24 m tall; shrubs 2–4 m. The card is 2 m tall at scale 1.
+          const scale = pine ? 7 + r() * 5 : 1 + r() * 1;
+          return { x, y: y - 0.2, z, scale };
+        }
+        return null;
+      },
+      rand,
+    );
+    trees.mesh.name = 'trees';
+    scene.add(trees.mesh);
+    reflectionSkips.push(trees.mesh);
   }
 
   // ---- wind flags beside the lane --------------------------------------------------------
@@ -473,29 +468,15 @@ export function buildWorld(opts: WorldOptions): RangeView {
     flags.push({ group, cloth, pos: { x, y: group.position.y, z } });
   }
 
-  // ---- clouds ------------------------------------------------------------------------------
-  const cloudTex = cloudTexture(seed);
-  const clouds: THREE.Sprite[] = [];
-  for (let i = 0; i < 16; i++) {
-    const mat = new THREE.SpriteMaterial({ map: cloudTex, transparent: true, depthWrite: false, opacity: 0.85, fog: true });
-    const sp = new THREE.Sprite(mat);
-    const r = 900 + rand() * 2600;
-    const a = rand() * Math.PI * 2;
-    sp.position.set(Math.sin(a) * r, 520 + rand() * 420, centre.z + Math.cos(a) * r);
-    const w = 380 + rand() * 520;
-    sp.scale.set(w, w * (0.42 + rand() * 0.2), 1);
-    scene.add(sp);
-    clouds.push(sp);
-  }
-
   // ---- dust, splashes and tracers ---------------------------------------------------------
   const dotTex = softDotTexture();
+  const smokeTex = assets().texture('smoke');
   const puffs: Array<{ sprite: THREE.Sprite; age: number; life: number; vel: THREE.Vector3; size: number; gravity: number }> = [];
   const dust = (point: Vec3, size = 1): void => {
     const splash = water !== undefined && point.y <= water + 0.3 && terrain(point.x, point.z) < water;
     const n = splash ? 14 : 9;
     for (let i = 0; i < n; i++) {
-      const mat = new THREE.SpriteMaterial({ map: dotTex, color: splash ? '#eaf4ff' : '#b59a6c', transparent: true, depthWrite: false });
+      const mat = new THREE.SpriteMaterial({ map: smokeTex, color: splash ? '#eaf4ff' : '#a08b66', transparent: true, depthWrite: false, rotation: rand() * Math.PI * 2 });
       const sprite = new THREE.Sprite(mat);
       sprite.position.set(point.x + (rand() - 0.5) * 0.3, point.y + 0.1 + rand() * 0.2, point.z + (rand() - 0.5) * 0.3);
       scene.add(sprite);
@@ -533,8 +514,7 @@ export function buildWorld(opts: WorldOptions): RangeView {
   const flare = scene.getObjectsByProperty('name', 'flare') as THREE.Mesh[];
   const update = (time: number, dt: number, windAt: (p: Vec3) => Vec3): void => {
     clock = time;
-    // The sky dome (if drawn live) and the shadow box follow the camera; the sun stays on its bearing.
-    if (daylight.sky.parent) daylight.sky.position.copy(camera.position);
+    // The shadow box follows the camera; the sun stays on its bearing.
     sun.target.position.copy(camera.position);
     sun.position.copy(camera.position).addScaledVector(daylight.sunDir, 400);
     sun.target.updateMatrixWorld();
@@ -547,16 +527,8 @@ export function buildWorld(opts: WorldOptions): RangeView {
     }
     const midWind = windAt({ x: 0, y: 0, z: centre.z });
     waterSurface?.update(time, midWind, camera.position);
-    for (const sp of clouds) {
-      sp.position.x += midWind.x * dt * 0.6;
-      sp.position.z += midWind.z * dt * 0.6;
-      const dx = sp.position.x;
-      const dz = sp.position.z - centre.z;
-      if (Math.hypot(dx, dz) > 3800) {
-        sp.position.x = -dx * 0.9;
-        sp.position.z = centre.z - dz * 0.9;
-      }
-    }
+    trees?.update(time, midWind);
+    for (const fig of figures.values()) fig.update(dt);
     for (const f of flare) f.scale.setScalar(0.85 + 0.3 * Math.sin(time * 17) * Math.sin(time * 5.3));
 
     for (const f of flags) {

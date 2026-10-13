@@ -1,6 +1,6 @@
 /**
- * Procedural textures: everything is drawn on a canvas at start-up, so the game ships no image
- * files and every map still gets grain, concrete, asphalt, rust and cloud detail.
+ * Small procedural textures drawn on a canvas at start-up: brushed steel, wood, the range signs,
+ * the helideck markings and the soft dot used by tracers. Photographic textures live in assets/.
  */
 import * as THREE from 'three';
 
@@ -71,53 +71,9 @@ function shade(g: CanvasRenderingContext2D, img: ImageData, f: (u: number, v: nu
 
 const clamp255 = (v: number): number => Math.max(0, Math.min(255, Math.round(v)));
 
-/** Neutral grain that multiplies vertex colours: keeps the ground from looking like plastic. */
-export function grainTexture(seed = 1): THREE.Texture {
-  return canvasTexture(256, (g, img) =>
-    shade(g, img, (u, v) => {
-      const n = fbm(u, v, seed, 5, 6);
-      const k = clamp255(170 + 85 * n);
-      return [k, k, k];
-    }),
-  );
-}
 
-export function concreteTexture(seed = 2): THREE.Texture {
-  return canvasTexture(256, (g, img) =>
-    shade(g, img, (u, v) => {
-      const n = fbm(u, v, seed, 5, 8);
-      const streak = 0.06 * Math.sin(v * 60 + fbm(u, v, seed + 9, 2, 3) * 6);
-      const speck = hash(Math.floor(u * 256), Math.floor(v * 256), seed) > 0.985 ? -40 : 0;
-      const k = 150 + 50 * n + streak * 255 + speck;
-      return [clamp255(k), clamp255(k - 2), clamp255(k - 6)];
-    }),
-  );
-}
 
-/** Asphalt with a dashed centre line and solid edge lines, tiled along u. */
-export function roadTexture(seed = 3): THREE.Texture {
-  return canvasTexture(256, (g, img) =>
-    shade(g, img, (u, v) => {
-      const n = fbm(u, v, seed, 4, 12);
-      let k = 52 + 28 * n;
-      const centre = Math.abs(v - 0.5) < 0.012 && u % 0.5 < 0.3;
-      const edge = Math.abs(v - 0.06) < 0.01 || Math.abs(v - 0.94) < 0.01;
-      if (centre || edge) k = 215 + 25 * n;
-      return [clamp255(k), clamp255(k), clamp255(k - 4)];
-    }),
-  );
-}
 
-export function rustTexture(seed = 4): THREE.Texture {
-  return canvasTexture(256, (g, img) =>
-    shade(g, img, (u, v) => {
-      const n = fbm(u, v, seed, 5, 5);
-      const rust = Math.max(0, n - 0.55) * 2.2;
-      const r = 140 + 60 * n - rust * 20;
-      return [clamp255(r), clamp255(r * (0.9 - rust * 0.45)), clamp255(r * (0.85 - rust * 0.6))];
-    }),
-  );
-}
 
 export function steelTexture(seed = 5): THREE.Texture {
   return canvasTexture(256, (g, img) =>
@@ -140,34 +96,6 @@ export function woodTexture(seed = 6): THREE.Texture {
   );
 }
 
-/** Soft cumulus blob with alpha, for sky billboards. */
-export function cloudTexture(seed = 7): THREE.Texture {
-  const size = 256;
-  const c = document.createElement('canvas');
-  c.width = c.height = size;
-  const g = c.getContext('2d')!;
-  const img = g.createImageData(size, size);
-  const d = img.data;
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const u = x / size - 0.5;
-      const v = y / size - 0.5;
-      const r = Math.hypot(u * 1.1, v * 1.8);
-      const n = fbm(x / size, y / size, seed, 5, 3);
-      const a = Math.max(0, Math.min(1, (0.55 - r) * 3 + (n - 0.5) * 1.4));
-      const i = (y * size + x) * 4;
-      const shadeK = 225 + 30 * n;
-      d[i] = shadeK;
-      d[i + 1] = shadeK;
-      d[i + 2] = Math.min(255, shadeK + 8);
-      d[i + 3] = Math.round(a * a * 255);
-    }
-  }
-  g.putImageData(img, 0, 0);
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
-}
 
 export function softDotTexture(): THREE.Texture {
   const c = document.createElement('canvas');

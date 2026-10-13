@@ -64,7 +64,9 @@ export interface DuelMap {
 
 /** Colours for drawing a map; anything left out uses the client's default green range. */
 export interface Palette {
-  sky?: string;
+  /** Which photographic sky lights the map, and where its sun sits (degrees clockwise from the enemy's direction). */
+  sky?: 'sunrise' | 'clear' | 'sunset';
+  sunAzimuthDeg?: number;
   /** Ground hue/saturation/lightness in the lane and around it (0–1 each). */
   lane?: [number, number, number];
   outside?: [number, number, number];
@@ -241,7 +243,8 @@ function makeDryValley(): DuelMap {
       ],
       laneHalfWidth: 75,
       palette: {
-        sky: '#c7d6e2',
+        sky: 'clear',
+        sunAzimuthDeg: 105,
         lane: [0.09, 0.32, 0.56],
         outside: [0.08, 0.28, 0.5],
         grass: '#b9a66b',
@@ -353,7 +356,8 @@ function makeHarborRooftops(): DuelMap {
       ],
       laneHalfWidth: 60,
       palette: {
-        sky: '#b9c8d6',
+        sky: 'sunrise',
+        sunAzimuthDeg: 250,
         lane: [0.08, 0.05, 0.5],
         outside: [0.58, 0.25, 0.42],
         water: [0.56, 0.35, 0.32],
@@ -440,7 +444,8 @@ function makeAlpineRidge(): DuelMap {
       ],
       laneHalfWidth: 75,
       palette: {
-        sky: '#9fc3e8',
+        sky: 'clear',
+        sunAzimuthDeg: 80,
         lane: [0.3, 0.18, 0.5],
         outside: [0.6, 0.08, 0.78],
         grass: '#8fa06a',
@@ -532,7 +537,8 @@ function makeTwinBridges(): DuelMap {
       laneHalfWidth: 180,
       structures,
       palette: {
-        sky: '#bcd0e4',
+        sky: 'sunrise',
+        sunAzimuthDeg: 125,
         lane: [0.3, 0.3, 0.42],
         outside: [0.27, 0.32, 0.38],
         water: [0.55, 0.4, 0.3],
@@ -601,7 +607,8 @@ function makeWatchtowers(): DuelMap {
       laneHalfWidth: 160,
       structures,
       palette: {
-        sky: '#c9d3d8',
+        sky: 'clear',
+        sunAzimuthDeg: 95,
         lane: [0.22, 0.28, 0.34],
         outside: [0.2, 0.3, 0.3],
         water: [0.46, 0.25, 0.22],
@@ -660,7 +667,8 @@ function makeOilRigs(): DuelMap {
       laneHalfWidth: 200,
       structures,
       palette: {
-        sky: '#b7c4cf',
+        sky: 'sunset',
+        sunAzimuthDeg: 95,
         lane: [0.58, 0.3, 0.22],
         outside: [0.58, 0.3, 0.22],
         water: [0.58, 0.32, 0.2],
