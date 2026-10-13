@@ -45,6 +45,7 @@ namespace SniperDuel.Game.World
         void LateUpdate()
         {
             clock += Time.deltaTime;
+            Sound.AmbienceOn = Current != Mode.Menu;
             if (Current == Mode.Menu)
             {
                 // Low over the water off the near bridge, drifting and looking up the estuary.

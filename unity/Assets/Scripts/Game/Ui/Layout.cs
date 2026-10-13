@@ -227,7 +227,12 @@ namespace SniperDuel.Game.Ui
             if (on != null)
             {
                 e.pickingMode = PickingMode.Position;
-                e.RegisterCallback<ClickEvent>(_ => screen.Fire(on));
+                e.RegisterCallback<ClickEvent>(_ =>
+                {
+                    // The fire button makes its own (much louder) sound.
+                    if (on != "fire") Sound.UiClick();
+                    screen.Fire(on);
+                });
             }
             string? hold = node.Get("data-hold");
             if (hold != null)

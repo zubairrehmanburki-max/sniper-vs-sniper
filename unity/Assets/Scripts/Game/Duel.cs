@@ -244,13 +244,21 @@ namespace SniperDuel.Game
             float tof = (float)o.Impact.T;
             bool cinematic = mine && o.Verdict != Verdict.Miss && o.Trajectory.Points.Count > 1;
             World.Effects.Shot(o, mine, arena, tracer: !cinematic);
+            float range = (float)Math.Sqrt(Sq(o.Impact.Point.X - o.Eye.X) + Sq(o.Impact.Point.Z - o.Eye.Z));
             if (mine)
             {
                 recoil = 0.004;
                 Haptics.Recoil();
+                Sound.FireMine();
+                bool water = arena.Map.Water.HasValue && o.Impact.Point.Y <= arena.Map.Water.Value + 0.05;
+                Sound.Landed(range, tof, water, o.Verdict != Verdict.Miss);
             }
-            else if (o.Verdict != Verdict.Miss) Haptics.Struck(o.Verdict == Verdict.Kill);
-            else if (o.NearMiss) Haptics.Snap();
+            else
+            {
+                Sound.FireEnemy(range, tof, o.NearMiss, o.Verdict != Verdict.Miss);
+                if (o.Verdict != Verdict.Miss) Haptics.Struck(o.Verdict == Verdict.Kill);
+                else if (o.NearMiss) Haptics.Snap();
+            }
 
             string dist = Math.Round(Math.Sqrt(Sq(o.Impact.Point.X - o.Eye.X) + Sq(o.Impact.Point.Z - o.Eye.Z))).ToString("0");
             string text;

@@ -45,6 +45,8 @@ namespace SniperDuel.Game
             Config = GameConfig.Parse(Resources.Load<TextAsset>("Config/game").text);
             var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
             var cam = camGo.AddComponent<Camera>();
+            camGo.AddComponent<AudioListener>();
+            Sound.Init();
             cam.backgroundColor = new Color(0.04f, 0.05f, 0.045f);
             rig = CameraRig.Create(cam);
             PostFx.Setup(cam, transform);
