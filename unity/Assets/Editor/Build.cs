@@ -25,7 +25,13 @@ namespace SniperDuel.EditorTools
 
         public static void IOS() => Run(BuildTarget.iOS, BuildTargetGroup.iOS, "build/iOS/SniperDuel");
 
-        public static void Linux() => Run(BuildTarget.StandaloneLinux64, BuildTargetGroup.Standalone, "build/StandaloneLinux64/SniperDuel");
+        public static void Linux()
+        {
+            // The Linux build only exists for CI screenshots on a software renderer (llvmpipe), where
+            // GPU skinning draws nothing; skin on the CPU there. Phones keep GPU skinning.
+            PlayerSettings.meshDeformation = MeshDeformation.CPU;
+            Run(BuildTarget.StandaloneLinux64, BuildTargetGroup.Standalone, "build/StandaloneLinux64/SniperDuel");
+        }
 
         /// <summary>Menu item for local use: set the project up without building.</summary>
         [MenuItem("Sniper Duel/Set up project")]
