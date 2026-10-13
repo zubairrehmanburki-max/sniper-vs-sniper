@@ -17,6 +17,10 @@ namespace SniperDuel.Game
         static Sound? instance;
         public static bool Enabled = true;
         public static float Volume = 1;
+        /// <summary>Level of the wind-and-water bed, on top of Volume.</summary>
+        public static float AmbienceVolume = 1;
+        /// <summary>Menu taps click.</summary>
+        public static bool Clicks = true;
 
         AudioClip shotNear = null!, shotFar = null!, crack = null!, thump = null!, splash = null!, bolt = null!, click = null!, ambience = null!;
         AudioSource[] voices = null!;
@@ -62,7 +66,7 @@ namespace SniperDuel.Game
         {
             // The wind-and-water bed fades in when a world is on screen and is ducked in menus.
             if (bed == null) return;
-            float target = Enabled ? Volume * (AmbienceOn ? 0.55f : 0.18f) : 0;
+            float target = Enabled ? AmbienceVolume * (AmbienceOn ? 0.55f : 0.18f) : 0;
             bed.volume = Mathf.MoveTowards(bed.volume, target, Time.unscaledDeltaTime * 0.5f);
         }
 
@@ -109,7 +113,10 @@ namespace SniperDuel.Game
             else Play(s => s.thump, volume * (hit ? 1.2f : 0.8f), delay, hit ? 0.9f : 1.3f);
         }
 
-        public static void UiClick() => Play(s => s.click, 0.35f);
+        public static void UiClick()
+        {
+            if (Clicks) Play(s => s.click, 0.35f);
+        }
 
         // --- Synthesis -------------------------------------------------------------------------
 

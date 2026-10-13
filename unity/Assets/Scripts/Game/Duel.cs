@@ -54,6 +54,9 @@ namespace SniperDuel.Game
         int? lookPointer;
         Vector2 lookLast;
         bool zoomDragging;
+        float fireDownAt = -10;
+        /// <summary>With the hold-to-fire setting, how long the fire button must be held.</summary>
+        const float FireHoldSeconds = 0.3f;
         bool director;
 
         public static Duel Begin(GameConfig cfg, UiHost ui, CameraRig rig, Arena arena, string playerName, string rifleId, BotDifficulty bot)
@@ -98,6 +101,7 @@ namespace SniperDuel.Game
             hud.On("crouch", () => Call("Stance is fixed on this map"));
             hud.OnHold("breath", SetBreath);
             Look(hud.Root);
+            ApplyHudSettings(hud);
 
             var scope = ui.Get("Scope");
             scope.On("exit", () => SetScoped(false));
@@ -108,6 +112,9 @@ namespace SniperDuel.Game
             scope.On("windLeft", () => Dial(ref windMrad, -1, cfg.Scope.MaxWindageMrad, -cfg.Scope.MaxWindageMrad));
             scope.OnHold("breath", SetBreath);
             Look(scope.Root);
+            foreach (var screen in new[] { hud, scope })
+                if (screen.Has("fireBtn"))
+                    screen["fireBtn"].RegisterCallback<PointerDownEvent>(_ => fireDownAt = Time.unscaledTime, TrickleDown.TrickleDown);
             if (scope.Has("zoomTrack"))
             {
                 var track = scope["zoomTrack"];
@@ -142,9 +149,12 @@ namespace SniperDuel.Game
                 Vector2 p = e.position;
                 var d = p - lookLast;
                 lookLast = p;
-                double radPerUnit = Fov() * Mathf.Deg2Rad / UiHost.RefHeight * 0.9;
+                double radPerUnit = SensitivityFov() * Mathf.Deg2Rad / UiHost.RefHeight * 0.9
+                    * (scoped ? Settings.ScopeSensitivity : Settings.LookSensitivity);
+                if (scoped && Settings.InvertScopeDrag) d = -d;
+                if (Settings.InvertLookY) d.y = -d.y;
                 yaw += d.x * radPerUnit;
-                pitch = Math.Max(-0.3, Math.Min(0.3, pitch + d.y * radPerUnit));
+                pitch = Math.Max(-0.3, Math.Min(0.3, pitch + d.y * radPerUnit * Settings.VerticalSensitivity));
             });
             root.RegisterCallback<PointerUpEvent>(e =>
             {
@@ -152,6 +162,28 @@ namespace SniperDuel.Game
                 lookPointer = null;
                 root.ReleasePointer(e.pointerId);
             });
+        }
+
+        /// <summary>
+        /// Field of view the look drag is scaled to: the real one, or with soft scope scaling one
+        /// that shrinks less with zoom so high magnification turns faster.
+        /// </summary>
+        double SensitivityFov() =>
+            scoped && Settings.ScopeScaling == 1 ? Math.Pow(Fov(), 0.8) * Math.Pow(cfg.Scope.EyeFovDeg, 0.2) : Fov();
+
+        /// <summary>The HUD options from Settings: which panels show, opacity and scale.</summary>
+        static void ApplyHudSettings(UiScreen hud)
+        {
+            // The wind panel and range card have no bind of their own; reach them from their contents.
+            if (hud.Has("windArrow0") && hud["windArrow0"].parent?.parent?.parent is VisualElement wind)
+                wind.style.display = Settings.WindArrows ? DisplayStyle.Flex : DisplayStyle.None;
+            if (hud.Has("cardTarget") && hud["cardTarget"].parent?.parent is VisualElement card)
+                card.style.display = Settings.RangeCard ? DisplayStyle.Flex : DisplayStyle.None;
+            hud.Show("marker", Settings.RangeMarker);
+            hud.Show("crosshair", Settings.Crosshair);
+            hud.Root.style.opacity = Settings.HudOpacity;
+            float scale = Settings.HudScales[Settings.HudScale] / 100f;
+            foreach (var top in hud.Root.Children()) top.style.scale = new Scale(new Vector2(scale, scale));
         }
 
         void ShowHud()
@@ -375,6 +407,11 @@ namespace SniperDuel.Game
                 return;
             }
             if (time - lastShotAt < CycleSeconds) return;
+            if (Settings.FireHold && Time.unscaledTime - fireDownAt < FireHoldSeconds)
+            {
+                Call("Hold the fire button to shoot");
+                return;
+            }
             lastShotAt = time;
             var aim = TrueAim();
             Apply(MatchInput.FireShot(Me, new FireInput
@@ -384,6 +421,7 @@ namespace SniperDuel.Game
                 DialElevationMrad = elevMrad,
                 DialWindageMrad = windMrad,
             }, time));
+            if (scoped && Settings.UnscopeAfterShot) SetScoped(false);
         }
 
         void Laser()

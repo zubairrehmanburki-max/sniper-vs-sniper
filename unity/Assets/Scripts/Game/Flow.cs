@@ -21,7 +21,9 @@ namespace SniperDuel.Game
         string mapId = "twin-bridges";
         BotDifficulty difficulty = BotDifficulty.Medium;
         string rifleId = "";
-        const string PlayerName = "YOU";
+        SettingsMenu settings = null!;
+
+        static string PlayerName => Settings.Callsign;
 
         public static Flow Create(GameConfig cfg, UiHost ui, CameraRig rig, Arena? arena)
         {
@@ -81,7 +83,9 @@ namespace SniperDuel.Game
                 loadout.On("rifle" + i, () => { if (k < cfg.Rifles.Count) rifleId = cfg.Rifles[k].Id; });
             }
 
-            foreach (var side in new[] { "Settings", "Operators", "Career", "Pass", "Gunsmith", "HudLayout" })
+            settings = new SettingsMenu(ui.Get("Settings"), () => Go("Lobby"));
+
+            foreach (var side in new[] { "Operators", "Career", "Pass", "Gunsmith", "HudLayout" })
                 ui.Get(side).On("back", () => Go("Lobby"));
 
             var results = ui.Get("Results");
@@ -98,6 +102,8 @@ namespace SniperDuel.Game
                 duel = null;
             }
             rig.Current = CameraRig.Mode.Menu;
+            Settings.SetInMenus(true);
+            if (screen == "Settings") settings.Refresh();
             ui.Show(screen);
         }
 
@@ -155,6 +161,7 @@ namespace SniperDuel.Game
                 yield return new WaitForSeconds(1);
             }
             duel = Duel.Begin(cfg, ui, rig, arena, PlayerName, rifleId, difficulty);
+            Settings.SetInMenus(false);
             duel.Finished += ShowResults;
         }
 

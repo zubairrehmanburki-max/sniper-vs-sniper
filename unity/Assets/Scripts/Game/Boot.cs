@@ -37,10 +37,7 @@ namespace SniperDuel.Game
 
         void Awake()
         {
-            Application.targetFrameRate = 60;
-            QualitySettings.vSyncCount = 0;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
-            QualitySettings.realtimeReflectionProbes = true;
 
             Config = GameConfig.Parse(Resources.Load<TextAsset>("Config/game").text);
             var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
@@ -50,6 +47,8 @@ namespace SniperDuel.Game
             cam.backgroundColor = new Color(0.04f, 0.05f, 0.045f);
             rig = CameraRig.Create(cam);
             PostFx.Setup(cam, transform);
+            // Frame rate, quality, render scale, shadows, audio levels and haptics from the saved settings.
+            Settings.Apply();
 
             ui = UiHost.Create();
             ui.Created += s =>
