@@ -123,12 +123,11 @@ namespace SniperDuel.Game.World
             var b = Library.BoundsOf(body.gameObject);
             body.position += new Vector3(0, ground - b.min.y, 0);
 
-            // The rifle in his hands: grip at the right hand, pointing past the left.
+            // The rifle in his hands: grip at the right hand, aimed straight down-range.
             var rifle = Rifle(root.transform);
-            if (fig.bones.TryGetValue("RightHand", out var rh) && fig.bones.TryGetValue("LeftHand", out var lh))
+            if (fig.bones.TryGetValue("RightHand", out var rh))
             {
-                var fwd = root.transform.forward;
-                var dir = ((lh.position - rh.position).normalized + fwd).normalized;
+                var dir = root.transform.forward;
                 rifle.transform.rotation = Quaternion.LookRotation(dir, root.transform.up);
                 rifle.transform.position = rh.position + dir * 0.28f + root.transform.up * 0.03f;
                 if (stance == Stance.Prone && Library.BoundsOf(rifle).min.y < ground)
