@@ -1,0 +1,31 @@
+name: Unity third-party assets
+description: >
+  Puts the free assets listed in unity/assets.json into unity/Assets/ThirdParty/Downloaded. They are
+  fetched once per version of assets.json and kept as a release (unity-assets-<hash>), so builds
+  don't depend on the original hosts.
+outputs:
+  tag:
+    description: Release tag holding this asset set
+    value: ${{ steps.key.outputs.tag }}
+runs:
+  using: composite
+  steps:
+    - id: key
+      shell: bash
+      run: echo "tag=unity-assets-$(sha256sum unity/assets.json tools/unity-assets/fetch.py | sha256sum | cut -c1-12)" >> "$GITHUB_OUTPUT"
+    - name: Download or build the asset set
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        TAG: ${{ steps.key.outputs.tag }}
+      run: |
+        if ! gh release download "$TAG" -p assets.tgz -D "$RUNNER_TEMP" 2>/dev/null; then
+          python3 tools/unity-assets/fetch.py unity/assets.json "$RUNNER_TEMP/assets"
+          tar -czf "$RUNNER_TEMP/assets.tgz" -C "$RUNNER_TEMP/assets" .
+          gh release create "$TAG" "$RUNNER_TEMP/assets.tgz" --prerelease --title "$TAG" \
+            --notes "Free third-party assets for the Unity build (see CREDITS.md inside)." \
+            || gh release download "$TAG" -p assets.tgz -D "$RUNNER_TEMP" --clobber
+        fi
+        mkdir -p unity/Assets/ThirdParty/Downloaded
+        tar -xzf "$RUNNER_TEMP/assets.tgz" -C unity/Assets/ThirdParty/Downloaded
+        du -sh unity/Assets/ThirdParty/Downloaded
