@@ -1,9 +1,7 @@
-<div style="width: 932px; height: 430px; position: relative; overflow: hidden; background: #050605; color: #EDEFE8; font-family: 'Barlow', 'Helvetica Neue', sans-serif">
-<div style="position: absolute; left: 256px; top: 5px; width: 420px; height: 420px; border-radius: 50%; background: #000; box-shadow: 0 0 0 600px rgba(3,4,3,0.86)"></div>
+<div style="width: 932px; height: 430px; position: relative; overflow: hidden; color: #EDEFE8; font-family: 'Barlow', 'Helvetica Neue', sans-serif">
+<div data-bind="mask" style="position: absolute; left: 0; top: 0; width: 932px; height: 430px"></div>
 <div style="position: absolute; left: 266px; top: 15px; width: 400px; height: 400px; border-radius: 50%; overflow: hidden">
-<img data-src="rt:todo" alt="Scope view of the far bridge" style="position: absolute; left: -20px; top: -40px; width: 460px; height: 460px">
 <svg width="400" height="400" viewBox="0 0 400 400" aria-hidden="true" style="position: absolute; inset: 0">
-<g transform="translate(212,262)"><path d="M-4 0 a4 4 0 1 1 8 0 l2 14 l-1 16 l-3 0 l-1 -12 l-1 12 l-3 0 l-1 -16 z" fill="#14100c"></path><path d="M-6 6 l-3 9 M6 6 l6 4" stroke="#14100c" stroke-width="2"></path></g>
 <g stroke="#0b0b0b" fill="none">
 <path d="M0 200 H150 M250 200 H400 M200 0 V150 M200 250 V400" stroke-width="5"></path>
 <path d="M150 200 H250 M200 150 V250" stroke-width="1.2"></path>
@@ -12,55 +10,54 @@
 <g fill="#0b0b0b"><circle cx="200" cy="218" r="1.6"></circle><circle cx="182" cy="236" r="1.4"></circle><circle cx="200" cy="236" r="1.6"></circle><circle cx="218" cy="236" r="1.4"></circle><circle cx="164" cy="254" r="1.4"></circle><circle cx="182" cy="254" r="1.4"></circle><circle cx="200" cy="254" r="1.6"></circle><circle cx="218" cy="254" r="1.4"></circle><circle cx="236" cy="254" r="1.4"></circle><circle cx="146" cy="272" r="1.4"></circle><circle cx="164" cy="272" r="1.4"></circle><circle cx="182" cy="272" r="1.4"></circle><circle cx="200" cy="272" r="1.6"></circle><circle cx="218" cy="272" r="1.4"></circle><circle cx="236" cy="272" r="1.4"></circle><circle cx="254" cy="272" r="1.4"></circle></g>
 <g font-family="Share Tech Mono, monospace" font-size="9" fill="#0b0b0b"><text x="242" y="222">1</text><text x="260" y="240">2</text><text x="278" y="258">3</text><text x="296" y="276">4</text></g>
 <circle cx="200" cy="200" r="1.6" fill="#E5483B"></circle>
-<circle cx="200" cy="200" r="199" fill="none" stroke="rgba(0,0,0,0.9)" stroke-width="30" style="filter: blur(6px)"></circle>
 </svg>
-<div style="position: absolute; left: 0; right: 0; bottom: 34px; display: flex; justify-content: center"><span style="padding: 2px 8px; background: rgba(0,0,0,0.55); font-family: 'Share Tech Mono', monospace; font-size: 12px; color: #ff8a7e">LRF 641 m</span></div>
+<div style="position: absolute; left: 0; right: 0; bottom: 34px; display: flex; justify-content: center"><span style="padding: 2px 8px; background: rgba(0,0,0,0.55); font-family: 'Share Tech Mono', monospace; font-size: 12px; color: #ff8a7e" data-bind="lrf">LRF 641 m</span></div>
 </div>
 
 <div style="position: absolute; left: 20px; top: 14px; display: flex; align-items: center; gap: 10px">
-<div style="padding: 4px 10px; background: rgba(10,12,11,0.7); border-bottom: 2px solid #F2B33D; display: flex; align-items: baseline; gap: 8px"><span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 11px; letter-spacing: 0.18em; color: #F2B33D">YOUR SHOT</span><span style="font-family: 'Share Tech Mono', monospace; font-size: 18px">0:17</span></div>
-<div style="font-family: 'Share Tech Mono', monospace; font-size: 13px; color: #A7AD9F">1 – 1</div>
+<div style="padding: 4px 10px; background: rgba(10,12,11,0.7); border-bottom: 2px solid #F2B33D; display: flex; align-items: baseline; gap: 8px"><span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 11px; letter-spacing: 0.18em; color: #F2B33D" data-bind="turn">YOUR SHOT</span><span style="font-family: 'Share Tech Mono', monospace; font-size: 18px" data-bind="timer">0:17</span></div>
+<div style="font-family: 'Share Tech Mono', monospace; font-size: 13px; color: #A7AD9F" data-bind="score">1 – 1</div>
 </div>
 
 <div style="position: absolute; left: 20px; top: 70px; width: 200px; display: flex; flex-direction: column; gap: 14px">
 <div style="display: flex; flex-direction: column; gap: 6px">
 <div style="display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 0.16em; color: #A7AD9F"><span>ELEVATION</span><span>0.1 mil / click</span></div>
 <div style="display: flex; align-items: center; gap: 6px">
-<button aria-label="Dial elevation down" style="width: 48px; height: 48px; border: 1px solid rgba(237,239,232,0.3); background: rgba(10,12,11,0.6); display: grid; place-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
-<div style="flex: 1; height: 48px; background: rgba(10,12,11,0.75); border: 1px solid #F2B33D; display: grid; place-items: center"><span style="font-family: 'Share Tech Mono', monospace; font-size: 20px; color: #F2B33D">U 3.0</span></div>
-<button aria-label="Dial elevation up" style="width: 48px; height: 48px; border: 1px solid rgba(237,239,232,0.3); background: rgba(10,12,11,0.6); display: grid; place-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14M12 5v14"></path></svg></button>
+<button data-on="elevDown" aria-label="Dial elevation down" style="width: 48px; height: 48px; border: 1px solid rgba(237,239,232,0.3); background: rgba(10,12,11,0.6); display: grid; place-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+<div style="flex: 1; height: 48px; background: rgba(10,12,11,0.75); border: 1px solid #F2B33D; display: grid; place-items: center"><span style="font-family: 'Share Tech Mono', monospace; font-size: 20px; color: #F2B33D" data-bind="elev">U 3.0</span></div>
+<button data-on="elevUp" aria-label="Dial elevation up" style="width: 48px; height: 48px; border: 1px solid rgba(237,239,232,0.3); background: rgba(10,12,11,0.6); display: grid; place-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14M12 5v14"></path></svg></button>
 </div>
 </div>
 <div style="display: flex; flex-direction: column; gap: 6px">
 <div style="display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 0.16em; color: #A7AD9F"><span>WINDAGE</span><span>0.1 mil / click</span></div>
 <div style="display: flex; align-items: center; gap: 6px">
-<button aria-label="Dial windage left" style="width: 48px; height: 48px; border: 1px solid rgba(237,239,232,0.3); background: rgba(10,12,11,0.6); display: grid; place-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="2.4" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
-<div style="flex: 1; height: 48px; background: rgba(10,12,11,0.75); border: 1px solid rgba(237,239,232,0.3); display: grid; place-items: center"><span style="font-family: 'Share Tech Mono', monospace; font-size: 20px">R 0.4</span></div>
-<button aria-label="Dial windage right" style="width: 48px; height: 48px; border: 1px solid rgba(237,239,232,0.3); background: rgba(10,12,11,0.6); display: grid; place-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="2.4" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
+<button data-on="windLeft" aria-label="Dial windage left" style="width: 48px; height: 48px; border: 1px solid rgba(237,239,232,0.3); background: rgba(10,12,11,0.6); display: grid; place-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="2.4" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
+<div style="flex: 1; height: 48px; background: rgba(10,12,11,0.75); border: 1px solid rgba(237,239,232,0.3); display: grid; place-items: center"><span style="font-family: 'Share Tech Mono', monospace; font-size: 20px" data-bind="windage">R 0.4</span></div>
+<button data-on="windRight" aria-label="Dial windage right" style="width: 48px; height: 48px; border: 1px solid rgba(237,239,232,0.3); background: rgba(10,12,11,0.6); display: grid; place-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="2.4" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
 </div>
 </div>
 <div style="padding: 8px 10px; background: rgba(10,12,11,0.6); display: flex; flex-direction: column; gap: 4px; font-size: 11px">
-<div style="display: flex; justify-content: space-between"><span style="color: #A7AD9F">Wind, mid zone</span><span style="font-family: 'Share Tech Mono', monospace">5.6 m/s 3:30</span></div>
-<div style="display: flex; justify-content: space-between"><span style="color: #A7AD9F">Solution 640 m</span><span style="font-family: 'Share Tech Mono', monospace">U 3.1 · R 0.5</span></div>
+<div style="display: flex; justify-content: space-between"><span style="color: #A7AD9F">Wind, mid zone</span><span style="font-family: 'Share Tech Mono', monospace" data-bind="windRead">5.6 m/s 3:30</span></div>
+<div style="display: flex; justify-content: space-between"><span style="color: #A7AD9F" data-bind="solutionLabel">Solution 640 m</span><span style="font-family: 'Share Tech Mono', monospace" data-bind="solution">U 3.1 · R 0.5</span></div>
 </div>
 </div>
 
 <div style="position: absolute; left: 700px; top: 40px; width: 40px; height: 250px; display: flex; flex-direction: column; align-items: center; gap: 6px">
 <span style="font-family: 'Share Tech Mono', monospace; font-size: 11px; color: #A7AD9F">25×</span>
-<div style="position: relative; flex: 1; width: 4px; background: rgba(237,239,232,0.2)"><div style="position: absolute; left: 0; bottom: 0; width: 4px; height: 65%; background: #EDEFE8"></div><div style="position: absolute; left: -12px; bottom: calc(65% - 14px); width: 28px; height: 28px; border-radius: 50%; background: #EDEFE8; display: grid; place-items: center; font-family: 'Share Tech Mono', monospace; font-size: 10px; color: #0b0d0c">18</div></div>
+<div data-hold="zoomDrag" data-bind="zoomTrack" style="position: relative; flex: 1; width: 4px; background: rgba(237,239,232,0.2)"><div data-bind="zoomFill" style="position: absolute; left: 0; bottom: 0; width: 4px; height: 65%; background: #EDEFE8"></div><div data-bind="zoomKnob" style="position: absolute; left: -12px; bottom: calc(65% - 14px); width: 28px; height: 28px; border-radius: 50%; background: #EDEFE8; display: grid; place-items: center; font-family: 'Share Tech Mono', monospace; font-size: 10px; color: #0b0d0c" data-bind="zoom">18</div></div>
 <span style="font-family: 'Share Tech Mono', monospace; font-size: 11px; color: #A7AD9F">5×</span>
 </div>
 
 <div style="position: absolute; right: 20px; top: 14px; display: flex; gap: 8px">
-<button aria-label="Exit scope" style="width: 44px; height: 44px; border: 1px solid rgba(237,239,232,0.25); background: rgba(10,12,11,0.55); display: grid; place-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="2.2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+<button data-on="exit" aria-label="Exit scope" style="width: 44px; height: 44px; border: 1px solid rgba(237,239,232,0.25); background: rgba(10,12,11,0.55); display: grid; place-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="2.2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
 </div>
 
 <div style="position: absolute; right: 20px; bottom: 20px; width: 160px; height: 300px">
 <div style="position: absolute; right: 0; top: 0; width: 150px; display: flex; flex-direction: column; gap: 4px">
-<div style="display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 0.16em; color: #A7AD9F"><span>BREATH</span><span style="color: #F2B33D">STEADY 3.4 s</span></div>
-<div style="height: 6px; background: rgba(237,239,232,0.16)"><div style="width: 68%; height: 6px; background: #F2B33D"></div></div>
+<div style="display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 0.16em; color: #A7AD9F"><span>BREATH</span><span style="color: #F2B33D" data-bind="breathText">STEADY 3.4 s</span></div>
+<div style="height: 6px; background: rgba(237,239,232,0.16)"><div data-bind="breath" style="width: 68%; height: 6px; background: #F2B33D"></div></div>
 </div>
-<button aria-label="Hold breath" style="position: absolute; right: 18px; top: 50px; width: 70px; height: 70px; border-radius: 50%; border: 2px solid #F2B33D; background: rgba(242,179,61,0.22); display: grid; place-items: center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="1.8" aria-hidden="true"><path d="M4 9h11a3 3 0 1 0-3-3M4 13h15a3 3 0 1 1-3 3M4 17h7"></path></svg></button>
-<button aria-label="Fire" style="position: absolute; right: 0; bottom: 0; width: 110px; height: 110px; border-radius: 50%; border: 2px solid rgba(229,72,59,0.95); background: rgba(229,72,59,0.38); display: grid; place-items: center"><svg width="50" height="50" viewBox="0 0 44 44" fill="none" stroke="#EDEFE8" stroke-width="2.2" aria-hidden="true"><circle cx="22" cy="22" r="14"></circle><path d="M22 2v12M22 30v12M2 22h12M30 22h12"></path></svg></button>
+<button data-hold="breath" aria-label="Hold breath" style="position: absolute; right: 18px; top: 50px; width: 70px; height: 70px; border-radius: 50%; border: 2px solid #F2B33D; background: rgba(242,179,61,0.22); display: grid; place-items: center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="1.8" aria-hidden="true"><path d="M4 9h11a3 3 0 1 0-3-3M4 13h15a3 3 0 1 1-3 3M4 17h7"></path></svg></button>
+<button data-on="fire" data-bind="fireBtn" aria-label="Fire" style="position: absolute; right: 0; bottom: 0; width: 110px; height: 110px; border-radius: 50%; border: 2px solid rgba(229,72,59,0.95); background: rgba(229,72,59,0.38); display: grid; place-items: center"><svg width="50" height="50" viewBox="0 0 44 44" fill="none" stroke="#EDEFE8" stroke-width="2.2" aria-hidden="true"><circle cx="22" cy="22" r="14"></circle><path d="M22 2v12M22 30v12M2 22h12M30 22h12"></path></svg></button>
 </div>
 </div>

@@ -74,6 +74,9 @@ namespace SniperDuel.Game.Ui
             safe.style.right = right;
         }
 
+        /// <summary>Raised once per screen when its layout is first built, for screen-specific setup.</summary>
+        public event System.Action<UiScreen>? Created;
+
         public UiScreen Get(string name)
         {
             if (screens.TryGetValue(name, out var s)) return s;
@@ -81,6 +84,7 @@ namespace SniperDuel.Game.Ui
             s.Root.style.display = DisplayStyle.None;
             safe.Add(s.Root);
             screens[name] = s;
+            Created?.Invoke(s);
             return s;
         }
 
