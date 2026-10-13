@@ -107,7 +107,8 @@ namespace SniperDuel.Game.World
             if (fig.pose.Lie.HasValue)
             {
                 // Lying down: the model's up points along −z (feet trailing behind the head, which faces +z).
-                body.localRotation = Quaternion.Euler(-fig.pose.Lie.Value, 0, 0);
+                // Rolled over on the long axis so he lies face down on his elbows, not on his back.
+                body.localRotation = Quaternion.Euler(0, 0, 180) * Quaternion.Euler(-fig.pose.Lie.Value, 0, 0);
                 body.localPosition = new Vector3(0, 0.22f, -1.5f);
             }
             body.localPosition += fig.pose.Shift;
@@ -117,6 +118,12 @@ namespace SniperDuel.Game.World
             rifle.transform.localRotation = Quaternion.Euler(fig.pose.RifleTilt, 0, 0);
             fig.LateUpdate();
             fig.Bake();
+            if (fig.pose.Lie.HasValue)
+            {
+                // Rest the lowest point of the lying body just on the ground (the road sits 4 cm proud).
+                var b = Library.BoundsOf(body.gameObject);
+                body.position += new Vector3(0, root.transform.position.y + 0.04f - b.min.y, 0);
+            }
             return fig;
         }
 
