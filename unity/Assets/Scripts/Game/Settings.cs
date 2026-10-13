@@ -149,7 +149,7 @@ namespace SniperDuel.Game
             }
             else
             {
-                QualitySettings.shadows = Shadows == 0 ? ShadowQuality.Disable : ShadowQuality.All;
+                QualitySettings.shadows = Shadows == 0 ? UnityEngine.ShadowQuality.Disable : UnityEngine.ShadowQuality.All;
                 QualitySettings.shadowDistance = Shadows switch { 0 => 0f, 1 => 80f, 2 => 150f, _ => 220f };
             }
             var cam = Camera.main;
