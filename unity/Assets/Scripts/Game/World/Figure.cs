@@ -5,65 +5,85 @@ using UnityEngine;
 namespace SniperDuel.Game.World
 {
     /// <summary>
-    /// The sniper figure: the rigged soldier posed per stance with bone rotations over its bind pose
-    /// (ported from the web client's figure.ts), with a slow breath. Faces +z; the caller turns it.
-    /// The origin is on the ground under the head when prone, under the feet otherwise.
+    /// The sniper figure: a rigged soldier posed per stance, frozen into static meshes, with the
+    /// rifle in his hands. Faces +z; the caller turns it. The origin is on the ground under the head
+    /// when prone, under the hips otherwise.
     /// </summary>
     public sealed class Figure : MonoBehaviour
     {
+        /// <summary>
+        /// A stance as directions in the figure's frame (+z ahead, +y up, +x right): which way the
+        /// body's long axis and chest point, then for each joint the way its bone should run to the
+        /// next joint. Each bone is swung onto its direction from wherever the model's rest pose has
+        /// it, so any Mixamo-rigged model takes the pose regardless of its bind pose or joint axes.
+        /// </summary>
         sealed class Pose
         {
-            public Dictionary<string, Vector3> Bones = new Dictionary<string, Vector3>();
-            public Vector3 Hips;
-            public float? Lie;
-            public Vector3 Shift;
-            public Vector3 RifleAt;
-            public float RifleTilt;
+            public Vector3 Up = Vector3.up, Chest = Vector3.forward;
+            public (string bone, string next, Vector3 dir)[] Limbs = System.Array.Empty<(string, string, Vector3)>();
         }
+
+        static readonly (string, string, Vector3)[] AimArms =
+        {
+            // Right elbow out at shoulder height, hand back at the grip by the cheek; left arm
+            // reaching forward under the handguard.
+            ("RightArm", "RightForeArm", new Vector3(0.6f, -0.35f, 0.45f)), ("RightForeArm", "RightHand", new Vector3(-0.65f, 0.25f, 0.7f)),
+            ("LeftArm", "LeftForeArm", new Vector3(-0.3f, -0.5f, 0.8f)), ("LeftForeArm", "LeftHand", new Vector3(0.2f, 0.25f, 1f)),
+        };
 
         static readonly Dictionary<Stance, Pose> Poses = new Dictionary<Stance, Pose>
         {
             [Stance.Standing] = new Pose
             {
-                Bones = { ["RightArm"] = new Vector3(85, 0, 35), ["RightForeArm"] = new Vector3(0, 0, -55), ["LeftArm"] = new Vector3(95, 0, 40), ["LeftForeArm"] = new Vector3(0, 0, -30), ["Spine1"] = new Vector3(4, 0, 0), ["Head"] = new Vector3(-4, 0, 0) },
-                RifleAt = new Vector3(0.1f, 1.35f, 0.3f),
+                Limbs = Join(new[]
+                {
+                    ("Spine", "Spine1", new Vector3(0, 1, 0.03f)), ("Spine1", "Spine2", new Vector3(0, 1, 0.05f)), ("Spine2", "Neck", new Vector3(0, 1, 0.08f)),
+                    ("Neck", "Head", new Vector3(0, 1, 0.15f)), ("Head", "HeadTop_End", new Vector3(0.05f, 1, 0.2f)),
+                    ("RightUpLeg", "RightLeg", new Vector3(0.12f, -1, -0.04f)), ("RightLeg", "RightFoot", new Vector3(0.1f, -1, -0.06f)), ("RightFoot", "RightToeBase", new Vector3(0.3f, -0.5f, 1)),
+                    ("LeftUpLeg", "LeftLeg", new Vector3(-0.1f, -1, 0.14f)), ("LeftLeg", "LeftFoot", new Vector3(-0.08f, -1, 0.04f)), ("LeftFoot", "LeftToeBase", new Vector3(-0.1f, -0.5f, 1)),
+                }, AimArms),
             },
             [Stance.Crouch] = new Pose
             {
-                Bones =
+                // Kneeling on the right knee, left foot planted forward, leaning into the rifle.
+                Limbs = Join(new[]
                 {
-                    ["RightUpLeg"] = new Vector3(95, 0, 8), ["LeftUpLeg"] = new Vector3(95, 0, -8), ["RightLeg"] = new Vector3(-100, 0, 0), ["LeftLeg"] = new Vector3(-100, 0, 0),
-                    ["Spine"] = new Vector3(20, 0, 0), ["Spine1"] = new Vector3(8, 0, 0), ["Head"] = new Vector3(-22, 0, 0),
-                    ["RightArm"] = new Vector3(85, 0, 35), ["RightForeArm"] = new Vector3(0, 0, -55), ["LeftArm"] = new Vector3(95, 0, 40), ["LeftForeArm"] = new Vector3(0, 0, -30),
-                },
-                Hips = new Vector3(0, 0, -58),
-                Shift = new Vector3(0, 0, 0.25f),
-                RifleAt = new Vector3(0.1f, 0.8f, 0.5f),
+                    ("Spine", "Spine1", new Vector3(0, 1, 0.3f)), ("Spine1", "Spine2", new Vector3(0, 1, 0.2f)), ("Spine2", "Neck", new Vector3(0, 1, 0.12f)),
+                    ("Neck", "Head", new Vector3(0, 1, 0.2f)), ("Head", "HeadTop_End", new Vector3(0.05f, 1, 0.25f)),
+                    ("RightUpLeg", "RightLeg", new Vector3(0.15f, -1, 0.1f)), ("RightLeg", "RightFoot", new Vector3(0.05f, -0.12f, -1)), ("RightFoot", "RightToeBase", new Vector3(0, -1, -0.3f)),
+                    ("LeftUpLeg", "LeftLeg", new Vector3(-0.2f, -0.1f, 1)), ("LeftLeg", "LeftFoot", new Vector3(-0.05f, -1, 0.08f)), ("LeftFoot", "LeftToeBase", new Vector3(-0.1f, -0.4f, 1)),
+                }, AimArms),
             },
             [Stance.Prone] = new Pose
             {
-                Bones =
+                // Flat on his front along +z, propped on the elbows, legs spread, toes dug in.
+                Up = Vector3.forward,
+                Chest = Vector3.down,
+                Limbs = new[]
                 {
-                    ["RightArm"] = new Vector3(80, 0, 60), ["RightForeArm"] = new Vector3(55, 0, 0), ["LeftArm"] = new Vector3(95, 0, 60), ["LeftForeArm"] = new Vector3(30, 0, 0),
-                    ["RightUpLeg"] = new Vector3(0, 0, 10), ["LeftUpLeg"] = new Vector3(0, 0, -10),
-                    ["Spine"] = new Vector3(-10, 0, 0), ["Spine1"] = new Vector3(-10, 0, 0), ["Spine2"] = new Vector3(-10, 0, 0), ["Neck"] = new Vector3(-25, 0, 0), ["Head"] = new Vector3(-30, 0, 0),
+                    ("Spine", "Spine1", new Vector3(0, 0.04f, 1)), ("Spine1", "Spine2", new Vector3(0, 0.1f, 1)), ("Spine2", "Neck", new Vector3(0, 0.2f, 1)),
+                    ("Neck", "Head", new Vector3(0, 0.5f, 1)), ("Head", "HeadTop_End", new Vector3(0.05f, 0.35f, 1)),
+                    ("RightArm", "RightForeArm", new Vector3(0.4f, -0.55f, 0.7f)), ("RightForeArm", "RightHand", new Vector3(-0.35f, 0.1f, 1)),
+                    ("LeftArm", "LeftForeArm", new Vector3(-0.3f, -0.55f, 0.8f)), ("LeftForeArm", "LeftHand", new Vector3(0.15f, 0.05f, 1)),
+                    ("RightUpLeg", "RightLeg", new Vector3(0.22f, 0, -1)), ("RightLeg", "RightFoot", new Vector3(0.25f, 0, -1)), ("RightFoot", "RightToeBase", new Vector3(0.1f, -0.8f, -0.5f)),
+                    ("LeftUpLeg", "LeftLeg", new Vector3(-0.15f, 0, -1)), ("LeftLeg", "LeftFoot", new Vector3(-0.18f, 0, -1)), ("LeftFoot", "LeftToeBase", new Vector3(-0.1f, -0.8f, -0.5f)),
                 },
-                Lie = -90,
-                RifleAt = new Vector3(0.03f, 0.27f, 0.25f),
             },
         };
 
-        const float ModelHeight = 1.83f;
+        static (string, string, Vector3)[] Join((string, string, Vector3)[] a, (string, string, Vector3)[] b)
+        {
+            var r = new (string, string, Vector3)[a.Length + b.Length];
+            a.CopyTo(r, 0);
+            b.CopyTo(r, a.Length);
+            return r;
+        }
+
         readonly Dictionary<string, Transform> bones = new Dictionary<string, Transform>();
         /// <summary>Joints by Mixamo name without the prefix ("Hips", "Spine2", "LeftForeArm"...).</summary>
         public IReadOnlyDictionary<string, Transform> Bones => bones;
         /// <summary>The soldier model's root (the rifle sits outside it).</summary>
         public Transform Body = null!;
-        readonly Dictionary<string, Quaternion> rest = new Dictionary<string, Quaternion>();
-        Pose pose = null!;
-        Transform? hips;
-        Vector3 hipsRest;
-        float clock;
         readonly List<SkinnedMeshRenderer> skins = new List<SkinnedMeshRenderer>();
 
         public static Figure Create(Stance stance, float heightM, Transform parent, Color tint)
@@ -71,117 +91,134 @@ namespace SniperDuel.Game.World
             var root = new GameObject("Figure " + stance);
             root.transform.SetParent(parent, false);
             var fig = root.AddComponent<Figure>();
-            fig.pose = Poses[stance];
+            var pose = Poses[stance];
             var body = new GameObject("Body").transform;
             body.SetParent(root.transform, false);
             fig.Body = body;
             // The detailed CC-BY soldier when the asset set has it, else the bundled low-detail one.
             var hd = Library.Model("soldier_tactical");
             var prefab = hd != null ? hd : Resources.Load<GameObject>("Characters/Soldier");
+            Transform? model = null;
             if (prefab != null)
             {
-                var model = Instantiate(prefab, body);
+                model = Instantiate(prefab, body).transform;
                 model.name = "Soldier";
                 foreach (var anim in model.GetComponentsInChildren<Animation>()) anim.enabled = false;
                 foreach (var animator in model.GetComponentsInChildren<Animator>()) animator.enabled = false;
-                if (hd != null) Retarget(model.transform, body);
                 foreach (var t in model.GetComponentsInChildren<Transform>())
                 {
                     string n = BoneName(t.name);
-                    if (!fig.bones.ContainsKey(n)) { fig.bones[n] = t; fig.rest[n] = t.localRotation; }
+                    if (!fig.bones.ContainsKey(n)) fig.bones[n] = t;
                 }
-                foreach (var r in model.GetComponentsInChildren<SkinnedMeshRenderer>())
-                {
-                    // On the same URP Lit template as the structures: the imported glTF materials
-                    // draw nothing on some renderers. The old soldier is tinted olive drab; the detailed
-                    // one keeps its own colours and normal maps.
-                    var mats = new Material[r.sharedMaterials.Length];
-                    for (int i = 0; i < mats.Length; i++)
-                    {
-                        var src = r.sharedMaterials[i];
-                        var tex = src == null ? null : src.HasProperty("baseColorTexture") ? src.GetTexture("baseColorTexture") : src.mainTexture;
-                        var mat = new Material(Library.Template("Lit")) { name = "Soldier " + r.name };
-                        mat.SetTexture("_BaseMap", tex);
-                        mat.SetFloat("_Metallic", 0);
-                        // The Lit template reads metallic from a map; without one it defaults to white,
-                        // fully metallic, and the cloth turns to chrome.
-                        mat.SetTexture("_MetallicGlossMap", NonMetal);
-                        if (hd != null)
-                        {
-                            var nor = src != null && src.HasProperty("normalTexture") ? src.GetTexture("normalTexture") : null;
-                            if (nor != null) mat.SetTexture("_BumpMap", nor);
-                            var factor = src != null && src.HasProperty("baseColorFactor") ? src.GetColor("baseColorFactor") : Color.white;
-                            mat.SetColor("_BaseColor", factor * Color.Lerp(Color.white, tint * 1.5f, 0.25f));
-                            mat.SetFloat("_Smoothness", 0.22f);
-                            if (src != null && src.HasProperty("alphaCutoff") && src.renderQueue >= 2450)
-                            {
-                                mat.SetFloat("_AlphaClip", 1);
-                                mat.SetFloat("_Cutoff", 0.5f);
-                                mat.EnableKeyword("_ALPHATEST_ON");
-                            }
-                        }
-                        else
-                        {
-                            mat.SetColor("_BaseColor", r.name.Contains("visor") ? new Color(0.17f, 0.19f, 0.17f) : tint);
-                            mat.SetFloat("_Smoothness", 0.12f);
-                        }
-                        mats[i] = mat;
-                    }
-                    r.sharedMaterials = mats;
-                    fig.skins.Add(r);
-                }
+                fig.Dress(model, hd != null, tint);
             }
             else Debug.LogWarning("[Figure] no soldier model loaded");
             Debug.Log($"[Figure] {stance}: {fig.bones.Count} bones, {root.GetComponentsInChildren<Renderer>().Length} renderers");
-            fig.bones.TryGetValue("Hips", out fig.hips);
-            if (fig.hips != null) fig.hipsRest = fig.hips.localPosition;
 
-            float scale = stance == Stance.Standing ? heightM / ModelHeight : 1.75f / ModelHeight;
-            body.localScale = Vector3.one * scale;
-            if (fig.pose.Lie.HasValue)
-            {
-                // Lying down: the model's up points along −z (feet trailing behind the head, which faces +z).
-                body.localRotation = Quaternion.Euler(-fig.pose.Lie.Value, 0, 0);
-                body.localPosition = new Vector3(0, 0.22f, -1.5f);
-            }
-            body.localPosition += fig.pose.Shift;
-
-            var rifle = Rifle(root.transform);
-            rifle.transform.localPosition = fig.pose.RifleAt;
-            float yaw = rifle.transform.localEulerAngles.y;
-            rifle.transform.localRotation = Quaternion.Euler(fig.pose.RifleTilt, yaw, 0);
-            if (fig.pose.Lie.HasValue)
-            {
-                // Prone: the rifle lies out in front of his head on its bipod, stock at the shoulder.
-                rifle.transform.localPosition = new Vector3(0.12f, 0, 0.75f);
-                Library.Ground(rifle, root.transform.position.y + 0.06f);
-            }
-            fig.LateUpdate();
-            if (fig.pose.Lie.HasValue) fig.FaceDown(body);
+            if (model != null) fig.Strike(model, pose, stance == Stance.Prone ? 1.75f : heightM);
             fig.Bake();
-            if (fig.pose.Lie.HasValue)
+
+            // Ground him: the lowest point of the posed body on the road (which sits 4 cm proud).
+            float ground = root.transform.position.y + 0.04f;
+            var b = Library.BoundsOf(body.gameObject);
+            body.position += new Vector3(0, ground - b.min.y, 0);
+
+            // The rifle in his hands: grip at the right hand, pointing past the left.
+            var rifle = Rifle(root.transform);
+            if (fig.bones.TryGetValue("RightHand", out var rh) && fig.bones.TryGetValue("LeftHand", out var lh))
             {
-                // Rest the hips a hand's depth above the ground (the road sits 4 cm proud) so the torso
-                // lies flat; grounding the lowest point instead props him up on his hands.
-                float ground = root.transform.position.y + 0.04f;
-                float lift = fig.hips != null ? ground + 0.16f - fig.hips.position.y : ground - Library.BoundsOf(body.gameObject).min.y;
-                body.position += new Vector3(0, lift, 0);
+                var fwd = root.transform.forward;
+                var dir = ((lh.position - rh.position).normalized + fwd).normalized;
+                rifle.transform.rotation = Quaternion.LookRotation(dir, root.transform.up);
+                rifle.transform.position = rh.position + dir * 0.28f + root.transform.up * 0.03f;
+                if (stance == Stance.Prone && Library.BoundsOf(rifle).min.y < ground)
+                    rifle.transform.position += new Vector3(0, ground - Library.BoundsOf(rifle).min.y, 0);
             }
+            else rifle.transform.localPosition = new Vector3(0.1f, stance == Stance.Prone ? 0.15f : 1.3f, 0.5f);
             return fig;
         }
 
-        /// <summary>
-        /// Rolls a lying figure onto his front if the pose left him on his back: models differ in
-        /// which way their rest pose faces, so this checks the chest instead of trusting the rig.
-        /// </summary>
-        void FaceDown(Transform body)
+        /// <summary>Gives each skin a URP Lit material built from its imported one.</summary>
+        void Dress(Transform model, bool hd, Color tint)
         {
-            if (!bones.TryGetValue("LeftArm", out var l) || !bones.TryGetValue("RightArm", out var r)
-                || !bones.TryGetValue("Neck", out var neck) || hips == null) return;
-            var up = neck.position - hips.position;
-            var chest = Vector3.Cross(r.position - l.position, up).normalized;
-            Debug.Log($"[Figure] prone chest faces {chest}");
-            if (chest.y > 0) body.RotateAround(hips.position, up.normalized, 180);
+            foreach (var r in model.GetComponentsInChildren<SkinnedMeshRenderer>())
+            {
+                // On the same URP Lit template as the structures: the imported glTF materials draw
+                // nothing on some renderers. The old soldier is tinted olive drab; the detailed one
+                // keeps its own colours and normal maps.
+                var mats = new Material[r.sharedMaterials.Length];
+                for (int i = 0; i < mats.Length; i++)
+                {
+                    var src = r.sharedMaterials[i];
+                    var tex = src == null ? null : src.HasProperty("baseColorTexture") ? src.GetTexture("baseColorTexture") : src.mainTexture;
+                    var mat = new Material(Library.Template("Lit")) { name = "Soldier " + r.name };
+                    mat.SetTexture("_BaseMap", tex);
+                    mat.SetFloat("_Metallic", 0);
+                    // The Lit template reads metallic from a map; without one it defaults to white,
+                    // fully metallic, and the cloth turns to chrome.
+                    mat.SetTexture("_MetallicGlossMap", NonMetal);
+                    if (hd)
+                    {
+                        var nor = src != null && src.HasProperty("normalTexture") ? src.GetTexture("normalTexture") : null;
+                        if (nor != null) mat.SetTexture("_BumpMap", nor);
+                        var factor = src != null && src.HasProperty("baseColorFactor") ? src.GetColor("baseColorFactor") : Color.white;
+                        mat.SetColor("_BaseColor", factor * Color.Lerp(Color.white, tint * 1.5f, 0.25f));
+                        // Matte fabric: the sheen of a wet road is wrong on cloth.
+                        mat.SetFloat("_Smoothness", 0.08f);
+                    }
+                    else
+                    {
+                        mat.SetColor("_BaseColor", r.name.Contains("visor") ? new Color(0.17f, 0.19f, 0.17f) : tint);
+                        mat.SetFloat("_Smoothness", 0.12f);
+                    }
+                    mats[i] = mat;
+                }
+                r.sharedMaterials = mats;
+                skins.Add(r);
+            }
+        }
+
+        /// <summary>
+        /// Sizes and poses the model: measures its rest pose (which way is up, right and the chest),
+        /// scales it to the height, turns the whole body into the stance's frame, then swings each
+        /// limb bone, parents first, onto its direction.
+        /// </summary>
+        void Strike(Transform model, Pose pose, float height)
+        {
+            if (!bones.TryGetValue("Hips", out var hips) || !bones.TryGetValue("Head", out var head)
+                || !bones.TryGetValue("LeftUpLeg", out var lul) || !bones.TryGetValue("RightUpLeg", out var rul)) return;
+            var frame = transform;
+            Vector3 up = (head.position - hips.position).normalized;
+            Vector3 right = Vector3.ProjectOnPlane(rul.position - lul.position, up).normalized;
+            Vector3 chest = Vector3.Cross(right, up);
+
+            // Height: crown to sole along the body's up axis.
+            float top = bones.TryGetValue("HeadTop_End", out var crown) ? Vector3.Dot(crown.position, up) : Vector3.Dot(head.position, up) + 0.12f * 1.7f;
+            float sole = float.MaxValue;
+            foreach (var n in new[] { "LeftToeBase", "RightToeBase", "LeftFoot", "RightFoot", "LeftToe_End", "RightToe_End" })
+                if (bones.TryGetValue(n, out var f)) sole = Mathf.Min(sole, Vector3.Dot(f.position, up));
+            float rest = top - sole;
+            if (rest > 1e-4f && sole < float.MaxValue) model.localScale *= height / (rest * 1.04f);
+
+            var have = Quaternion.LookRotation(chest, up);
+            var want = Quaternion.LookRotation(frame.TransformDirection(pose.Chest), frame.TransformDirection(pose.Up));
+            var turn = want * Quaternion.Inverse(have);
+            var pivot = hips.position;
+            model.rotation = turn * model.rotation;
+            model.position = pivot + turn * (model.position - pivot);
+
+            foreach (var (bone, next, dir) in pose.Limbs)
+            {
+                if (!bones.TryGetValue(bone, out var b) || !bones.TryGetValue(next, out var c)) continue;
+                var now = c.position - b.position;
+                if (now.sqrMagnitude < 1e-8f) continue;
+                b.rotation = Quaternion.FromToRotation(now, frame.TransformDirection(dir.normalized)) * b.rotation;
+            }
+
+            // Put him over his origin: under the head when prone, under the hips otherwise.
+            var anchor = pose.Up == Vector3.forward ? head.position : hips.position;
+            var shift = frame.position - anchor;
+            model.position += new Vector3(shift.x, 0, shift.z);
         }
 
         /// <summary>
@@ -231,55 +268,6 @@ namespace SniperDuel.Game.World
             }
         }
 
-        static Dictionary<string, Quaternion>? refRotations;
-        static Vector3 refHips;
-        static float refSpan;
-
-        /// <summary>
-        /// Puts a different Mixamo-rigged model into the bundled soldier's rest pose, at its size and
-        /// place, so the stance poses (offsets from that rest pose) work on it unchanged. Copies each
-        /// joint's orientation relative to the body, parents first.
-        /// </summary>
-        static void Retarget(Transform model, Transform body)
-        {
-            if (refRotations == null)
-            {
-                refRotations = new Dictionary<string, Quaternion>();
-                var refPrefab = Resources.Load<GameObject>("Characters/Soldier");
-                if (refPrefab == null) return;
-                var tmp = Instantiate(refPrefab);
-                tmp.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
-                tmp.transform.localScale = Vector3.one;
-                Transform? h = null, head = null;
-                foreach (var t in tmp.GetComponentsInChildren<Transform>())
-                {
-                    string n = BoneName(t.name);
-                    if (refRotations.ContainsKey(n)) continue;
-                    refRotations[n] = t.rotation;
-                    if (n == "Hips") h = t;
-                    if (n == "Head") head = t;
-                }
-                if (h != null && head != null) { refHips = h.position; refSpan = Vector3.Distance(h.position, head.position); }
-                DestroyImmediate(tmp);
-            }
-            Transform? hips = null, top = null;
-            foreach (var t in model.GetComponentsInChildren<Transform>())
-            {
-                string n = BoneName(t.name);
-                if (n == "Hips" && hips == null) hips = t;
-                if (n == "Head" && top == null) top = t;
-                // Only real joints (from the hips down) take the reference pose; the wrapper nodes
-                // above them keep whatever turns the model upright.
-                if (hips == null || !t.IsChildOf(hips)) continue;
-                if (refRotations.TryGetValue(n, out var q)) t.rotation = body.rotation * q;
-            }
-            if (hips == null || top == null || refSpan <= 0) return;
-            float span = Vector3.Distance(hips.position, top.position) / body.lossyScale.y;
-            if (span > 1e-4f) model.localScale *= refSpan / span;
-            model.position += body.TransformPoint(refHips) - hips.position;
-            Debug.Log($"[Figure] retargeted: span {span:0.000} -> {refSpan:0.000}");
-        }
-
         /// <summary>
         /// Freezes the posed soldier into plain meshes. The pose never changes while it is shown,
         /// and skinned meshes rendered nothing in testing, so each skin becomes a static mesh.
@@ -299,29 +287,6 @@ namespace SniperDuel.Game.World
                 go.AddComponent<MeshRenderer>().sharedMaterials = mats;
             }
             skins.Clear();
-            enabled = false;
-        }
-
-        /// <summary>three.js XYZ Euler (degrees, right-handed) to a Unity local rotation (glTF X flipped).</summary>
-        static Quaternion FromThree(Vector3 deg)
-        {
-            var qx = Quaternion.AngleAxis(deg.x, Vector3.right);
-            var qy = Quaternion.AngleAxis(-deg.y, Vector3.up);
-            var qz = Quaternion.AngleAxis(-deg.z, Vector3.forward);
-            return qx * qy * qz;
-        }
-
-        void LateUpdate()
-        {
-            clock += Time.deltaTime;
-            if (hips != null) hips.localPosition = hipsRest + new Vector3(-pose.Hips.x, pose.Hips.y, pose.Hips.z) * 0.01f * (hips.localPosition.magnitude > 10 ? 100 : 1);
-            foreach (var kv in pose.Bones)
-            {
-                if (!bones.TryGetValue(kv.Key, out var b)) continue;
-                b.localRotation = rest[kv.Key] * FromThree(kv.Value);
-            }
-            if (bones.TryGetValue("Spine2", out var spine2))
-                spine2.localRotation *= Quaternion.AngleAxis(Mathf.Sin(clock * 1.4f) * 1.2f, Vector3.right);
         }
     }
 }

@@ -31,29 +31,32 @@ namespace SniperDuel.Game.World
 
             // Bones: a beam from each joint to its parent, thicker along the spine and legs.
             var bone = new MeshBuilder();
-            foreach (var kv in target.Bones)
+            foreach (var (name, parent) in Links)
             {
-                string name = kv.Key;
-                var t = kv.Value;
-                if (Skip(name) || t.parent == null) continue;
-                string parent = t.parent.name.Replace("mixamorig:", "").Replace("mixamorig", "");
-                if (!target.Bones.TryGetValue(parent, out var pt) || pt != t.parent) continue;
-                if (Skip(parent) || parent == "Hips" && !name.Contains("UpLeg") && name != "Spine") continue;
+                if (!target.Bones.TryGetValue(name, out var t) || !target.Bones.TryGetValue(parent, out var pt)) continue;
                 float w = name.Contains("Spine") || name == "Neck" ? 0.045f : name.Contains("Leg") ? 0.04f : name.Contains("Arm") ? 0.03f : 0.022f;
-                bone.Beam(t.parent.position, t.position, w, w);
+                bone.Beam(pt.position, t.position, w, w);
             }
             Bones(target, "Head", b => bone.Box(b.position + b.up * 0.09f, new Vector3(0.15f, 0.19f, 0.17f), b.rotation));
-            // Rib cage: hoops around the upper spine.
+            // Rib cage: pairs of ribs curving from the spine round to the breastbone, sloping down
+            // toward the front, with a gap at the sternum.
             Bones(target, "Spine1", s1 =>
             {
                 Bones(target, "Spine2", s2 =>
                 {
-                    for (int i = 0; i < 6; i++)
+                    var up = (s2.position - s1.position).normalized;
+                    var side = s2.right;
+                    var front = Vector3.Cross(side, up).normalized;
+                    var top = s2.position + up * 0.12f;
+                    for (int i = 0; i < 7; i++)
                     {
-                        var c = Vector3.Lerp(s1.position, s2.position + s2.up * 0.08f, i / 5f);
-                        float rw = 0.13f - Mathf.Abs(i - 2.5f) * 0.012f;
-                        Hoop(bone, c, s2.up, s2.right, s2.forward, rw, rw * 0.75f, 0.012f);
+                        var c = Vector3.Lerp(s1.position - up * 0.02f, top, i / 6f) - front * 0.04f;
+                        float rw = 0.14f - Mathf.Abs(i - 3.2f) * 0.012f;
+                        foreach (float sgn in new[] { -1f, 1f })
+                            Rib(bone, c, up, side * sgn, front, rw, rw * 0.9f, 0.011f);
                     }
+                    // Breastbone.
+                    bone.Beam(Vector3.Lerp(s1.position, top, 0.15f) + front * 0.1f - up * 0.04f, top + front * 0.08f, 0.025f, 0.012f);
                 });
             });
             // Pelvis.
@@ -78,6 +81,40 @@ namespace SniperDuel.Game.World
             wound.Box(impact, new Vector3(0.06f, 0.06f, 0.06f), Quaternion.LookRotation(bulletDir));
             wound.Object("Wound", Tinted(new Color(1f, 0.15f, 0.08f, 1f)), go.transform, shadows: false);
             return x;
+        }
+
+        /// <summary>The skeleton drawn: each joint and the joint it hangs from.</summary>
+        static readonly (string, string)[] Links = BuildLinks();
+
+        static (string, string)[] BuildLinks()
+        {
+            var l = new List<(string, string)> { ("Spine", "Hips"), ("Spine1", "Spine"), ("Spine2", "Spine1"), ("Neck", "Spine2"), ("Head", "Neck") };
+            foreach (var side in new[] { "Left", "Right" })
+            {
+                l.Add((side + "Shoulder", "Spine2"));
+                l.Add((side + "Arm", side + "Shoulder"));
+                l.Add((side + "ForeArm", side + "Arm"));
+                l.Add((side + "Hand", side + "ForeArm"));
+                l.Add((side + "UpLeg", "Hips"));
+                l.Add((side + "Leg", side + "UpLeg"));
+                l.Add((side + "Foot", side + "Leg"));
+                l.Add((side + "ToeBase", side + "Foot"));
+            }
+            return l.ToArray();
+        }
+
+        /// <summary>Half an elliptical hoop: from the spine at the back, round one side, to the front.</summary>
+        static void Rib(MeshBuilder mb, Vector3 centre, Vector3 up, Vector3 side, Vector3 front, float ra, float rb, float thick)
+        {
+            const int Seg = 8;
+            for (int i = 0; i < Seg; i++)
+            {
+                // From the back (−front) through the side to just short of the front.
+                float t0 = Mathf.PI * (-0.5f + 0.9f * i / Seg), t1 = Mathf.PI * (-0.5f + 0.9f * (i + 1) / Seg);
+                var p0 = centre + side * Mathf.Cos(t0) * ra + front * Mathf.Sin(t0) * rb - up * 0.04f * (i / (float)Seg);
+                var p1 = centre + side * Mathf.Cos(t1) * ra + front * Mathf.Sin(t1) * rb - up * 0.04f * ((i + 1) / (float)Seg);
+                mb.Beam(p0, p1, thick, thick);
+            }
         }
 
         static bool Skip(string bone) =>
