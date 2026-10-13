@@ -68,10 +68,16 @@ def main():
             continue
         for m in results:
             uid = m["uid"]
-            lic = (m.get("license") or {}).get("slug") or ""
             if uid in seen:
                 continue
             seen.add(uid)
+            # Search results leave the licence out; the model's own page has it.
+            lic = (m.get("license") or {}).get("slug") or ""
+            if not lic:
+                try:
+                    lic = (json.loads(get(f"{API}/models/{uid}")).get("license") or {}).get("slug") or ""
+                except Exception as e:
+                    lic = f"? {e}"
             entry = {"label": label, "query": q, "uid": uid, "name": m.get("name"), "author": m["user"]["username"],
                      "license": lic, "faces": m.get("faceCount"), "verts": m.get("vertexCount"),
                      "animations": m.get("animationCount"), "likes": m.get("likeCount"),
