@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 namespace SniperDuel.Game.Ui
 {
     /// <summary>
-    /// Darkens everything outside the scope's eyepiece: a full-screen fill with a round hole, a
+    /// Darkens everything outside the scope's eyepiece: a wide dark ring out to the screen edges, a
     /// black tube ring and a soft inner shadow, drawn with painter2D so the world shows through.
     /// </summary>
     public static class ScopeMask
@@ -16,18 +16,14 @@ namespace SniperDuel.Game.Ui
             {
                 var r = e.contentRect;
                 var p = ctx.painter2D;
-                // Outside: near-black haze over the screen edge, hole cut with the odd-even rule.
-                p.fillColor = new Color(0.012f, 0.016f, 0.012f, 0.9f);
+                // Outside: a near-black haze from the tube out past the screen corners, drawn as one
+                // very wide ring (robust where an odd-even fill with an arc hole is not).
+                float reach = Mathf.Max(r.width, r.height) * 1.5f;
+                p.strokeColor = new Color(0.012f, 0.016f, 0.012f, 0.92f);
+                p.lineWidth = reach;
                 p.BeginPath();
-                p.MoveTo(new Vector2(r.xMin - 50, r.yMin - 50));
-                p.LineTo(new Vector2(r.xMax + 50, r.yMin - 50));
-                p.LineTo(new Vector2(r.xMax + 50, r.yMax + 50));
-                p.LineTo(new Vector2(r.xMin - 50, r.yMax + 50));
-                p.ClosePath();
-                p.MoveTo(centre + new Vector2(radius + 10, 0));
-                p.Arc(centre, radius + 10, 0, 360);
-                p.ClosePath();
-                p.Fill(FillRule.OddEven);
+                p.Arc(centre, radius + 8 + reach / 2, 0, 360);
+                p.Stroke();
                 // Tube ring, then a falloff inside the glass.
                 p.strokeColor = Color.black;
                 p.lineWidth = 12;

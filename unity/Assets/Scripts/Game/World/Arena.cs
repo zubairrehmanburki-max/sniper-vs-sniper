@@ -53,6 +53,8 @@ namespace SniperDuel.Game.World
                 foreach (var spot in map.Spots[side])
                     Dressing.Kit(Library.ToUnity(spot), side == Side.A ? 0 : 180, root);
             }
+            // Water and steel reflect the finished scene; the probe renders once per map.
+            arena.Sky.Probe.RenderProbe();
             return arena;
         }
 

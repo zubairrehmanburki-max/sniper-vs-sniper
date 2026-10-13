@@ -347,7 +347,16 @@ namespace SniperDuel.Game.Ui
             {
                 var sb = new StringBuilder();
                 Serialize(node, sb, skipText: true);
-                using var reader = new StringReader(sb.ToString());
+                // The vector image is cropped to its geometry; a near-invisible rect over the whole
+                // viewBox keeps the drawing where the viewBox puts it (a lone minus sign stays a line).
+                string svg = sb.ToString();
+                int open = svg.IndexOf('>');
+                if (open > 0 && vb.Length == 4)
+                {
+                    string frame = FormattableString.Invariant($"<rect x=\"{vb[0]}\" y=\"{vb[1]}\" width=\"{vb[2]}\" height=\"{vb[3]}\" fill=\"#000000\" fill-opacity=\"0.004\" stroke=\"none\"/>");
+                    svg = svg.Insert(open + 1, frame);
+                }
+                using var reader = new StringReader(svg);
                 var scene = SVGParser.ImportSVG(reader, ViewportOptions.PreserveViewport, 0, 1, (int)w, (int)hh);
                 var image = VectorUtils.BuildVectorImage(scene);
                 e.style.backgroundImage = Background.FromVectorImage(image);

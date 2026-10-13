@@ -160,6 +160,11 @@ namespace SniperDuel.EditorTools
             Directory.CreateDirectory(Path.GetDirectoryName(ScenePath)!);
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             new GameObject("Boot").AddComponent<Boot>();
+            // Unity strips fog shader variants that no scene in the build uses; the maps turn fog
+            // on at runtime, so the boot scene declares it to keep the exponential-squared variants.
+            RenderSettings.fog = true;
+            RenderSettings.fogMode = FogMode.ExponentialSquared;
+            RenderSettings.fogDensity = 0.0006f;
             EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
         }

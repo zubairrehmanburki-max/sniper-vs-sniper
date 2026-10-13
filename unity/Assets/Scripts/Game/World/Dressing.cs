@@ -48,7 +48,7 @@ namespace SniperDuel.Game.World
             }
 
             // Trees on the land beyond the banks, thinning with distance.
-            string[] trees = { "fir_tree_01", "island_tree_01", "fir_tree_01", "shrub_02" };
+            string[] trees = { "island_tree_01", "island_tree_01", "shrub_02" };
             int planted = 0;
             for (int i = 0; i < 2000 && planted < 70; i++)
             {

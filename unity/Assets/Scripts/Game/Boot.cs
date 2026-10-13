@@ -40,6 +40,7 @@ namespace SniperDuel.Game
             Application.targetFrameRate = 60;
             QualitySettings.vSyncCount = 0;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
+            QualitySettings.realtimeReflectionProbes = true;
 
             Config = GameConfig.Parse(Resources.Load<TextAsset>("Config/game").text);
             var camGo = new GameObject("Main Camera") { tag = "MainCamera" };

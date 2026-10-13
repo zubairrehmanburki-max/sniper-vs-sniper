@@ -97,6 +97,8 @@ namespace SniperDuel.Game.World
                 // Lamp posts every 40 m.
                 for (float x = -reach + 20; x < reach; x += 40)
                 {
+                    // Nothing tall in the firing line: keep lamp posts clear of mid-span.
+                    if (Mathf.Abs(x) < 14) continue;
                     rail.Box(new Vector3(x, deck + 4.2f, z), new Vector3(0.18f, 8.2f, 0.18f));
                     rail.Box(new Vector3(x, deck + 8.2f, z - side * 1.1f), new Vector3(0.12f, 0.12f, 2.3f));
                     rail.Box(new Vector3(x, deck + 8.05f, z - side * 2.1f), new Vector3(0.35f, 0.18f, 0.7f));
