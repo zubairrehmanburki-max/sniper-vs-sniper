@@ -103,6 +103,9 @@ namespace SniperDuel.Game.World
                         var mat = new Material(Library.Template("Lit")) { name = "Soldier " + r.name };
                         mat.SetTexture("_BaseMap", tex);
                         mat.SetFloat("_Metallic", 0);
+                        // The Lit template reads metallic from a map; without one it defaults to white,
+                        // fully metallic, and the cloth turns to chrome.
+                        mat.SetTexture("_MetallicGlossMap", NonMetal);
                         if (hd != null)
                         {
                             var nor = src != null && src.HasProperty("normalTexture") ? src.GetTexture("normalTexture") : null;
@@ -154,6 +157,7 @@ namespace SniperDuel.Game.World
                 Library.Ground(rifle, root.transform.position.y + 0.06f);
             }
             fig.LateUpdate();
+            if (fig.pose.Lie.HasValue) fig.FaceDown(body);
             fig.Bake();
             if (fig.pose.Lie.HasValue)
             {
@@ -164,6 +168,20 @@ namespace SniperDuel.Game.World
                 body.position += new Vector3(0, lift, 0);
             }
             return fig;
+        }
+
+        /// <summary>
+        /// Rolls a lying figure onto his front if the pose left him on his back: models differ in
+        /// which way their rest pose faces, so this checks the chest instead of trusting the rig.
+        /// </summary>
+        void FaceDown(Transform body)
+        {
+            if (!bones.TryGetValue("LeftArm", out var l) || !bones.TryGetValue("RightArm", out var r)
+                || !bones.TryGetValue("Neck", out var neck) || hips == null) return;
+            var up = neck.position - hips.position;
+            var chest = Vector3.Cross(r.position - l.position, up).normalized;
+            Debug.Log($"[Figure] prone chest faces {chest}");
+            if (chest.y > 0) body.RotateAround(hips.position, up.normalized, 180);
         }
 
         /// <summary>
@@ -197,6 +215,20 @@ namespace SniperDuel.Game.World
             int i = n.IndexOf("mixamorig", System.StringComparison.Ordinal);
             if (i >= 0) n = n.Substring(i + 9).TrimStart(':');
             return Suffix.Replace(n, "");
+        }
+
+        static Texture2D? nonMetal;
+        /// <summary>Metallic 0, smoothness 1 (scaled by _Smoothness).</summary>
+        static Texture2D NonMetal
+        {
+            get
+            {
+                if (nonMetal != null) return nonMetal;
+                nonMetal = new Texture2D(2, 2, TextureFormat.RGBA32, false, true) { name = "Non-metal" };
+                nonMetal.SetPixels32(new[] { new Color32(0, 0, 0, 255), new Color32(0, 0, 0, 255), new Color32(0, 0, 0, 255), new Color32(0, 0, 0, 255) });
+                nonMetal.Apply();
+                return nonMetal;
+            }
         }
 
         static Dictionary<string, Quaternion>? refRotations;

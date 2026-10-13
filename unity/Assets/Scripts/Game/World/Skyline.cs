@@ -37,13 +37,26 @@ namespace SniperDuel.Game.World
 
             // Downtown clusters on both banks past the far bridge, then lower blocks spreading up and
             // down the river. Nothing stands on the water.
+            // Downtown stands on a quay that runs out to the river, so its towers rise from solid
+            // ground rather than floating over the water where the terrain mesh ends.
+            const float QuayTop = 3;
+            float downFrom = lane + 250, downTo = lane + 1650;
+            var quay = new MeshBuilder();
+            foreach (float side in new[] { -1f, 1f })
+            {
+                float inner = riverHalfWidth + 40, outer = riverHalfWidth + 900;
+                quay.Box(new Vector3(side * (inner + outer) / 2, QuayTop / 2 - 4, (downFrom + downTo) / 2), new Vector3(outer - inner, QuayTop + 8, downTo - downFrom));
+            }
+            quay.Object("Quay", Library.Surface("concrete_wall_008", 6, new Color(0.5f, 0.5f, 0.5f)), root);
+
             void Block(float x, float s, float height, float width, float depth)
             {
                 float y = (float)ground(x, -s);
                 float yMin = y;
                 foreach (var (dx, dz) in new[] { (-1, -1), (-1, 1), (1, -1), (1, 1) })
                     yMin = Mathf.Min(yMin, (float)ground(x + dx * width / 2, -(s + dz * depth / 2)));
-                if (yMin < 2) return;
+                if (s > downFrom && s < downTo) yMin = Mathf.Max(yMin, QuayTop);
+                else if (yMin < 2) return;
                 // Heights snap to whole floors so the window grid ends cleanly at the roof.
                 height = Mathf.Max(2, Mathf.Round(height / FloorM)) * FloorM;
                 int kind = rng.Next(builders.Length);
