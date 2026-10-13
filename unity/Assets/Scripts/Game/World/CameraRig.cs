@@ -27,7 +27,7 @@ namespace SniperDuel.Game.World
         /// <summary>The player's own body, hidden whenever the camera is at the eye.</summary>
         public GameObject? Body;
         /// <summary>Over-the-shoulder offset in the camera's frame: right, up, back (metres).</summary>
-        public static readonly Vector3 ShoulderOffset = new Vector3(0.55f, 0.8f, -2.6f);
+        public static readonly Vector3 ShoulderOffset = new Vector3(0.85f, 0.75f, -2.4f);
         float clock;
 
         public const float EyeFov = 55;

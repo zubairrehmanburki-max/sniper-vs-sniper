@@ -91,7 +91,7 @@ namespace SniperDuel.Game.World
             DynamicGI.UpdateEnvironment();
 
             // Haze: the far bank should go soft and blue-grey, the near water stay crisp.
-            var fog = Color.Lerp(new Color(0.62f, 0.68f, 0.74f), new Color(0.86f, 0.66f, 0.52f), warm * 0.8f);
+            var fog = Color.Lerp(new Color(0.62f, 0.68f, 0.74f), new Color(0.8f, 0.68f, 0.6f), warm * 0.35f);
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
             // Thin enough that the city a kilometre or two away reads as hazy silhouettes, not a wall.
