@@ -309,7 +309,7 @@ namespace SniperDuel.Game
                 SetScoped(scoped);
                 resume = next;
                 resumeAt = time;
-            });
+            }, arena.Enemy);
             k.On("skip", cam.Finish);
             k.On("pause", () => cam.Paused = !cam.Paused);
         }

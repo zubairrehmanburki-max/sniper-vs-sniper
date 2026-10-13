@@ -17,12 +17,14 @@ namespace SniperDuel.Game.World
         Transform bullet = null!;
         Action<float, float>? progress;
         Action done = null!;
+        Figure? target;
+        XRay? xray;
         double t;
         float held;
         public float Speed { get; private set; } = Fast;
         public bool Paused;
 
-        public static BulletCam Play(ShotOutcome o, CameraRig rig, Transform parent, Action<float, float>? progress, Action done)
+        public static BulletCam Play(ShotOutcome o, CameraRig rig, Transform parent, Action<float, float>? progress, Action done, Figure? target = null)
         {
             var go = new GameObject("BulletCam");
             go.transform.SetParent(parent, false);
@@ -31,6 +33,7 @@ namespace SniperDuel.Game.World
             bc.rig = rig;
             bc.progress = progress;
             bc.done = done;
+            bc.target = o.Verdict != Verdict.Miss ? target : null;
             rig.Current = CameraRig.Mode.Director;
             rig.Cam.fieldOfView = 40;
 
@@ -89,6 +92,12 @@ namespace SniperDuel.Game.World
             if (t < end)
             {
                 Speed = t / end > SlowFrom ? Slow : Fast;
+                // Into the last stretch on a hit: the X-ray shows where it's going in.
+                if (Speed == Slow && xray == null && target != null)
+                {
+                    var impact = At(end, out var dir);
+                    xray = XRay.Begin(target, impact, dir);
+                }
                 t = Math.Min(end, t + Time.deltaTime * Speed);
                 Place();
                 if (t >= end) Effects.Impact(Library.ToUnity(o.Impact.Point), false, o.Verdict != Verdict.Miss, transform.parent);
@@ -108,6 +117,7 @@ namespace SniperDuel.Game.World
         {
             if (finished) return;
             finished = true;
+            if (xray != null) xray.End();
             Destroy(gameObject);
             rig.Current = CameraRig.Mode.Eye;
             done();

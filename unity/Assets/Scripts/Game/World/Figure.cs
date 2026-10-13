@@ -55,6 +55,10 @@ namespace SniperDuel.Game.World
 
         const float ModelHeight = 1.83f;
         readonly Dictionary<string, Transform> bones = new Dictionary<string, Transform>();
+        /// <summary>Joints by Mixamo name without the prefix ("Hips", "Spine2", "LeftForeArm"...).</summary>
+        public IReadOnlyDictionary<string, Transform> Bones => bones;
+        /// <summary>The soldier model's root (the rifle sits outside it).</summary>
+        public Transform Body = null!;
         readonly Dictionary<string, Quaternion> rest = new Dictionary<string, Quaternion>();
         Pose pose = null!;
         Transform? hips;
@@ -70,6 +74,7 @@ namespace SniperDuel.Game.World
             fig.pose = Poses[stance];
             var body = new GameObject("Body").transform;
             body.SetParent(root.transform, false);
+            fig.Body = body;
             var prefab = Resources.Load<GameObject>("Characters/Soldier");
             if (prefab != null)
             {
