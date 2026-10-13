@@ -113,8 +113,7 @@ namespace SniperDuel.Game.World
             if (fig.pose.Lie.HasValue)
             {
                 // Lying down: the model's up points along −z (feet trailing behind the head, which faces +z).
-                // Rolled over on the long axis so he lies face down on his elbows, not on his back.
-                body.localRotation = Quaternion.Euler(0, 0, 180) * Quaternion.Euler(-fig.pose.Lie.Value, 0, 0);
+                body.localRotation = Quaternion.Euler(-fig.pose.Lie.Value, 0, 0);
                 body.localPosition = new Vector3(0, 0.22f, -1.5f);
             }
             body.localPosition += fig.pose.Shift;

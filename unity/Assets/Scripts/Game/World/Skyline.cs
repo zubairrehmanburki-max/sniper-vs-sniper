@@ -21,8 +21,17 @@ namespace SniperDuel.Game.World
             var rng = new System.Random(map.Id.GetHashCode() ^ 0x5eed);
             float lane = (float)map.LaneLength;
 
-            var facades = new[] { Facade(rng, new Color(0.56f, 0.57f, 0.58f), 0.10f), Facade(rng, new Color(0.44f, 0.42f, 0.40f), 0.07f), Facade(rng, new Color(0.30f, 0.36f, 0.42f), 0.05f) };
-            var builders = new[] { new MeshBuilder(), new MeshBuilder(), new MeshBuilder() };
+            // Five facade tones from pale limestone to dark glass, so the blocks don't read as one colour.
+            var facades = new[]
+            {
+                Facade(rng, new Color(0.50f, 0.50f, 0.50f), 0.08f),
+                Facade(rng, new Color(0.38f, 0.36f, 0.34f), 0.06f),
+                Facade(rng, new Color(0.24f, 0.28f, 0.32f), 0.05f),
+                Facade(rng, new Color(0.45f, 0.40f, 0.34f), 0.07f),
+                Facade(rng, new Color(0.18f, 0.20f, 0.22f), 0.04f),
+            };
+            var builders = new MeshBuilder[facades.Length];
+            for (int k = 0; k < builders.Length; k++) builders[k] = new MeshBuilder();
             var roofs = new MeshBuilder();
             var beacons = new MeshBuilder();
 
@@ -130,7 +139,7 @@ namespace SniperDuel.Game.World
             mat.SetFloat("_Smoothness", 0.45f);
             mat.EnableKeyword("_EMISSION");
             mat.SetTexture("_EmissionMap", glow);
-            mat.SetColor("_EmissionColor", Color.white * 1.6f);
+            mat.SetColor("_EmissionColor", Color.white * 0.9f);
             // MeshBuilder UVs are metres × 0.25: one texture repeat per Bays × Floors.
             var scale = new Vector2(4f / (Bays * BayM), 4f / (Floors * FloorM));
             mat.SetTextureScale("_BaseMap", scale);

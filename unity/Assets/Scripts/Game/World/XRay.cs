@@ -14,8 +14,8 @@ namespace SniperDuel.Game.World
 
         public static XRay Begin(Figure target, Vector3 impact, Vector3 bulletDir)
         {
+            // Built in world coordinates, so the object stays at the origin rather than under the figure.
             var go = new GameObject("XRay");
-            go.transform.SetParent(target.transform, false);
             var x = go.AddComponent<XRay>();
 
             // Ghost the flesh: every renderer of the body (not the rifle) goes additive blue.
