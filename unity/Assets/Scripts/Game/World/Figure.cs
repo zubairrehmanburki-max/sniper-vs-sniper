@@ -92,7 +92,8 @@ namespace SniperDuel.Game.World
                     var mat = new Material(Library.Template("Lit")) { name = "Soldier " + r.name };
                     mat.SetTexture("_BaseMap", tex);
                     mat.SetColor("_BaseColor", r.name.Contains("visor") ? new Color(0.17f, 0.19f, 0.17f) : tint);
-                    mat.SetFloat("_Smoothness", 0.25f);
+                    mat.SetFloat("_Smoothness", 0.12f);
+                    mat.SetFloat("_Metallic", 0);
                     r.sharedMaterials = new[] { mat };
                     fig.skins.Add(r);
                 }
@@ -115,7 +116,16 @@ namespace SniperDuel.Game.World
 
             var rifle = Library.Place("bolt_action_rifle_7_62", Vector3.zero, 0, 1, root.transform);
             rifle.transform.localPosition = fig.pose.RifleAt;
-            rifle.transform.localRotation = Quaternion.Euler(fig.pose.RifleTilt, 0, 0);
+            // The scanned rifle's long axis may run along x; turn it so the barrel points ahead (+z).
+            var rb = Library.BoundsOf(rifle);
+            float yaw = rb.size.x > rb.size.z ? 90 : 0;
+            rifle.transform.localRotation = Quaternion.Euler(fig.pose.RifleTilt, yaw, 0);
+            if (fig.pose.Lie.HasValue)
+            {
+                // Prone: the rifle lies out in front of his head on its bipod, stock at the shoulder.
+                rifle.transform.localPosition = new Vector3(0.12f, 0, 0.75f);
+                Library.Ground(rifle, root.transform.position.y + 0.06f);
+            }
             fig.LateUpdate();
             fig.Bake();
             if (fig.pose.Lie.HasValue)

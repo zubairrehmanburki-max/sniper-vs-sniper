@@ -65,6 +65,44 @@ namespace SniperDuel.Game.World
             }
 
             if (open) Water(map, root, rng, water);
+            if (map.Look.Structures != null)
+                foreach (var st in map.Look.Structures)
+                    if (st.Kind == StructureKind.Bridge) Roadblock(st, root, rng);
+        }
+
+        /// <summary>
+        /// A bridge closed off by the military: lane-closure barriers, supply dumps, fuel cans and
+        /// searchlights along the deck. Mid-span stays clear so nothing stands in the firing line.
+        /// </summary>
+        static void Roadblock(Structure b, Transform root, System.Random rng)
+        {
+            float deck = (float)b.DeckY, hw = (float)b.HalfWidth, s = (float)b.S;
+            float span = (float)b.HalfSpan;
+            GameObject Put(string id, float x, float z, float yaw, float scale = 1)
+            {
+                var go = Library.Place(id, new Vector3(x, deck, s + z), yaw, scale, root);
+                Library.Ground(go, deck + 0.04f);
+                return go;
+            }
+            foreach (float dir in new[] { -1f, 1f })
+            {
+                // Chicane of barriers across both lanes.
+                float bx = dir * (26 + (float)rng.NextDouble() * 10);
+                for (int i = 0; i < 4; i++) Put("concrete_road_barrier", bx + i * 0.4f * dir, -hw + 2.6f + i * 1.7f, 90 + (float)rng.Next(-6, 6));
+                float bx2 = bx + dir * 9;
+                for (int i = 0; i < 4; i++) Put("concrete_road_barrier", bx2 - i * 0.4f * dir, hw - 2.6f - i * 1.7f, 90 + (float)rng.Next(-6, 6));
+                // A supply dump and a searchlight further along.
+                float dx = dir * (55 + (float)rng.NextDouble() * 30);
+                float dz = (rng.Next(2) == 0 ? -1 : 1) * (hw - 3.4f);
+                Put("wooden_military_crate", dx, dz, (float)rng.Next(0, 30));
+                var under = Put("wooden_military_crate", dx + 1.3f, dz, (float)rng.Next(0, 30));
+                var top = Library.Place("old_military_crate", new Vector3(dx + 1.3f, deck, s + dz), (float)rng.Next(0, 90), 1, root);
+                Library.Ground(top, Library.BoundsOf(under).max.y);
+                for (int i = 0; i < 3; i++) Put("barrel_03", dx + 3 + i * 0.7f, dz + (float)rng.NextDouble() * 0.6f, (float)rng.Next(0, 360));
+                for (int i = 0; i < 2; i++) Put("metal_jerrycan_green", dx - 1.6f - i * 0.45f, dz + 0.3f, (float)rng.Next(0, 360));
+                Put("portable_searchlight", dir * (18 + (float)rng.NextDouble() * 4), -dz * 0.8f, dir > 0 ? -90 : 90);
+                if (span > 120) Put("concrete_road_barrier", dir * (span - 20), 0, 90);
+            }
         }
 
         static void Water(DuelMap map, Transform root, System.Random rng, float water)

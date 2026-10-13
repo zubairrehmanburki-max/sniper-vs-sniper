@@ -94,7 +94,8 @@ namespace SniperDuel.Game.World
             var fog = Color.Lerp(new Color(0.62f, 0.68f, 0.74f), new Color(0.86f, 0.66f, 0.52f), warm * 0.8f);
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
-            RenderSettings.fogDensity = kind == SkyKind.Clear ? 0.00055f : 0.0008f;
+            // Thin enough that the city a kilometre or two away reads as hazy silhouettes, not a wall.
+            RenderSettings.fogDensity = kind == SkyKind.Clear ? 0.00045f : 0.0006f;
             RenderSettings.fogColor = fog;
 
             // One realtime probe over the lane so water and metal reflect the bridges and the sky.

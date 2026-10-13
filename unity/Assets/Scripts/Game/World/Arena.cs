@@ -28,6 +28,8 @@ namespace SniperDuel.Game.World
             if (map.Water.HasValue) Land.Water(map, root);
             Structures.Build(map, root);
             Dressing.Build(map, root);
+            // The estuary maps get a city on the banks so the far horizon isn't empty water.
+            if (map.Id == "twin-bridges") Skyline.Build(map, root, 260);
 
             var ground = map.Terrain ?? map.Ground;
             float water = (float)(map.Water ?? -1000);
@@ -62,7 +64,7 @@ namespace SniperDuel.Game.World
         public Figure PlaceEnemy(Vec3 position, Stance stance, Side enemySide)
         {
             if (Enemy != null) Object.Destroy(Enemy.gameObject);
-            Enemy = Figure.Create(stance, 1.8f, Root, new Color(0.35f, 0.38f, 0.29f));
+            Enemy = Figure.Create(stance, 1.8f, Root, new Color(0.62f, 0.64f, 0.52f));
             Enemy.transform.position = Library.ToUnity(position);
             Enemy.transform.rotation = Quaternion.Euler(0, enemySide == Side.A ? 0 : 180, 0);
             return Enemy;
