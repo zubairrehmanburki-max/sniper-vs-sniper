@@ -44,7 +44,7 @@ jobs:
       - uses: actions/checkout@v4
       - id: a
         uses: ./.github/actions/unity-assets
-      - run: echo "Asset set ${{ steps.a.outputs.tag }}"; cat unity/Assets/ThirdParty/Downloaded/PROBLEMS.txt 2>/dev/null || true
+      - run: echo "Asset set ${{ steps.a.outputs.tag }}"; cat unity/Assets/Resources/TP/PROBLEMS.txt 2>/dev/null || true
 
   licence:
     runs-on: ubuntu-latest

@@ -1,52 +1,316 @@
 {
-  "$comment": "Free third-party assets fetched by tools/unity-assets/fetch.py at build time (not committed). Poly Haven assets are CC0; fonts are OFL.",
+  "$comment": "Free third-party assets fetched by tools/unity-assets/fetch.py at build time (not committed). Poly Haven assets are CC0; fonts are OFL. Models over maxModelMB (sum of files) are skipped and reported in PROBLEMS.txt.",
   "hdris": [
-    { "id": "venice_sunset", "res": "4k", "format": "exr" },
-    { "id": "belfast_sunset_puresky", "res": "4k", "format": "exr" },
-    { "id": "kloofendal_48d_partly_cloudy_puresky", "res": "4k", "format": "exr" },
-    { "id": "kloppenheim_06_puresky", "res": "4k", "format": "exr" },
-    { "id": "spaichingen_hill", "res": "2k", "format": "exr" }
+    {
+      "id": "belfast_sunset_puresky",
+      "res": "4k",
+      "format": "exr"
+    },
+    {
+      "id": "qwantani_sunrise_puresky",
+      "res": "4k",
+      "format": "exr"
+    },
+    {
+      "id": "kloofendal_misty_morning_puresky",
+      "res": "4k",
+      "format": "exr"
+    },
+    {
+      "id": "kloofendal_48d_partly_cloudy_puresky",
+      "res": "4k",
+      "format": "exr"
+    }
   ],
   "textures": [
-    { "id": "concrete_wall_008", "res": "2k", "maps": ["Diffuse", "nor_gl", "arm"] },
-    { "id": "rusty_metal_02", "res": "2k", "maps": ["Diffuse", "nor_gl", "arm"] },
-    { "id": "corrugated_iron_02", "res": "2k", "maps": ["Diffuse", "nor_gl", "arm"] },
-    { "id": "metal_plate", "res": "2k", "maps": ["Diffuse", "nor_gl", "arm"] },
-    { "id": "asphalt_02", "res": "2k", "maps": ["Diffuse", "nor_gl", "arm"] },
-    { "id": "coast_sand_rocks_02", "res": "2k", "maps": ["Diffuse", "nor_gl", "arm"] },
-    { "id": "aerial_rocks_02", "res": "2k", "maps": ["Diffuse", "nor_gl", "arm"] },
-    { "id": "brown_mud_leaves_01", "res": "2k", "maps": ["Diffuse", "nor_gl", "arm"] }
+    {
+      "id": "concrete_wall_008",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "rusty_metal_02",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "corrugated_iron_02",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "metal_plate",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "asphalt_02",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "coast_sand_rocks_02",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "aerial_rocks_02",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "brown_mud_leaves_01",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "rocky_terrain_02",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "sparse_grass",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "coast_sand_01",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "rusty_painted_metal",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "weathered_planks",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    }
   ],
   "models": [
-    { "id": "bolt_action_rifle_7_62", "res": "2k" },
-    { "id": "coastal_cliff_01", "res": "2k" },
-    { "id": "coastal_cliff_02", "res": "2k" },
-    { "id": "coast_rocks_01", "res": "1k" },
-    { "id": "coast_rocks_03", "res": "1k" },
-    { "id": "mountainside", "res": "2k" },
-    { "id": "lateral_sea_marker", "res": "1k" },
-    { "id": "ocean_buoy", "res": "1k" },
-    { "id": "lifebuoy", "res": "1k" },
-    { "id": "dutch_ship_medium", "res": "1k" },
-    { "id": "old_military_crate", "res": "1k" },
-    { "id": "ammo_box", "res": "1k" },
-    { "id": "binoculars", "res": "1k" },
-    { "id": "concrete_road_barrier", "res": "1k" },
-    { "id": "metal_jerrycan_green", "res": "1k" },
-    { "id": "portable_searchlight", "res": "1k" },
-    { "id": "modular_electricity_poles", "res": "1k" },
-    { "id": "island_tree_01", "res": "1k" },
-    { "id": "pine_tree_01", "res": "1k" }
+    {
+      "id": "bolt_action_rifle_7_62",
+      "res": "2k"
+    },
+    {
+      "id": "coastal_cliff_01",
+      "res": "2k"
+    },
+    {
+      "id": "coastal_cliff_02",
+      "res": "2k"
+    },
+    {
+      "id": "coast_rocks_01",
+      "res": "1k"
+    },
+    {
+      "id": "coast_rocks_03",
+      "res": "1k"
+    },
+    {
+      "id": "mountainside",
+      "res": "2k"
+    },
+    {
+      "id": "lateral_sea_marker",
+      "res": "1k"
+    },
+    {
+      "id": "ocean_buoy",
+      "res": "1k"
+    },
+    {
+      "id": "lifebuoy",
+      "res": "1k"
+    },
+    {
+      "id": "dutch_ship_medium",
+      "res": "1k"
+    },
+    {
+      "id": "old_military_crate",
+      "res": "1k"
+    },
+    {
+      "id": "ammo_box",
+      "res": "1k"
+    },
+    {
+      "id": "binoculars",
+      "res": "1k"
+    },
+    {
+      "id": "concrete_road_barrier",
+      "res": "1k"
+    },
+    {
+      "id": "metal_jerrycan_green",
+      "res": "1k"
+    },
+    {
+      "id": "portable_searchlight",
+      "res": "1k"
+    },
+    {
+      "id": "modular_electricity_poles",
+      "res": "1k"
+    },
+    {
+      "id": "island_tree_01",
+      "res": "1k"
+    },
+    {
+      "id": "coastal_cliff_04",
+      "res": "1k"
+    },
+    {
+      "id": "modular_fort_01",
+      "res": "1k"
+    },
+    {
+      "id": "rock_face_01",
+      "res": "1k"
+    },
+    {
+      "id": "shrub_02",
+      "res": "1k"
+    },
+    {
+      "id": "wooden_military_crate",
+      "res": "1k"
+    },
+    {
+      "id": "barrel_03",
+      "res": "1k"
+    },
+    {
+      "id": "dutch_ship_large_01",
+      "res": "1k"
+    },
+    {
+      "id": "fir_tree_01",
+      "res": "1k"
+    }
   ],
   "files": [
-    { "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlowcondensed/BarlowCondensed-Medium.ttf", "dest": "Fonts/BarlowCondensed-Medium.ttf", "source": "Google Fonts", "author": "Jeremy Tribby", "license": "OFL" },
-    { "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlowcondensed/BarlowCondensed-SemiBold.ttf", "dest": "Fonts/BarlowCondensed-SemiBold.ttf", "source": "Google Fonts", "author": "Jeremy Tribby", "license": "OFL" },
-    { "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlowcondensed/BarlowCondensed-Bold.ttf", "dest": "Fonts/BarlowCondensed-Bold.ttf", "source": "Google Fonts", "author": "Jeremy Tribby", "license": "OFL" },
-    { "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlowcondensed/BarlowCondensed-ExtraBold.ttf", "dest": "Fonts/BarlowCondensed-ExtraBold.ttf", "source": "Google Fonts", "author": "Jeremy Tribby", "license": "OFL" },
-    { "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlowcondensed/BarlowCondensed-ExtraBoldItalic.ttf", "dest": "Fonts/BarlowCondensed-ExtraBoldItalic.ttf", "source": "Google Fonts", "author": "Jeremy Tribby", "license": "OFL" },
-    { "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlow/Barlow-Regular.ttf", "dest": "Fonts/Barlow-Regular.ttf", "source": "Google Fonts", "author": "Jeremy Tribby", "license": "OFL" },
-    { "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlow/Barlow-Medium.ttf", "dest": "Fonts/Barlow-Medium.ttf", "source": "Google Fonts", "author": "Jeremy Tribby", "license": "OFL" },
-    { "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlow/Barlow-SemiBold.ttf", "dest": "Fonts/Barlow-SemiBold.ttf", "source": "Google Fonts", "author": "Jeremy Tribby", "license": "OFL" },
-    { "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/sharetechmono/ShareTechMono-Regular.ttf", "dest": "Fonts/ShareTechMono-Regular.ttf", "source": "Google Fonts", "author": "Carrois Apostrophe", "license": "OFL" }
-  ]
+    {
+      "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlowcondensed/BarlowCondensed-Medium.ttf",
+      "dest": "Fonts/BarlowCondensed-Medium.ttf",
+      "source": "Google Fonts",
+      "author": "Jeremy Tribby",
+      "license": "OFL"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlowcondensed/BarlowCondensed-SemiBold.ttf",
+      "dest": "Fonts/BarlowCondensed-SemiBold.ttf",
+      "source": "Google Fonts",
+      "author": "Jeremy Tribby",
+      "license": "OFL"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlowcondensed/BarlowCondensed-Bold.ttf",
+      "dest": "Fonts/BarlowCondensed-Bold.ttf",
+      "source": "Google Fonts",
+      "author": "Jeremy Tribby",
+      "license": "OFL"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlowcondensed/BarlowCondensed-ExtraBold.ttf",
+      "dest": "Fonts/BarlowCondensed-ExtraBold.ttf",
+      "source": "Google Fonts",
+      "author": "Jeremy Tribby",
+      "license": "OFL"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlowcondensed/BarlowCondensed-ExtraBoldItalic.ttf",
+      "dest": "Fonts/BarlowCondensed-ExtraBoldItalic.ttf",
+      "source": "Google Fonts",
+      "author": "Jeremy Tribby",
+      "license": "OFL"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlow/Barlow-Regular.ttf",
+      "dest": "Fonts/Barlow-Regular.ttf",
+      "source": "Google Fonts",
+      "author": "Jeremy Tribby",
+      "license": "OFL"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlow/Barlow-Medium.ttf",
+      "dest": "Fonts/Barlow-Medium.ttf",
+      "source": "Google Fonts",
+      "author": "Jeremy Tribby",
+      "license": "OFL"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlow/Barlow-SemiBold.ttf",
+      "dest": "Fonts/Barlow-SemiBold.ttf",
+      "source": "Google Fonts",
+      "author": "Jeremy Tribby",
+      "license": "OFL"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/sharetechmono/ShareTechMono-Regular.ttf",
+      "dest": "Fonts/ShareTechMono-Regular.ttf",
+      "source": "Google Fonts",
+      "author": "Carrois Apostrophe",
+      "license": "OFL"
+    }
+  ],
+  "maxModelMB": 120
 }

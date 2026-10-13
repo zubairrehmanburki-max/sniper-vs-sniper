@@ -26,7 +26,7 @@ def save(url, path):
     print(f"  {len(data) / 1e6:6.1f} MB  {path}")
 
 
-def polyhaven(kind, item, out, credits, problems):
+def polyhaven(kind, item, out, credits, problems, max_mb):
     pid, res = item["id"], item.get("res", "2k")
     try:
         files = json.loads(get(f"{API}/files/{pid}"))
@@ -48,6 +48,10 @@ def polyhaven(kind, item, out, credits, problems):
             save(f["url"], os.path.join(folder, os.path.basename(f["url"])))
     elif kind == "model":
         g = files["gltf"][res]["gltf"]
+        mb = (g.get("size", 0) + sum(i.get("size", 0) for i in g.get("include", {}).values())) / 1e6
+        if mb > max_mb:  # some scans (pine_tree_01) ship ~1 GB of geometry; not usable on a phone
+            problems.append(f"{pid}: {mb:.0f} MB at {res}, over the {max_mb} MB limit; skipped")
+            return
         save(g["url"], os.path.join(folder, os.path.basename(g["url"])))
         for rel, inc in g.get("include", {}).items():
             save(inc["url"], os.path.join(folder, rel))
@@ -64,7 +68,7 @@ def main():
     for kind in ("hdri", "texture", "model"):
         for item in manifest.get(kind + "s", []):
             print(f"{kind}: {item['id']}")
-            polyhaven(kind, item, out, credits, problems)
+            polyhaven(kind, item, out, credits, problems, manifest.get("maxModelMB", 1e9))
     for item in manifest.get("files", []):
         print(f"file: {item['dest']}")
         try:

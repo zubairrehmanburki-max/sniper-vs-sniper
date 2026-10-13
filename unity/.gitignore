@@ -15,9 +15,9 @@
 *.mdb.meta
 .vs/
 .idea/
-# Downloaded at build time from the assets release (see Assets/ThirdParty/README.md)
-/Assets/ThirdParty/Downloaded/
-/Assets/ThirdParty/Downloaded.meta
+# Third-party assets, downloaded at build time by .github/actions/unity-assets (see unity/assets.json)
+/Assets/Resources/TP/
+/Assets/Resources/TP.meta
 # dotnet test output
 /CoreTests/bin/
 /CoreTests/obj/
