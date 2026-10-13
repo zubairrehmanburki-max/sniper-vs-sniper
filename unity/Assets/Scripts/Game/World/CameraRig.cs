@@ -19,6 +19,15 @@ namespace SniperDuel.Game.World
         /// <summary>Vertical field of view in the eye mode, degrees.</summary>
         public float Fov = EyeFov;
         public Vector3 MenuFocus;
+        /// <summary>
+        /// At the bare eye the camera sits over the shooter's shoulder, so you see your own sniper
+        /// lying at the edge with the river beyond; the scope puts it back at the eye.
+        /// </summary>
+        public bool ThirdPerson;
+        /// <summary>The player's own body, hidden whenever the camera is at the eye.</summary>
+        public GameObject? Body;
+        /// <summary>Over-the-shoulder offset in the camera's frame: right, up, back (metres).</summary>
+        public static readonly Vector3 ShoulderOffset = new Vector3(0.55f, 0.8f, -2.6f);
         float clock;
 
         public const float EyeFov = 55;
@@ -48,10 +57,14 @@ namespace SniperDuel.Game.World
             }
             else if (Current == Mode.Eye)
             {
-                Cam.transform.position = Eye;
-                Cam.transform.rotation = Quaternion.Euler(-Pitch, Yaw, 0);
+                var rot = Quaternion.Euler(-Pitch, Yaw, 0);
+                // Level the offset with the yaw only, so looking up or down doesn't swing the camera
+                // into the deck; at 600 m the 0.8 m height shifts the aim point by under 0.1°.
+                Cam.transform.position = ThirdPerson ? Eye + Quaternion.Euler(0, Yaw, 0) * ShoulderOffset : Eye;
+                Cam.transform.rotation = rot;
                 Cam.fieldOfView = Fov;
             }
+            if (Body != null) Body.SetActive(Current != Mode.Eye || ThirdPerson);
         }
     }
 }

@@ -48,6 +48,8 @@ namespace SniperDuel.Game
         float hintTimer;
         Stance enemyStanceShown = (Stance)(-1);
         Vec3 enemyPosShown;
+        Stance playerStanceShown = (Stance)(-1);
+        Vec3 playerPosShown;
 
         int? lookPointer;
         Vector2 lookLast;
@@ -429,10 +431,12 @@ namespace SniperDuel.Game
             rig.Yaw = (float)(aim.Yaw * Mathf.Rad2Deg);
             rig.Pitch = (float)(aim.Pitch * Mathf.Rad2Deg);
             rig.Fov = (float)Fov();
+            rig.ThirdPerson = !scoped;
 
             var wind = Match.ActiveConditions(State).Wind;
             arena.SetWind(wind);
             SyncEnemy();
+            SyncPlayer();
             RenderHud(wind);
         }
 
@@ -443,6 +447,15 @@ namespace SniperDuel.Game
             enemyStanceShown = e.Stance;
             enemyPosShown = e.Position;
             arena.PlaceEnemy(e.Position, e.Stance, Side.B);
+        }
+
+        void SyncPlayer()
+        {
+            var p = State.Players[Me];
+            if (p.Stance == playerStanceShown && p.Position.Equals(playerPosShown) && arena.Player != null) return;
+            playerStanceShown = p.Stance;
+            playerPosShown = p.Position;
+            rig.Body = arena.PlacePlayer(p.Position, p.Stance, Me).gameObject;
         }
 
         void RenderHud(LaneWind wind)

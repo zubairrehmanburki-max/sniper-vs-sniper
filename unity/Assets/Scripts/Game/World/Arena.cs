@@ -17,6 +17,7 @@ namespace SniperDuel.Game.World
         public Atmos.Sky Sky = null!;
         public readonly List<Flag> Flags = new List<Flag>();
         public Figure? Enemy;
+        public Figure? Player;
 
         public static Arena Build(DuelMap map)
         {
@@ -68,6 +69,17 @@ namespace SniperDuel.Game.World
             Enemy.transform.position = Library.ToUnity(position);
             Enemy.transform.rotation = Quaternion.Euler(0, enemySide == Side.A ? 0 : 180, 0);
             return Enemy;
+        }
+
+        /// <summary>Places (or re-poses) the player's own figure, facing down-lane.</summary>
+        public Figure PlacePlayer(Vec3 position, Stance stance, Side side)
+        {
+            if (Player != null) Object.Destroy(Player.gameObject);
+            Player = Figure.Create(stance, 1.8f, Root, new Color(0.56f, 0.55f, 0.47f));
+            Player.name = "Player";
+            Player.transform.position = Library.ToUnity(position);
+            Player.transform.rotation = Quaternion.Euler(0, side == Side.A ? 0 : 180, 0);
+            return Player;
         }
 
         /// <summary>Feeds the lane wind to the flags.</summary>

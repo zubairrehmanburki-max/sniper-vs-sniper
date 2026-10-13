@@ -80,6 +80,7 @@ namespace SniperDuel.Game
             rig.MenuFocus = Library.ToUnity(a);
             rig.Eye = Library.ToUnity(Combat.EyeOf(a, Stance.Prone, Config));
             var enemy = arena.PlaceEnemy(b, Stance.Prone, Side.B);
+            rig.Body = arena.PlacePlayer(a, Stance.Prone, Side.A).gameObject;
             // Default view: straight at the enemy's head.
             var to = Library.ToUnity(Combat.EyeOf(b, Stance.Prone, Config)) - rig.Eye;
             rig.Yaw = Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg;
@@ -91,6 +92,7 @@ namespace SniperDuel.Game
         {
             bool world = Array.IndexOf(InWorld, screen) >= 0;
             rig.Current = world ? CameraRig.Mode.Eye : CameraRig.Mode.Menu;
+            rig.ThirdPerson = screen != "Scope";
             rig.Fov = screen == "Scope" ? (float)(Config.Scope.FovAt1xDeg / 12) : (float)Config.Scope.EyeFovDeg;
         }
 
