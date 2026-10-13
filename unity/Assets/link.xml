@@ -1,0 +1,4 @@
+<linker>
+  <!-- The config classes are only created by Newtonsoft through reflection; IL2CPP would strip them. -->
+  <assembly fullname="SniperDuel.Core" preserve="all" />
+</linker>

@@ -1,0 +1,52 @@
+<div style="width: 932px; height: 430px; position: relative; overflow: hidden; background: #0b0d0c; color: #EDEFE8; font-family: 'Barlow', 'Helvetica Neue', sans-serif">
+<div style="position: absolute; inset: 0; background: rgba(8,10,9,0.7)"></div>
+
+<div style="position: absolute; left: 0; right: 0; top: 24px; display: flex; flex-direction: column; align-items: center; gap: 4px">
+<div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.3em; color: #F2B33D" data-bind="mode">RANKED DUEL · TWIN BRIDGES</div>
+<div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 30px; letter-spacing: 0.14em" data-bind="headline">SEARCHING FOR OPPONENT</div>
+</div>
+
+<svg data-bind="radar" width="220" height="220" viewBox="0 0 220 220" aria-hidden="true" style="position: absolute; left: 356px; top: 98px">
+<defs><linearGradient id="sweep" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F2B33D" stop-opacity="0"></stop><stop offset="1" stop-color="#F2B33D" stop-opacity="0.45"></stop></linearGradient></defs>
+<circle cx="110" cy="110" r="104" fill="rgba(10,12,11,0.5)" stroke="rgba(237,239,232,0.25)"></circle>
+<circle cx="110" cy="110" r="72" fill="none" stroke="rgba(237,239,232,0.14)"></circle>
+<circle cx="110" cy="110" r="40" fill="none" stroke="rgba(237,239,232,0.14)"></circle>
+<path d="M110 6v208M6 110h208" stroke="rgba(237,239,232,0.1)"></path>
+<path d="M110 110 L110 6 A104 104 0 0 1 200 58 Z" fill="url(#sweep)"></path>
+<path d="M110 110 L200 58" stroke="#F2B33D" stroke-width="1.5"></path>
+<circle cx="160" cy="70" r="3" fill="#F2B33D"></circle>
+<circle cx="64" cy="150" r="2.5" fill="rgba(242,179,61,0.5)"></circle>
+<circle cx="140" cy="168" r="2" fill="rgba(242,179,61,0.35)"></circle>
+</svg>
+
+<div data-bind="clock" style="position: absolute; left: 356px; top: 194px; width: 220px; text-align: center; font-family: 'Share Tech Mono', monospace; font-size: 22px">00:14</div>
+<div style="position: absolute; left: 40px; top: 120px; width: 250px; padding: 14px; box-sizing: border-box; background: rgba(10,12,11,0.7); border: 1px solid rgba(237,239,232,0.16); border-left: none; border-top: 2px solid #F2B33D; display: flex; gap: 12px; align-items: center">
+<div style="width: 64px; height: 84px; overflow: hidden; background: #151816; position: relative; flex: none"><img data-src="rt:operator" alt="" style="position: absolute; left: 50%; top: 2px; height: 200px; transform: translateX(-50%)"></div>
+<div style="display: flex; flex-direction: column; gap: 3px">
+<div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px" data-bind="name">ZUBAIR_ACTUAL</div>
+<div style="font-size: 11px; color: #A7AD9F; letter-spacing: 0.08em" data-bind="rank">MARKSMAN II · 1,384</div>
+<div style="font-size: 11px; color: #A7AD9F" data-bind="kit">Magnum .338 · Varga</div>
+<div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.14em; color: #F2B33D; margin-top: 2px">READY</div>
+</div>
+</div>
+
+<div style="position: absolute; right: 40px; top: 120px; width: 250px; padding: 14px; box-sizing: border-box; background: rgba(10,12,11,0.5); border: 1px dashed rgba(237,239,232,0.22); display: flex; gap: 12px; align-items: center">
+<div style="width: 64px; height: 84px; background: #151816; display: grid; place-items: center; flex: none"><svg width="28" height="50" viewBox="0 0 34 60" fill="#2a2e2b" aria-hidden="true"><circle cx="17" cy="9" r="8"></circle><path d="M3 22 Q17 16 31 22 L28 44 L24 60 L10 60 L6 44 Z"></path></svg></div>
+<div style="display: flex; flex-direction: column; gap: 3px">
+<div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px; color: #A7AD9F" data-bind="opponent">SEARCHING…</div>
+<div style="font-size: 11px; color: #A7AD9F; letter-spacing: 0.08em">RATING RANGE <span data-bind="ratingRange" style="font-family: 'Share Tech Mono', monospace">1,264–1,504</span></div>
+<div style="font-size: 11px; color: #A7AD9F">Widens every 10 s</div>
+</div>
+</div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 74px; display: flex; justify-content: center; gap: 28px; font-size: 11px; letter-spacing: 0.12em; color: #A7AD9F">
+<span>EST. WAIT <span style="font-family: 'Share Tech Mono', monospace; color: #EDEFE8" data-bind="wait">0:20</span></span>
+<span>REGION <span style="font-family: 'Share Tech Mono', monospace; color: #EDEFE8">EU-WEST · 38 ms</span></span>
+<span>FORMAT <span style="font-family: 'Share Tech Mono', monospace; color: #EDEFE8">BEST OF 3</span></span>
+</div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 18px; display: flex; justify-content: center; gap: 10px">
+<button data-on="cancel" style="width: 200px; height: 46px; border: 1px solid rgba(237,239,232,0.35); background: rgba(10,12,11,0.5); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 17px; letter-spacing: 0.18em">CANCEL</button>
+<button data-on="bot" style="width: 200px; height: 46px; border: 1px solid rgba(237,239,232,0.2); background: rgba(10,12,11,0.5); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 17px; letter-spacing: 0.14em; color: #A7AD9F">PLAY BOT WHILE WAITING</button>
+</div>
+</div>

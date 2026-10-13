@@ -83,6 +83,7 @@ jobs:
           targetPlatform: StandaloneLinux64
           buildMethod: SniperDuel.EditorTools.Build.Linux
           buildsPath: build
+          buildName: SniperDuel
           allowDirtyBuild: true
       - name: Capture every screen
         run: |
@@ -93,7 +94,8 @@ jobs:
           xvfb-run -a -s "-screen 0 1864x860x24" build/StandaloneLinux64/SniperDuel \
             -screen-fullscreen 0 -screen-width 1864 -screen-height 860 -force-glcore \
             -logFile shots/player.log -capture-all "$PWD/shots" || true
-          tail -50 shots/player.log
+          grep -E "Capture|Exception|Error|error" shots/player.log | head -80 || true
+          tail -30 shots/player.log
           ls -la shots
       - name: Publish to the screens branch
         run: |
@@ -134,9 +136,10 @@ jobs:
           targetPlatform: iOS
           buildMethod: SniperDuel.EditorTools.Build.IOS
           buildsPath: build
+          buildName: SniperDuel
           allowDirtyBuild: true
       - name: Pack the Xcode project
-        run: sudo tar -czf xcode.tgz -C build iOS
+        run: ls build/iOS/SniperDuel && sudo tar -czf xcode.tgz -C build/iOS SniperDuel
       - uses: actions/upload-artifact@v4
         with:
           name: xcode
@@ -153,7 +156,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: xcode
-      - run: mkdir -p "$RUNNER_TEMP/xc" && tar -xzf xcode.tgz -C "$RUNNER_TEMP/xc" && ls "$RUNNER_TEMP/xc/iOS"
+      - run: mkdir -p "$RUNNER_TEMP/xc" && tar -xzf xcode.tgz -C "$RUNNER_TEMP/xc" && ls "$RUNNER_TEMP/xc/SniperDuel"
       - name: Write the API key
         env:
           P8: ${{ secrets.APPSTORE_KEY_P8 }}
@@ -192,7 +195,7 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PASS" "$KC" > /dev/null
       # Only the app target gets the App Store profile; UnityFramework is signed when embedded.
       - name: Point the app target at the profile
-        working-directory: ${{ runner.temp }}/xc/iOS
+        working-directory: ${{ runner.temp }}/xc/SniperDuel
         run: |
           fastlane run update_code_signing_settings path:Unity-iPhone.xcodeproj targets:Unity-iPhone \
             use_automatic_signing:false team_id:"${{ secrets.APPLE_TEAM_ID }}" \
@@ -200,7 +203,7 @@ jobs:
           fastlane run update_code_signing_settings path:Unity-iPhone.xcodeproj targets:UnityFramework \
             use_automatic_signing:false team_id:"${{ secrets.APPLE_TEAM_ID }}" code_sign_identity:"Apple Distribution"
       - name: Archive (signed)
-        working-directory: ${{ runner.temp }}/xc/iOS
+        working-directory: ${{ runner.temp }}/xc/SniperDuel
         run: >
           "$GITHUB_WORKSPACE/apps/client/ios/ci/watchdog.sh" 2400
           xcodebuild -project Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release
