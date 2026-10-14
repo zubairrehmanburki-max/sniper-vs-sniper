@@ -288,7 +288,17 @@ namespace SniperDuel.Game.Ui
             int i = 0;
             foreach (var c in Flow(e))
             {
-                if (ctx.Width.HasValue) c.style.width = (ctx.Width.Value - (n - 1) * h.ColumnGap) / n;
+                float? track = h.GridTracks.Length == n ? h.GridTracks[i % n] : null;
+                if (track.HasValue) c.style.width = track.Value;
+                else if (ctx.Width.HasValue)
+                {
+                    // Flexible tracks share what the fixed ones and the gaps leave.
+                    float fixedW = 0;
+                    int flex = 0;
+                    foreach (var t in h.GridTracks) { if (t.HasValue) fixedW += t.Value; else flex++; }
+                    if (h.GridTracks.Length != n) { fixedW = 0; flex = n; }
+                    c.style.width = (ctx.Width.Value - (n - 1) * h.ColumnGap - fixedW) / Mathf.Max(1, flex);
+                }
                 else c.style.width = Length.Percent(100f / n - 2);
                 if (i % n != 0) c.style.marginLeft = h.ColumnGap;
                 if (i >= n) c.style.marginTop = h.RowGap;

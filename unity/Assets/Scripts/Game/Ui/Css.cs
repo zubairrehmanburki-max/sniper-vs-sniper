@@ -26,6 +26,8 @@ namespace SniperDuel.Game.Ui
         public bool Flex;
         public bool Grid;
         public int GridColumns;
+        /// <summary>Each column's fixed width in px, or null for a flexible (fr / minmax) track.</summary>
+        public float?[] GridTracks = System.Array.Empty<float?>();
         public float RowGap;
         public float ColumnGap;
         public bool DirectionSet;
@@ -95,6 +97,9 @@ namespace SniperDuel.Game.Ui
                 s.unityTextAlign = ta == "center" ? TextAnchor.MiddleCenter : ta == "right" ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
             if (d.TryGetValue("text-shadow", out var tsh)) s.textShadow = TextShadowOf(tsh);
             if (d.TryGetValue("white-space", out var ws)) s.whiteSpace = ws == "nowrap" ? WhiteSpace.NoWrap : WhiteSpace.Normal;
+            // UI Toolkit leaves letter-spacing out of the measured width, so spaced-out labels wrap
+            // a word early; they're single-line headings and tags, so keep them on one line.
+            else if (d.ContainsKey("letter-spacing")) s.whiteSpace = WhiteSpace.NoWrap;
 
             // Box.
             if (d.TryGetValue("display", out var disp))
@@ -186,8 +191,33 @@ namespace SniperDuel.Game.Ui
             }
             if (d.TryGetValue("grid-template-columns", out var gtc))
             {
-                int rep = gtc.IndexOf("repeat(", StringComparison.Ordinal);
-                h.GridColumns = rep >= 0 ? (int)Num(gtc.Substring(rep + 7, gtc.IndexOf(',', rep) - rep - 7), 1) : Split(gtc).Length;
+                // Tracks at the top level: "54px repeat(6, minmax(0, 1fr))" is one fixed and six flexible.
+                var tracks = new System.Collections.Generic.List<float?>();
+                int depth = 0, start = 0;
+                gtc = gtc.Trim() + " ";
+                for (int i = 0; i < gtc.Length; i++)
+                {
+                    char ch = gtc[i];
+                    if (ch == '(') depth++;
+                    else if (ch == ')') depth--;
+                    else if (ch == ' ' && depth == 0)
+                    {
+                        var tok = gtc.Substring(start, i - start).Trim();
+                        start = i + 1;
+                        if (tok.Length == 0) continue;
+                        if (tok.StartsWith("repeat(", StringComparison.Ordinal))
+                        {
+                            int comma = tok.IndexOf(',');
+                            int count = (int)Num(tok.Substring(7, comma - 7), 1);
+                            var inner = tok.Substring(comma + 1, tok.Length - comma - 2).Trim();
+                            float? tw = inner.EndsWith("px", StringComparison.Ordinal) ? Px(inner, ctx.FontSize) : (float?)null;
+                            for (int k = 0; k < count; k++) tracks.Add(tw);
+                        }
+                        else tracks.Add(tok.EndsWith("px", StringComparison.Ordinal) ? Px(tok, ctx.FontSize) : (float?)null);
+                    }
+                }
+                h.GridTracks = tracks.ToArray();
+                h.GridColumns = tracks.Count;
             }
 
             // Paint.
