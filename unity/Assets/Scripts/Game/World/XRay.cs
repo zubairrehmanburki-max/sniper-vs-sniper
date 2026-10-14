@@ -307,11 +307,11 @@ namespace SniperDuel.Game.World
                 }
                 if (st.Mist != null && st.MistMat != null)
                 {
-                    float r = (st.Part.Bleeds ? 0.02f + 0.11f * (1 - Mathf.Exp(-dt * 2.6f)) : 0.01f + 0.05f * (1 - Mathf.Exp(-dt * 3))) * k;
+                    float r = (st.Part.Bleeds ? 0.015f + 0.06f * (1 - Mathf.Exp(-dt * 2.6f)) : 0.008f + 0.025f * (1 - Mathf.Exp(-dt * 3))) * k;
                     st.Mist.localScale = Vector3.one * r;
                     st.Mist.position = st.Point + Dir * 0.06f * dt;
                     var col = st.MistMat.GetColor("_BaseColor");
-                    col.a = (st.Part.Bleeds ? 0.5f : 0.35f) * Mathf.Exp(-dt * 1.5f);
+                    col.a = (st.Part.Bleeds ? 0.4f : 0.15f) * Mathf.Exp(-dt * 1.5f);
                     st.MistMat.SetColor("_BaseColor", col);
                 }
             }
@@ -326,7 +326,7 @@ namespace SniperDuel.Game.World
                     var mb = new MeshBuilder();
                     mb.Tube(Vector3.zero, Vector3.forward, 1, 1, 10, true);
                     channel = mb.Object("Channel", Tinted("Additive", new Color(1.4f, 0.32f, 0.12f, 0.9f)), transform, shadows: false).transform;
-                    flare = Sphere("Flare", Tinted("Additive", new Color(1.6f, 0.9f, 0.55f, 1)));
+                    flare = Sphere("Flare", Tinted("Additive", new Color(0.7f, 0.3f, 0.12f, 1)));
                 }
                 float len = Mathf.Clamp(s, 0.001f, Exit + 0.05f);
                 channel.position = Entry;
@@ -335,7 +335,7 @@ namespace SniperDuel.Game.World
                 channel.localScale = new Vector3(rad, rad, len);
                 float ft = s / Pace;
                 flare!.position = Entry;
-                flare.localScale = Vector3.one * (ft < 0.5f ? Mathf.Lerp(0.015f, 0.05f, ft / 0.5f) * (1 - ft / 0.5f) + 0.0001f : 0.0001f);
+                flare.localScale = Vector3.one * (ft < 0.5f ? Mathf.Lerp(0.006f, 0.016f, ft / 0.5f) * (1 - ft / 0.5f) + 0.0001f : 0.0001f);
             }
         }
 
@@ -385,7 +385,7 @@ namespace SniperDuel.Game.World
                 st.Hole.position = st.Point + Dir * 0.004f * k;
                 st.Hole.localScale = Vector3.one * (p.Kind == Anatomy.Kind.Organ ? 0.011f : 0.008f) * k;
             }
-            var mist = p.Bleeds ? new Color(p.Blood.r, p.Blood.g, p.Blood.b, 0.5f) : new Color(0.92f, 0.9f, 0.84f, 0.35f);
+            var mist = p.Bleeds ? new Color(p.Blood.r, p.Blood.g, p.Blood.b, 0.5f) : new Color(0.7f, 0.66f, 0.6f, 0.15f);
             st.MistMat = Tinted("Fade", mist);
             st.Mist = Sphere("Mist", st.MistMat);
             st.Mist.position = st.Point;

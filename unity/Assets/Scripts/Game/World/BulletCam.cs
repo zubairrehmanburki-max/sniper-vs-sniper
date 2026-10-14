@@ -368,7 +368,8 @@ namespace SniperDuel.Game.World
                 go.AddComponent<MeshFilter>().sharedMesh = r.trail;
                 var mr = go.AddComponent<MeshRenderer>();
                 var haze = new Material(Library.Template("Fade"));
-                haze.SetColor("_BaseColor", new Color(0.88f, 0.92f, 1f, 1));
+                // Faint even where vertex alpha is ignored, so the wake never reads as a white disc up close.
+                haze.SetColor("_BaseColor", new Color(0.88f, 0.92f, 1f, 0.12f));
                 mr.sharedMaterial = haze;
                 mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 mr.receiveShadows = false;
