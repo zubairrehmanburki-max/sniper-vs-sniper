@@ -91,7 +91,8 @@ namespace SniperDuel.Game
             Toggle("aud-clicks", () => Settings.MenuClicks, v => Settings.MenuClicks = v);
 
             // Account.
-            Picker("acct-callsign", Settings.Callsigns, () => Settings.CallsignIndex, v => Settings.CallsignIndex = v, wrap: true);
+            s.On("acct-callsign-edit", EditCallsign);
+            renders.Add(() => s.Text("acct-callsign", Settings.Callsign));
             s.Text("acct-version", Catalog.Version);
             s.Text("acct-profile", "GUEST · THIS DEVICE");
             s.On("acct-credits", () => { Changed(); note = Catalog.Credits(); RenderInfo(); });
@@ -127,6 +128,45 @@ namespace SniperDuel.Game
         {
             tab = Array.IndexOf(Tabs, "account");
             Changed();
+        }
+
+        // ---- callsign ------------------------------------------------------
+
+        TouchScreenKeyboard? keyboard;
+
+        /// <summary>Opens the phone's keyboard on the callsign and saves what's typed when it's done.</summary>
+        void EditCallsign()
+        {
+            if (!TouchScreenKeyboard.isSupported)
+            {
+                note = "Typing a callsign needs the on-screen keyboard (on the phone).";
+                RenderInfo();
+                return;
+            }
+            keyboard = TouchScreenKeyboard.Open(Settings.Callsign == "YOU" ? "" : Settings.Callsign, TouchScreenKeyboardType.ASCIICapable,
+                false, false, false, false, $"Callsign, {Settings.CallsignMin}–{Settings.CallsignMax} letters or numbers", Settings.CallsignMax);
+            s.Root.schedule.Execute(PollKeyboard).Every(100).Until(() => keyboard == null);
+        }
+
+        void PollKeyboard()
+        {
+            if (keyboard == null) return;
+            var status = keyboard.status;
+            if (status == TouchScreenKeyboard.Status.Visible) return;
+            string typed = keyboard.text ?? "";
+            keyboard = null;
+            if (status != TouchScreenKeyboard.Status.Done) return;
+            var clean = Settings.CleanCallsign(typed);
+            if (clean == null)
+            {
+                note = $"A callsign needs {Settings.CallsignMin} to {Settings.CallsignMax} letters or numbers. Kept {Settings.Callsign}.";
+                RenderInfo();
+                return;
+            }
+            Settings.Callsign = clean;
+            Changed();
+            note = $"You'll play as {clean}.";
+            RenderInfo();
         }
 
         // ---- controls ------------------------------------------------------
@@ -300,7 +340,7 @@ namespace SniperDuel.Game
                     break;
                 default:
                     rows = new[] { ("Callsign", Settings.Callsign), ("Status", "Guest · offline"), ("Version", Catalog.Version) };
-                    help = "Your progress, callsign and settings are saved on this device until online accounts arrive.";
+                    help = "Tap your callsign to type a new one. Progress, callsign and settings are saved on this device until online accounts arrive.";
                     break;
             }
             for (int i = 0; i < 3; i++)

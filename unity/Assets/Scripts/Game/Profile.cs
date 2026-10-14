@@ -40,7 +40,14 @@ namespace SniperDuel.Game
         // ---- gear ----------------------------------------------------------
 
         /// <summary>Index into Catalog.LoadoutNames: the loadout taken into a duel.</summary>
-        public static int ActiveLoadout { get => GetInt("prof.loadout", 0, 0, Catalog.LoadoutNames.Length - 1); set => Set("prof.loadout", value); }
+        public static int ActiveLoadout { get => GetInt("prof.loadout", 0, 0, LoadoutCount - 1); set => Set("prof.loadout", value); }
+
+        /// <summary>How many loadout slots this profile has made (2 to start, up to Catalog.LoadoutNames).</summary>
+        public static int LoadoutCount
+        {
+            get => GetInt("prof.loadouts", Catalog.StartingLoadouts, Catalog.StartingLoadouts, Catalog.LoadoutNames.Length);
+            set => Set("prof.loadouts", value);
+        }
 
         public static string LoadoutRifle(int loadout) =>
             PlayerPrefs.GetString("prof.loadout" + loadout + ".rifle", Catalog.DefaultLoadoutRifles[Mathf.Clamp(loadout, 0, Catalog.DefaultLoadoutRifles.Length - 1)]);

@@ -6,7 +6,7 @@ using UnityEngine;
 namespace SniperDuel.Game
 {
     /// <summary>
-    /// Drives the Loadout screen: two loadout tabs, the rifle list (selection, lock, stats from
+    /// Drives the Loadout screen: the loadout tabs (two to start, + NEW adds up to four), the rifle list (selection, lock, stats from
     /// GameConfig plus fitted parts), the six part tiles that open the gunsmith on that slot, and
     /// EQUIP, which saves the rifle to the loadout and makes it the one taken into duels.
     /// </summary>
@@ -30,7 +30,18 @@ namespace SniperDuel.Game
                 int k = i;
                 s.On("preset" + i, () => { loadout = k; selected = Profile.LoadoutRifle(k); Render(); });
             }
-            s.On("preset-new", () => Toast.Show(s, "TWO LOADOUTS FOR NOW", "More loadout slots arrive with online accounts. Switch between LONG RANGE and ALL ROUND."));
+            s.On("preset-new", () =>
+            {
+                int n = Profile.LoadoutCount;
+                if (n >= Catalog.LoadoutNames.Length) return;
+                // The new slot starts with the rifle on show; EQUIP makes it the one you take.
+                Profile.SetLoadoutRifle(n, Current.Id);
+                Profile.LoadoutCount = n + 1;
+                loadout = n;
+                selected = Current.Id;
+                Toast.Show(s, "NEW LOADOUT", $"{Catalog.LoadoutNames[n]} added with the {Current.Name}. Pick a rifle and tap EQUIP to take it into duels.", 3f);
+                Render();
+            });
             for (int i = 0; i < Rows; i++)
             {
                 int k = i;
@@ -77,8 +88,13 @@ namespace SniperDuel.Game
         void Render()
         {
             if (cfg.Rifles.Count == 0) return;
+            int count = Profile.LoadoutCount;
             for (int i = 0; i < Catalog.LoadoutNames.Length; i++)
+            {
+                s.Show("preset" + i, i < count);
                 if (s.Has("preset" + i)) Skin.Tab(s["preset" + i], i == loadout);
+            }
+            s.Show("preset-new", count < Catalog.LoadoutNames.Length);
 
             var cur = Current;
             string equipped = Profile.LoadoutRifle(loadout);

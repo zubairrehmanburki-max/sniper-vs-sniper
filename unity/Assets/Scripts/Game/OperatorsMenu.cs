@@ -1,13 +1,14 @@
 using System;
 using SniperDuel.Game.Ui;
+using SniperDuel.Game.World;
 using UnityEngine;
 
 namespace SniperDuel.Game
 {
     /// <summary>
     /// Drives the Operators screen: unit filter tabs (other units dim), the operator tiles (tap to
-    /// select and equip), their career numbers, the outfit swatches (saved per operator) and the
-    /// PREVIEW / EQUIPPED buttons.
+    /// select and equip), their career numbers, the outfit swatches (saved per operator), the
+    /// soldier filmed in the chosen outfit (PREVIEW turns him round) and EQUIPPED.
     /// </summary>
     public sealed class OperatorsMenu
     {
@@ -17,7 +18,6 @@ namespace SniperDuel.Game
         public OperatorsMenu(UiScreen screen, Action back)
         {
             s = screen;
-            s.On("back", back);
             for (int i = 0; i < Catalog.Units.Length; i++)
             {
                 int k = i;
@@ -33,14 +33,29 @@ namespace SniperDuel.Game
                 int k = i;
                 s.On("outfit" + i, () => Outfit(k));
             }
-            s.On("preview", () => Toast.Show(s, "PREVIEW", "A turntable preview arrives with the final scanned operator models. Your choice already shows in the lobby and on the match cards."));
-            s.On("equip", back);
+            s.On("preview", () =>
+            {
+                var studio = Studio.Get();
+                studio.Spin = !studio.Spin;
+                s.Text("preview", studio.Spin ? "STOP" : "PREVIEW");
+            });
+            void Leave()
+            {
+                Studio.Get().Live = false;
+                back();
+            }
+            s.On("back", Leave);
+            s.On("equip", Leave);
         }
 
         public void Refresh()
         {
             unit = 0;
             Toast.Hide(s);
+            var studio = Studio.Get();
+            studio.Live = true;
+            s.Image("portrait", studio.Texture);
+            s.Text("preview", "PREVIEW");
             Render();
         }
 
@@ -98,6 +113,7 @@ namespace SniperDuel.Game
             s.Text("longest", longest > 0 ? $"{longest:#,0} m" : "—");
 
             int outfit = Profile.Outfit(cur);
+            Studio.Get().Dress(Catalog.OutfitTints[outfit]);
             for (int i = 0; i < Catalog.Outfits.Length; i++)
             {
                 if (!s.Has("outfit" + i)) continue;

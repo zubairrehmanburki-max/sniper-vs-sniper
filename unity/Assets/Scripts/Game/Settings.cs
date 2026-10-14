@@ -14,7 +14,6 @@ namespace SniperDuel.Game
         public static readonly string[] QualityNames = { "LOW", "MEDIUM", "HIGH", "ULTRA" };
         public static readonly int[] FrameRates = { 30, 60, 120 };
         public static readonly string[] ShadowNames = { "OFF", "LOW", "MEDIUM", "HIGH" };
-        public static readonly string[] Callsigns = { "YOU", "HAWK", "SPECTRE", "NOMAD", "RAVEN", "ORCA", "LYNX", "TALON" };
         public static readonly int[] HudScales = { 85, 90, 95, 100 };
 
         /// <summary>The keys behind each settings tab, for RESET TAB.</summary>
@@ -25,7 +24,7 @@ namespace SniperDuel.Game
             new[] { "sens.look", "sens.scope", "sens.vertical", "sens.scaling" },
             new[] { "hud.wind", "hud.card", "hud.marker", "hud.crosshair", "hud.opacity", "hud.scale" },
             new[] { "aud.on", "aud.master", "aud.effects", "aud.ambience", "aud.clicks" },
-            new[] { "acct.callsign" },
+            new[] { "acct.name" },
         };
 
         // ---- graphics ------------------------------------------------------
@@ -81,9 +80,31 @@ namespace SniperDuel.Game
 
         // ---- account -------------------------------------------------------
 
-        /// <summary>Index into Callsigns.</summary>
-        public static int CallsignIndex { get => GetInt("acct.callsign", 0, 0, Callsigns.Length - 1); set => Set("acct.callsign", value); }
-        public static string Callsign => Callsigns[CallsignIndex];
+        public const int CallsignMin = 3, CallsignMax = 14;
+
+        /// <summary>The name you play under, typed in Settings › Account; "YOU" until you set one.</summary>
+        public static string Callsign
+        {
+            get { var n = PlayerPrefs.GetString("acct.name", ""); return n.Length >= CallsignMin ? n : "YOU"; }
+            set { PlayerPrefs.SetString("acct.name", value); PlayerPrefs.Save(); }
+        }
+
+        /// <summary>
+        /// A typed callsign as it will show: upper case, letters, digits, spaces, - and _ only, spaces
+        /// squeezed. Null if what's left is shorter than CallsignMin.
+        /// </summary>
+        public static string? CleanCallsign(string typed)
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (char ch in typed.Trim().ToUpperInvariant())
+            {
+                bool ok = (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '-' || ch == '_' || ch == ' ';
+                if (!ok || (ch == ' ' && (sb.Length == 0 || sb[sb.Length - 1] == ' '))) continue;
+                if (sb.Length < CallsignMax) sb.Append(ch);
+            }
+            string n = sb.ToString().Trim();
+            return n.Length >= CallsignMin ? n : null;
+        }
 
         // ---- apply ---------------------------------------------------------
 

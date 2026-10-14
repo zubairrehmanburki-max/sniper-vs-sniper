@@ -81,6 +81,7 @@ namespace SniperDuel.Game
         /// <summary>How far the thumb can wander from the fire button's centre, in button radii, before release cancels.</summary>
         const float FireReach = 1.45f;
         bool director;
+        bool paused, forfeitArmed;
 
         /// <summary>Seconds to bring the rifle from the shoulder to the eye, and to lower it again.</summary>
         const float RaiseSeconds = 0.42f, LowerSeconds = 0.26f;
@@ -128,7 +129,21 @@ namespace SniperDuel.Game
             // Outside the scope: turn the knobs on the rifle's scope, drag elsewhere to look, scope in.
             var hud = ui.Get("Hud");
             hud.On("scope", () => SetScoped(true));
-            hud.On("pause", Quit);
+            hud.On("pause", () => SetPaused(true));
+            hud.On("resume", () => SetPaused(false));
+            hud.On("forfeit", () =>
+            {
+                // A second tap confirms: a stray one mustn't throw the match.
+                if (!forfeitArmed)
+                {
+                    forfeitArmed = true;
+                    hud.Text("forfeit", "TAP AGAIN TO FORFEIT");
+                    hud.Text("pauseNote", "Forfeiting counts as a loss.");
+                    return;
+                }
+                SetPaused(false);
+                Quit();
+            });
             // The marker shows a range only once the laser has measured one.
             hud.Text("markerRange", "");
             Look(hud.Root);
@@ -193,7 +208,7 @@ namespace SniperDuel.Game
             root.RegisterCallback<PointerDownEvent>(e =>
             {
                 // Screens outlive a duel; a finished one (destroyed) leaves the input alone.
-                if (!this) return;
+                if (!this || paused) return;
                 for (var t = e.target as VisualElement; t != null && t != root; t = t.parent)
                     if (t.ClassListContains(Layout.ActionClass)) return;
                 // Still held by a live finger: keep it.
@@ -693,8 +708,31 @@ namespace SniperDuel.Game
 
         // ---- frame ---------------------------------------------------------
 
+        /// <summary>The pause menu: the match clock and the bot stop until RESUME.</summary>
+        void SetPaused(bool on)
+        {
+            paused = on && State.Phase != PhaseKind.MatchOver;
+            forfeitArmed = false;
+            var hud = ui.Get("Hud");
+            hud.Text("forfeit", "FORFEIT MATCH");
+            hud.Text("pauseNote", "The clock is stopped. The bot waits for you.");
+            hud.Show("pauseMenu", paused);
+        }
+
+        /// <summary>
+        /// Leaving the app (a call, the home screen) opens the pause menu, so you come back to it rather
+        /// than to a running clock. (In the scope the clock is already safe: frames stop in the
+        /// background and a frame's step is capped at 0.1 s.)
+        /// </summary>
+        void OnApplicationPause(bool leaving)
+        {
+            if (!leaving || paused || director || scoped || raising != 0 || State.Phase == PhaseKind.MatchOver) return;
+            SetPaused(true);
+        }
+
         void Update()
         {
+            if (paused) return;
             float dt = Mathf.Min(0.1f, Time.deltaTime);
             time += dt;
             recoil *= Math.Exp(-dt * 6);

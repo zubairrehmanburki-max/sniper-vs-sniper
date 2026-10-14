@@ -78,6 +78,10 @@ namespace SniperDuel.Game
             Render();
         }
 
+        /// <summary>Where each duel-screen group sits as authored, so mirroring can swap and swap back.</summary>
+        static readonly System.Collections.Generic.Dictionary<VisualElement, (StyleLength left, StyleLength right)> Homes =
+            new System.Collections.Generic.Dictionary<VisualElement, (StyleLength left, StyleLength right)>();
+
         static int Active => Mathf.Clamp(PlayerPrefs.GetInt("hudl.active", 0), 0, Layouts - 1);
         static string Key(int l, int el, string what) => $"hudl{l}.{Ids[el]}.{what}";
 
@@ -190,6 +194,16 @@ namespace SniperDuel.Game
         {
             int l = Active;
             var layer = screen.Root.childCount > 0 ? screen.Root[0] : null;
+            // Mirror: every group pinned to a side by pixels swaps sides (centred ones stay put).
+            bool mirror = PlayerPrefs.GetInt($"hudl{l}.mirror", 0) != 0;
+            if (layer != null)
+                foreach (var child in layer.Children())
+                {
+                    if (!Homes.TryGetValue(child, out var home)) Homes[child] = home = (child.style.left, child.style.right);
+                    if (home.left.value.unit == LengthUnit.Percent || home.right.value.unit == LengthUnit.Percent) continue;
+                    child.style.left = mirror ? home.right : home.left;
+                    child.style.right = mirror ? home.left : home.right;
+                }
             for (int i = 0; i < Ids.Length; i++)
             {
                 if (!screen.Has(Binds[i])) continue;

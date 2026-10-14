@@ -1,7 +1,7 @@
 <div style="width: 932px; height: 430px; position: relative; overflow: hidden; background: #0b0d0c; color: #EDEFE8; font-family: 'Barlow', 'Helvetica Neue', sans-serif">
 <div style="position: absolute; inset: 0; background: linear-gradient(90deg, rgba(8,10,9,0.9) 0%, rgba(8,10,9,0.35) 36%, rgba(8,10,9,0.25) 62%, rgba(8,10,9,0.88) 100%)"></div>
 <div style="position: absolute; left: 330px; bottom: 6px; width: 260px; height: 40px; border-radius: 50%; background: radial-gradient(closest-side, rgba(0,0,0,0.65), rgba(0,0,0,0))"></div>
-<img data-src="rt:todo" alt="Operator Varga" style="position: absolute; left: 380px; bottom: 16px; height: 370px">
+<img data-src="rt:todo" data-bind="portrait" alt="The operator" style="position: absolute; left: 356px; bottom: 16px; width: 247px; height: 370px">
 
 <div style="position: absolute; left: 20px; right: 20px; top: 10px; height: 46px; display: flex; align-items: center; gap: 14px">
 <button data-on="back" aria-label="Back" style="width: 44px; height: 44px; border: none; background: none; display: grid; place-items: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="2" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
@@ -15,15 +15,15 @@
 
 <div style="position: absolute; left: 20px; top: 66px; width: 214px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
 <button data-on="op0" data-bind="op0" style="position: relative; height: 128px; padding: 0; border: 2px solid #F2B33D; background: #151816; overflow: hidden">
-<img data-src="rt:todo" alt="" style="position: absolute; left: 50%; top: 4px; height: 240px; transform: translateX(-50%)">
+<svg width="34" height="60" viewBox="0 0 34 60" fill="#3a3f3b" aria-hidden="true" style="position: absolute; left: 50%; top: 22px; transform: translateX(-50%)"><circle cx="17" cy="9" r="8"></circle><path d="M3 22 Q17 16 31 22 L28 44 L24 60 L10 60 L6 44 Z"></path></svg>
 <span style="position: absolute; left: 0; right: 0; bottom: 0; padding: 4px 6px; background: rgba(8,10,9,0.86); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.08em; text-align: left">VARGA</span>
 </button>
 <button data-on="op1" data-bind="op1" style="position: relative; height: 128px; padding: 0; border: 1px solid rgba(237,239,232,0.18); background: #151816; overflow: hidden">
-<img data-src="rt:todo" alt="" style="position: absolute; left: 50%; top: 4px; height: 240px; transform: translateX(-50%)">
+<svg width="34" height="60" viewBox="0 0 34 60" fill="#3a3f3b" aria-hidden="true" style="position: absolute; left: 50%; top: 22px; transform: translateX(-50%)"><circle cx="17" cy="9" r="8"></circle><path d="M3 22 Q17 16 31 22 L28 44 L24 60 L10 60 L6 44 Z"></path></svg>
 <span style="position: absolute; left: 0; right: 0; bottom: 0; padding: 4px 6px; background: rgba(8,10,9,0.86); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.08em; text-align: left">HOLLIS</span>
 </button>
 <button data-on="op2" data-bind="op2" style="position: relative; height: 128px; padding: 0; border: 1px solid rgba(237,239,232,0.18); background: #151816; overflow: hidden">
-<img data-src="rt:todo" alt="" style="position: absolute; left: 50%; top: 4px; height: 240px; transform: translateX(-50%)">
+<svg width="34" height="60" viewBox="0 0 34 60" fill="#3a3f3b" aria-hidden="true" style="position: absolute; left: 50%; top: 22px; transform: translateX(-50%)"><circle cx="17" cy="9" r="8"></circle><path d="M3 22 Q17 16 31 22 L28 44 L24 60 L10 60 L6 44 Z"></path></svg>
 <span style="position: absolute; left: 0; right: 0; bottom: 0; padding: 4px 6px; background: rgba(8,10,9,0.86); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.08em; text-align: left">KESTREL</span>
 </button>
 <button data-on="op3" data-bind="op3" style="position: relative; height: 128px; padding: 0; border: 1px solid rgba(237,239,232,0.12); background: #151816; overflow: hidden; display: grid; place-items: center">
@@ -51,7 +51,7 @@
 </div>
 
 <div style="position: absolute; right: 20px; bottom: 20px; width: 250px; display: flex; gap: 8px">
-<button data-on="preview" style="flex: 1; height: 48px; border: 1px solid rgba(237,239,232,0.3); background: rgba(10,12,11,0.5); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 0.14em">PREVIEW</button>
+<button data-on="preview" data-bind="preview" style="flex: 1; height: 48px; border: 1px solid rgba(237,239,232,0.3); background: rgba(10,12,11,0.5); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 0.14em">PREVIEW</button>
 <button data-on="equip" data-bind="equip" style="flex: 1.4; height: 48px; border: none; background: #F2B33D; color: #14120c; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: 0.14em">EQUIPPED</button>
 </div>
 <div data-on="toast" data-bind="toast" data-hidden style="position: absolute; left: 50%; top: 64px; transform: translateX(-50%); width: 400px; padding: 10px 14px; box-sizing: border-box; background: rgba(10,12,11,0.92); border: 1px solid rgba(237,239,232,0.2); border-left: 3px solid #F2B33D; display: flex; flex-direction: column; gap: 3px">

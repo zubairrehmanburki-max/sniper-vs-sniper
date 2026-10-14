@@ -158,8 +158,10 @@ namespace SniperDuel.Game
 
         // ---- loadouts ------------------------------------------------------
 
-        public static readonly string[] LoadoutNames = { "LONG RANGE", "ALL ROUND" };
-        public static readonly string[] DefaultLoadoutRifles = { "mag338", "bolt65cm" };
+        public static readonly string[] LoadoutNames = { "LONG RANGE", "ALL ROUND", "LOADOUT 3", "LOADOUT 4" };
+        public static readonly string[] DefaultLoadoutRifles = { "mag338", "bolt65cm", "mag338", "bolt65cm" };
+        /// <summary>Loadouts every profile starts with; + NEW adds the rest.</summary>
+        public const int StartingLoadouts = 2;
 
         /// <summary>The .50 opens at this player level; everything else is open from the start.</summary>
         public const int HeavyRifleLevel = 10;
@@ -190,6 +192,15 @@ namespace SniperDuel.Game
         public static string OperatorName(int op) => OperatorLock(op) != null ? "CLASSIFIED" : Operators[op].Name;
 
         public static readonly string[] Outfits = { "Estuary standard", "Night ops", "Saltmarsh ghillie", "Season 01 outfit" };
+        /// <summary>The colours each outfit dresses the soldier in (the in-duel figure and the Operators portrait).</summary>
+        public static readonly Color[] OutfitTints =
+        {
+            new Color(0.56f, 0.55f, 0.47f),
+            new Color(0.24f, 0.26f, 0.3f),
+            new Color(0.42f, 0.47f, 0.31f),
+            new Color(0.5f, 0.38f, 0.26f),
+        };
+
         /// <summary>The last outfit is a Battle Pass reward.</summary>
         public const int LockedOutfit = 3;
 
