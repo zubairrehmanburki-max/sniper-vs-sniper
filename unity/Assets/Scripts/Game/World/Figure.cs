@@ -85,6 +85,9 @@ namespace SniperDuel.Game.World
         /// <summary>The soldier model's root (the rifle sits outside it).</summary>
         public Transform Body = null!;
         readonly List<SkinnedMeshRenderer> skins = new List<SkinnedMeshRenderer>();
+        readonly List<GameObject> riders = new List<GameObject>();
+        Transform? head, headModel;
+        Matrix4x4 headRest;
 
         public static Figure Create(Stance stance, float heightM, Transform parent, Color tint)
         {
@@ -206,14 +209,22 @@ namespace SniperDuel.Game.World
             model.rotation = turn * model.rotation;
             model.position = pivot + turn * (model.position - pivot);
 
-            // Rigid gear sitting on the head (the headset) hangs off the model root, not the skeleton,
-            // so it would stay put while the neck swings: carry it with the head instead.
-            foreach (var mr in model.GetComponentsInChildren<Renderer>())
+            // Gear worn on top of the head (the headset) is skinned to bones other than the head, so
+            // it would stay put while the neck swings: note it here and carry it with the head on Bake.
+            var crownUp = frame.TransformDirection(pose.Up);
+            // In the model's frame, so the final shift over the origin doesn't count as head motion.
+            headRest = model.worldToLocalMatrix * head.localToWorldMatrix;
+            this.head = head;
+            headModel = model;
+            foreach (var r in skins)
             {
-                if (mr.transform.IsChildOf(hips)) continue;
-                float d = Vector3.Distance(mr.bounds.center, head.position);
-                if (mr is MeshRenderer && d < 0.35f * height / 1.8f) mr.transform.SetParent(head, true);
-                if (d < 0.5f) Debug.Log($"[Figure] near head: {mr.name} ({mr.GetType().Name}) {d:0.00} m");
+                if (System.Array.IndexOf(r.bones, head) >= 0) continue;
+                var c = r.bounds.center;
+                if (Vector3.Distance(c, head.position) < 0.35f * height / 1.8f && Vector3.Dot(c - head.position, crownUp) > 0.04f)
+                {
+                    riders.Add(r.gameObject);
+                    Debug.Log($"[Figure] head rider: {r.name}, bones {string.Join(",", System.Linq.Enumerable.Take(System.Linq.Enumerable.Select(r.bones, x => x != null ? x.name : "-"), 4))}");
+                }
             }
 
             foreach (var (bone, next, dir) in pose.Limbs)
@@ -676,6 +687,17 @@ namespace SniperDuel.Game.World
                 go.AddComponent<MeshRenderer>().sharedMaterials = mats;
             }
             skins.Clear();
+            // Riders follow the head from its rest place to its posed one.
+            if (head != null && headModel != null)
+            {
+                var delta = headModel.localToWorldMatrix * (headModel.worldToLocalMatrix * head.localToWorldMatrix) * headRest.inverse * headModel.worldToLocalMatrix;
+                foreach (var go in riders)
+                {
+                    var t = go.transform;
+                    t.SetPositionAndRotation(delta.MultiplyPoint3x4(t.position), delta.rotation * t.rotation);
+                }
+            }
+            riders.Clear();
         }
     }
 }
