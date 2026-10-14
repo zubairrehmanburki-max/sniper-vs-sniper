@@ -38,6 +38,13 @@ namespace SniperDuel.EditorTools
             Template("LitPlain", "Universal Render Pipeline/Lit");
             // Emissive variants (lit windows, warning lights) are stripped unless a material uses them.
             Template("LitEmissive", "Universal Render Pipeline/Lit", "_EMISSION");
+            // City facades: smoothness from the albedo's alpha, so glass and stone share one material.
+            var facade = Template("LitFacade", "Universal Render Pipeline/Lit", "_EMISSION", "_SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A");
+            if (facade != null)
+            {
+                facade.SetFloat("_SmoothnessTextureChannel", 1);
+                EditorUtility.SetDirty(facade);
+            }
             var water = Template("Water", "Universal Render Pipeline/Lit", "_NORMALMAP", "_DETAIL_MULX2");
             if (water != null)
             {

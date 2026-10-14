@@ -292,6 +292,68 @@ namespace SniperDuel.Game.World
             Quad(P(-1, 0, -1), P(1, 0, -1), P(1, 1, -1), P(-1, 1, -1), Vector3.back, size.x, size.y, new Vector2(0, y0));
         }
 
+        /// <summary>
+        /// Walls on a convex footprint (x, z points in order, either way round) from y0 up to y1, and
+        /// optionally a flat top: a building with chamfered or rounded corners. `top`, the same number
+        /// of points, makes the walls lean in to it (a tapered crown or mansard). Wall UVs run along
+        /// the perimeter and up from `vBase`, so a facade texture keeps whole floors and bays; corners
+        /// turning less than `smoothDeg` share normals so rounded corners shade round. `inward` faces
+        /// the walls inside (the back of a parapet).
+        /// </summary>
+        public void Extrude(IReadOnlyList<Vector2> ring, float y0, float y1, float vBase, bool cap = false,
+            IReadOnlyList<Vector2>? top = null, bool inward = false, float smoothDeg = 35)
+        {
+            int count = ring.Count;
+            if (count < 3) return;
+            top ??= ring;
+            var mid = Vector2.zero;
+            foreach (var p in ring) mid += p;
+            mid /= count;
+            Vector3 B(int i) => new Vector3(ring[i % count].x, y0, ring[i % count].y);
+            Vector3 T(int i) => new Vector3(top[i % count].x, y1, top[i % count].y);
+            var face = new Vector3[count];
+            for (int i = 0; i < count; i++)
+            {
+                var nm = Vector3.Cross(T(i) - B(i), B(i + 1) - B(i)).normalized;
+                var centre = (B(i) + B(i + 1)) * 0.5f;
+                if (Vector3.Dot(nm, centre - new Vector3(mid.x, y0, mid.y)) < 0) nm = -nm;
+                face[i] = inward ? -nm : nm;
+            }
+            float cos = Mathf.Cos(smoothDeg * Mathf.Deg2Rad);
+            // The normal at the start (i) and end (i + 1) of edge i.
+            Vector3 At(int edge, int corner)
+            {
+                int other = corner == edge ? (edge + count - 1) % count : (edge + 1) % count;
+                return Vector3.Dot(face[edge], face[other]) > cos ? (face[edge] + face[other]).normalized : face[edge];
+            }
+            float u = 0;
+            for (int i = 0; i < count; i++)
+            {
+                int j = (i + 1) % count;
+                float len = Vector2.Distance(ring[i], ring[j]);
+                var n0 = At(i, i);
+                var n1 = At(i, j);
+                QuadN(B(i), B(j), T(j), T(i), n0, n1, n1, n0,
+                    new Vector2(u, y0 - vBase), new Vector2(u + len, y0 - vBase), new Vector2(u + len, y1 - vBase), new Vector2(u, y1 - vBase));
+                u += len;
+            }
+            if (cap) Lid(top, y1);
+        }
+
+        /// <summary>A flat, upward-facing lid on a convex footprint (x, z points) at height y: a roof deck.</summary>
+        public void Lid(IReadOnlyList<Vector2> ring, float y)
+        {
+            int count = ring.Count;
+            var c = Vector3.zero;
+            foreach (var p in ring) c += new Vector3(p.x, y, p.y) / count;
+            for (int i = 0; i < count; i++)
+            {
+                var a = new Vector3(ring[i].x, y, ring[i].y);
+                var b = new Vector3(ring[(i + 1) % count].x, y, ring[(i + 1) % count].y);
+                Tri(c, a, b, Vector3.up, Vector3.up, Vector3.up, new Vector2(c.x, c.z), new Vector2(a.x, a.z), new Vector2(b.x, b.z));
+            }
+        }
+
         /// <summary>A round bar between two points at any angle (logs, poles, pipes, lattice members).</summary>
         public void Tube(Vector3 from, Vector3 to, float radius, int sides = 8, bool caps = true)
         {

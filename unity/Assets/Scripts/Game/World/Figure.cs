@@ -240,6 +240,7 @@ namespace SniperDuel.Game.World
             if (hd && len > 1e-3f) rifle.transform.localScale *= 1.3f / len;
             // The barrel end is the slim one: if the bulk (stock) is at +z, turn it round.
             if (hd && StockAhead(rifle, inner)) rifle.transform.localRotation = Quaternion.Euler(0, 180, 0) * rifle.transform.localRotation;
+            if (hd) Finish(rifle, inner);
             rb = Library.BoundsOf(rifle);
             // Centre it on its parent.
             rifle.transform.position -= rb.center - inner.position;
@@ -247,38 +248,324 @@ namespace SniperDuel.Game.World
         }
 
         /// <summary>
-        /// Turns a model's skinned meshes into static ones (they draw nothing in the capture build)
-        /// and gives every renderer a URP Lit material in its imported colour and texture.
+        /// Turns a model's skinned meshes into static ones (they draw nothing in the capture build),
+        /// keeping the imported materials for Finish to read.
         /// </summary>
         static void Freeze(GameObject go)
         {
-            foreach (var r in go.GetComponentsInChildren<Renderer>())
+            foreach (var skin in go.GetComponentsInChildren<SkinnedMeshRenderer>())
             {
-                var mats = new Material[r.sharedMaterials.Length];
-                for (int i = 0; i < mats.Length; i++)
-                {
-                    var src = r.sharedMaterials[i];
-                    var m = new Material(Library.Template("Lit")) { name = "Rifle " + r.name };
-                    var tex = src == null ? null : src.HasProperty("baseColorTexture") ? src.GetTexture("baseColorTexture") : src.mainTexture;
-                    m.SetTexture("_BaseMap", tex);
-                    m.SetColor("_BaseColor", src != null && src.HasProperty("baseColorFactor") ? src.GetColor("baseColorFactor") : Color.white);
-                    m.SetTexture("_MetallicGlossMap", NonMetal);
-                    m.SetFloat("_Metallic", 0);
-                    m.SetFloat("_Smoothness", 0.35f);
-                    mats[i] = m;
-                }
-                if (r is SkinnedMeshRenderer skin)
-                {
-                    var mesh = new Mesh { name = skin.name + " (frozen)" };
-                    skin.BakeMesh(mesh, true);
-                    mesh.RecalculateBounds();
-                    var host = skin.gameObject;
-                    DestroyImmediate(skin);
-                    host.AddComponent<MeshFilter>().sharedMesh = mesh;
-                    host.AddComponent<MeshRenderer>().sharedMaterials = mats;
-                }
-                else r.sharedMaterials = mats;
+                var mats = skin.sharedMaterials;
+                var mesh = new Mesh { name = skin.name + " (frozen)" };
+                skin.BakeMesh(mesh, true);
+                mesh.RecalculateBounds();
+                var host = skin.gameObject;
+                DestroyImmediate(skin);
+                host.AddComponent<MeshFilter>().sharedMesh = mesh;
+                host.AddComponent<MeshRenderer>().sharedMaterials = mats;
             }
+        }
+
+        enum Part { Furniture, Metal, Glass }
+
+        static readonly string[] GlassWords = { "lens", "glass" };
+        static readonly string[] MetalWords = { "barrel", "scope", "bolt", "metal", "steel", "rail", "bipod", "mag", "trigger", "muzzle", "brake", "suppress", "ring", "mount", "screw", "receiver", "action", "black" };
+        static readonly string[] FurnitureWords = { "stock", "wood", "grip", "cheek", "butt", "forend", "fore_end", "handguard", "polymer", "furniture" };
+
+        static Part? ByName(string name)
+        {
+            name = name.ToLowerInvariant();
+            foreach (var w in GlassWords) if (name.Contains(w)) return Part.Glass;
+            foreach (var w in FurnitureWords) if (name.Contains(w)) return Part.Furniture;
+            foreach (var w in MetalWords) if (name.Contains(w)) return Part.Metal;
+            return null;
+        }
+
+        /// <summary>Light warm (tan, salmon, wood) or green colours are the stock; dark and grey ones metal.</summary>
+        static Part ByColour(Color c)
+        {
+            float lum = 0.3f * c.r + 0.59f * c.g + 0.11f * c.b;
+            bool warm = c.r - c.b > 0.06f && lum > 0.08f;
+            bool green = c.g > c.b + 0.03f && c.g >= c.r * 0.85f && lum > 0.08f;
+            return warm || green ? Part.Furniture : Part.Metal;
+        }
+
+        /// <summary>
+        /// Gives the rifle a service finish: an olive-drab stock with a faint stipple and a dull
+        /// sheen, dark gunmetal barrel, action, scope and bipod, near-black lenses. Parts are told
+        /// apart by material or object name where the model names them, else per triangle by the
+        /// colour the model gives it (texture, factor and vertex colour: the furniture is the light,
+        /// warm or green part, metal the dark grey). A model with no usable colour, or one coloured
+        /// all alike, is split by position: forward of the fore-end, and above the bore over the
+        /// action (the scope), is metal. `frame` has the barrel along +z.
+        /// </summary>
+        static void Finish(GameObject go, Transform frame)
+        {
+            // The rifle's extent and bore height in the frame.
+            float zMin = float.MaxValue, zMax = float.MinValue, muzzleY = 0;
+            int muzzleN = 0;
+            var filters = go.GetComponentsInChildren<MeshFilter>();
+            foreach (var mf in filters)
+            {
+                if (mf.sharedMesh == null || !mf.sharedMesh.isReadable) continue;
+                foreach (var v in mf.sharedMesh.vertices)
+                {
+                    float z = frame.InverseTransformPoint(mf.transform.TransformPoint(v)).z;
+                    zMin = Mathf.Min(zMin, z);
+                    zMax = Mathf.Max(zMax, z);
+                }
+            }
+            float len = Mathf.Max(1e-3f, zMax - zMin);
+            foreach (var mf in filters)
+            {
+                if (mf.sharedMesh == null || !mf.sharedMesh.isReadable) continue;
+                foreach (var v in mf.sharedMesh.vertices)
+                {
+                    var p = frame.InverseTransformPoint(mf.transform.TransformPoint(v));
+                    if (p.z > zMax - len * 0.08f) { muzzleY += p.y; muzzleN++; }
+                }
+            }
+            muzzleY = muzzleN > 0 ? muzzleY / muzzleN : 0;
+            Part ByPlace(Vector3 p)
+            {
+                float t = (p.z - zMin) / len;
+                return t > 0.64f || t > 0.3f && p.y > muzzleY + 0.035f ? Part.Metal : Part.Furniture;
+            }
+
+            // First pass: each triangle's part by name or colour, counting how much of the rifle
+            // the colours make stock.
+            var jobs = new List<(MeshFilter mf, Renderer r, List<int>[] tris, List<int>[] byColour, List<int> unknown)>();
+            int furniture = 0, coloured = 0;
+            var seen = new List<string>();
+            foreach (var mf in filters)
+            {
+                var r = mf.GetComponent<Renderer>();
+                var mesh = mf.sharedMesh;
+                if (r == null || mesh == null) continue;
+                var srcs = r.sharedMaterials;
+                // Triangles by name (sure), by colour (likely) and with nothing to go by.
+                var tris = new List<int>[3];
+                var byColour = new List<int>[3];
+                for (int k = 0; k < 3; k++)
+                {
+                    tris[k] = new List<int>();
+                    byColour[k] = new List<int>();
+                }
+                var unknown = new List<int>();
+                if (!mesh.isReadable)
+                {
+                    // Whole sub-meshes only: by name, else the material's mean colour.
+                    var parts = new Material[srcs.Length];
+                    for (int i = 0; i < srcs.Length; i++)
+                    {
+                        var part = ByName((srcs[i] != null ? srcs[i].name : "") + " " + r.name) ?? ByColour(MeanColour(srcs[i]));
+                        parts[i] = RifleMaterial(part, srcs[i]);
+                    }
+                    r.sharedMaterials = parts;
+                    continue;
+                }
+                var uv = mesh.uv;
+                var colors = mesh.colors;
+                for (int s = 0; s < mesh.subMeshCount; s++)
+                {
+                    var src = s < srcs.Length ? srcs[s] : null;
+                    var named = ByName((src != null ? src.name : "") + " " + r.name);
+                    seen.Add($"{r.name}/{(src != null ? src.name : "-")}={(named?.ToString() ?? "?")}");
+                    var factor = src != null && src.HasProperty("baseColorFactor") ? src.GetColor("baseColorFactor") : src != null && src.HasProperty("_BaseColor") ? src.GetColor("_BaseColor") : Color.white;
+                    var tex = named == null ? Readable(BaseTexture(src)) : null;
+                    bool informative = tex != null || colors.Length > 0 || factor != Color.white;
+                    var ix = mesh.GetTriangles(s);
+                    for (int t = 0; t + 2 < ix.Length; t += 3)
+                    {
+                        int a = ix[t], b = ix[t + 1], c = ix[t + 2];
+                        List<int> into;
+                        if (named != null) into = tris[(int)named.Value];
+                        else if (!informative) into = unknown;
+                        else
+                        {
+                            var col = factor;
+                            if (tex != null && uv.Length > 0)
+                            {
+                                var m = (uv[a] + uv[b] + uv[c]) / 3;
+                                col *= (tex.GetPixelBilinear(m.x, m.y) + tex.GetPixelBilinear(uv[a].x, uv[a].y)) * 0.5f;
+                            }
+                            if (colors.Length > 0) col *= (colors[a] + colors[b] + colors[c]) / 3;
+                            var part = ByColour(col);
+                            coloured++;
+                            if (part == Part.Furniture) furniture++;
+                            into = byColour[(int)part];
+                        }
+                        into.Add(a);
+                        into.Add(b);
+                        into.Add(c);
+                    }
+                }
+                jobs.Add((mf, r, tris, byColour, unknown));
+            }
+
+            // Colours that make (nearly) everything stock, or none at all, tell nothing: then all
+            // but the named parts go by place. Otherwise only the triangles with no colour do.
+            bool byPlace = coloured == 0 || furniture > coloured * 0.85f;
+            foreach (var (mf, r, tris, byColour, unknown) in jobs)
+            {
+                var mesh = mf.sharedMesh;
+                for (int k = 0; k < 3; k++) (byPlace ? unknown : tris[k]).AddRange(byColour[k]);
+                var verts = mesh.vertices;
+                for (int t = 0; t + 2 < unknown.Count; t += 3)
+                {
+                    int a = unknown[t], b = unknown[t + 1], c = unknown[t + 2];
+                    var into = tris[(int)ByPlace(frame.InverseTransformPoint(mf.transform.TransformPoint((verts[a] + verts[b] + verts[c]) / 3)))];
+                    into.Add(a);
+                    into.Add(b);
+                    into.Add(c);
+                }
+                // One sub-mesh per part present, on a copy so the imported mesh is untouched.
+                var copy = Instantiate(mesh);
+                copy.name = mesh.name + " (finished)";
+                var mats = new List<Material>();
+                int n = 0;
+                for (int k = 0; k < 3; k++) if (tris[k].Count > 0) n++;
+                copy.subMeshCount = Mathf.Max(1, n);
+                int sub = 0;
+                var src0 = r.sharedMaterials.Length > 0 ? r.sharedMaterials[0] : null;
+                for (int k = 0; k < 3; k++)
+                {
+                    if (tris[k].Count == 0) continue;
+                    copy.SetTriangles(tris[k], sub++);
+                    mats.Add(RifleMaterial((Part)k, src0));
+                }
+                if (mats.Count == 0) continue;
+                mf.sharedMesh = copy;
+                r.sharedMaterials = mats.ToArray();
+            }
+            Debug.Log($"[Figure] rifle finish: {string.Join(", ", seen)}; {furniture}/{coloured} triangles stock by colour{(byPlace ? ", split by place" : "")}");
+        }
+
+        static Texture? BaseTexture(Material? src) =>
+            src == null ? null : src.HasProperty("baseColorTexture") ? src.GetTexture("baseColorTexture") : src.HasProperty("_BaseMap") ? src.GetTexture("_BaseMap") : src.mainTexture;
+
+        static Color MeanColour(Material? src)
+        {
+            if (src == null) return Color.white;
+            var c = src.HasProperty("baseColorFactor") ? src.GetColor("baseColorFactor") : src.HasProperty("_BaseColor") ? src.GetColor("_BaseColor") : Color.white;
+            var tex = Readable(BaseTexture(src));
+            if (tex == null) return c;
+            var px = tex.GetPixels32(tex.mipmapCount - 1);
+            var sum = Color.black;
+            foreach (var p in px) sum += (Color)p;
+            return c * (sum / Mathf.Max(1, px.Length));
+        }
+
+        static readonly Dictionary<Texture, Texture2D?> Readables = new Dictionary<Texture, Texture2D?>();
+
+        /// <summary>A small CPU-readable copy of a texture (imported ones usually aren't readable).</summary>
+        static Texture2D? Readable(Texture? tex)
+        {
+            if (tex == null) return null;
+            if (Readables.TryGetValue(tex, out var done)) return done;
+            Texture2D? copy = null;
+            try
+            {
+                const int S = 128;
+                var rt = RenderTexture.GetTemporary(S, S, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
+                Graphics.Blit(tex, rt);
+                var prev = RenderTexture.active;
+                RenderTexture.active = rt;
+                copy = new Texture2D(S, S, TextureFormat.RGBA32, true) { name = tex.name + " (readable)" };
+                copy.ReadPixels(new Rect(0, 0, S, S), 0, 0);
+                copy.Apply(true);
+                RenderTexture.active = prev;
+                RenderTexture.ReleaseTemporary(rt);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"[Figure] can't read {tex.name}: {ex.Message}");
+                copy = null;
+            }
+            Readables[tex] = copy;
+            return copy;
+        }
+
+        static readonly Dictionary<Part, Material> RifleMats = new Dictionary<Part, Material>();
+
+        /// <summary>The finish for one part, keeping the model's normal map if it has one.</summary>
+        static Material RifleMaterial(Part part, Material? src)
+        {
+            var nor = src != null && src.HasProperty("normalTexture") ? src.GetTexture("normalTexture") : null;
+            if (nor == null && RifleMats.TryGetValue(part, out var shared) && shared != null) return shared;
+            var m = new Material(Library.Template("Lit")) { name = "Rifle " + part };
+            // Every Lit material needs a mask map, or the template's metallic map reads as chrome.
+            switch (part)
+            {
+                case Part.Furniture:
+                    // Olive drab polymer: a faint stipple, matte with a slight sheen where it's handled.
+                    m.SetTexture("_BaseMap", Stipple);
+                    m.SetColor("_BaseColor", new Color(0.31f, 0.33f, 0.23f));
+                    m.SetTexture("_MetallicGlossMap", Mask(0, 0.55f));
+                    m.SetFloat("_Smoothness", 0.34f);
+                    break;
+                case Part.Metal:
+                    // Dark gunmetal: phosphated steel and anodised aluminium.
+                    m.SetTexture("_BaseMap", Stipple);
+                    m.SetColor("_BaseColor", new Color(0.2f, 0.21f, 0.22f));
+                    m.SetTexture("_MetallicGlossMap", Mask(0.6f, 0.8f));
+                    m.SetFloat("_Smoothness", 0.5f);
+                    break;
+                default:
+                    m.SetTexture("_BaseMap", Texture2D.whiteTexture);
+                    m.SetColor("_BaseColor", new Color(0.03f, 0.05f, 0.07f));
+                    m.SetTexture("_MetallicGlossMap", NonMetal);
+                    m.SetFloat("_Smoothness", 0.95f);
+                    break;
+            }
+            m.SetTextureScale("_BaseMap", Vector2.one * 3);
+            m.SetFloat("_Metallic", 0);
+            if (nor != null) m.SetTexture("_BumpMap", nor);
+            else RifleMats[part] = m;
+            return m;
+        }
+
+        static Texture2D? stipple;
+        /// <summary>A pale grey speckle that keeps a flat colour from reading as plastic.</summary>
+        static Texture2D Stipple
+        {
+            get
+            {
+                if (stipple != null) return stipple;
+                const int S = 64;
+                var rng = new System.Random(115);
+                var px = new Color32[S * S];
+                for (int i = 0; i < px.Length; i++)
+                {
+                    float x = i % S, y = i / S;
+                    float g = 0.86f + 0.08f * Mathf.PerlinNoise(x * 0.15f, y * 0.15f) + 0.06f * (float)rng.NextDouble();
+                    px[i] = new Color(g, g, g, 1);
+                }
+                stipple = new Texture2D(S, S, TextureFormat.RGBA32, true) { name = "Stipple", wrapMode = TextureWrapMode.Repeat };
+                stipple.SetPixels32(px);
+                stipple.Apply(true);
+                return stipple;
+            }
+        }
+
+        static readonly Dictionary<(float, float), Texture2D> Masks = new Dictionary<(float, float), Texture2D>();
+        /// <summary>A mask map: metallic in red, smoothness in alpha varying from `low` to 1 (scaled by _Smoothness).</summary>
+        static Texture2D Mask(float metallic, float low)
+        {
+            if (Masks.TryGetValue((metallic, low), out var done) && done != null) return done;
+            const int S = 64;
+            var px = new Color32[S * S];
+            byte m = (byte)Mathf.RoundToInt(metallic * 255);
+            for (int i = 0; i < px.Length; i++)
+            {
+                float g = Mathf.Lerp(low, 1, Mathf.PerlinNoise(i % S * 0.11f + 7, i / S * 0.11f + 3));
+                px[i] = new Color32(m, 0, 0, (byte)Mathf.RoundToInt(g * 255));
+            }
+            var tex = new Texture2D(S, S, TextureFormat.RGBA32, true, true) { name = "Rifle mask", wrapMode = TextureWrapMode.Repeat };
+            tex.SetPixels32(px);
+            tex.Apply(true);
+            Masks[(metallic, low)] = tex;
+            return tex;
         }
 
         /// <summary>Whether the deeper (stock) end of a model lies toward +z of `frame`.</summary>
