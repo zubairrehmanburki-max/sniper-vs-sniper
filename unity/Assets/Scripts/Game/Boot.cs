@@ -144,6 +144,22 @@ namespace SniperDuel.Game
                 yield return null;
                 yield return new WaitForEndOfFrame();
             }
+            // The other maps: the menu backdrop and the 1x eye on each, to judge them against Twin Bridges.
+            foreach (var id in Maps.Ids)
+            {
+                if (id == "twin-bridges") continue;
+                if (arena != null) Destroy(arena.Root.gameObject);
+                try { BuildArena(id); }
+                catch (Exception e) { Debug.LogException(e); continue; }
+                foreach (var (label, screen) in new[] { ("Menu", "Title"), ("Eye", "Hud") })
+                {
+                    Frame(screen);
+                    for (int f = 0; f < 8; f++) yield return null;
+                    ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"{++n:00}-Map-{id}-{label}.png"));
+                    yield return null;
+                    yield return new WaitForEndOfFrame();
+                }
+            }
             for (int f = 0; f < 10; f++) yield return null;
             Application.Quit(0);
         }
