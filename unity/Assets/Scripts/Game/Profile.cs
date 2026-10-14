@@ -86,7 +86,10 @@ namespace SniperDuel.Game
         public static void SetPart(string rifleId, int slot, int option) => Set($"prof.part.{rifleId}.{slot}", option);
 
         /// <summary>Index into Catalog.Finishes for one rifle.</summary>
-        public static int Finish(string rifleId) { int f = GetInt("prof.finish." + rifleId, 0, 0, Catalog.Finishes.Length - 1); return Catalog.FinishLock(f) == null ? f : 0; }
+        public static int Finish(string rifleId) { int f = GetInt("prof.finish." + rifleId, DefaultFinish, 0, Catalog.Finishes.Length - 1); return Catalog.FinishLock(f) == null ? f : DefaultFinish; }
+
+        /// <summary>Ranger green: the olive the rifles have always had.</summary>
+        const int DefaultFinish = 2;
         public static void SetFinish(string rifleId, int finish) => Set("prof.finish." + rifleId, finish);
 
         /// <summary>The summed effect of a rifle's fitted parts.</summary>

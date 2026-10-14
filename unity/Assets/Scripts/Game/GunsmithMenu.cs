@@ -153,6 +153,7 @@ namespace SniperDuel.Game
                 if (!s.Has("fin" + i)) continue;
                 bool on = i == finish;
                 Skin.Border(s["fin" + i], on ? Skin.Amber : new Color(Skin.Paper.r, Skin.Paper.g, Skin.Paper.b, 0.2f), on ? 2 : 1);
+                s["fin" + i].style.opacity = Catalog.FinishLock(i) != null ? 0.5f : 1f;
             }
         }
 

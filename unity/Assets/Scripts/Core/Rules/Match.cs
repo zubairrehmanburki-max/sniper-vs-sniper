@@ -33,6 +33,8 @@ namespace SniperDuel.Rules
         public int Wounds;
         /// <summary>Where this player last fired from, while they are still there (the enemy saw flash and dust).</summary>
         public Vec3? Revealed;
+        /// <summary>A suppressor: firing shows no flash or dust, so the shot doesn't give the position away.</summary>
+        public bool Suppressed;
         public bool ColdBore;
         /// <summary>A supersonic near miss gave this player a rough bearing to the shooter.</summary>
         public Vec3? HeardSnapFrom;
@@ -159,6 +161,7 @@ namespace SniperDuel.Rules
         public string Name = "";
         public string RifleId = "";
         public BotDifficulty? Bot;
+        public bool Suppressed;
 
         public PlayerSetup(string name, string rifleId, BotDifficulty? bot = null)
         {
@@ -241,6 +244,7 @@ namespace SniperDuel.Rules
                 Kills = 0,
                 Wounds = 0,
                 Revealed = null,
+                Suppressed = players[side].Suppressed,
                 ColdBore = true,
                 HeardSnapFrom = null,
                 Ready = false,
@@ -537,7 +541,7 @@ namespace SniperDuel.Rules
                         },
                         cfg);
                     shooter.ColdBore = false;
-                    shooter.Revealed = shooter.Position;
+                    if (!shooter.Suppressed) shooter.Revealed = shooter.Position;
                     state.Acted = true;
                     state.Shots.Add(new ShotRecord
                     {

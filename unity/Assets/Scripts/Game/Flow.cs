@@ -345,7 +345,7 @@ namespace SniperDuel.Game
                 v.Text("countdown", n.ToString());
                 yield return new WaitForSeconds(1);
             }
-            duel = Duel.Begin(cfg, ui, rig, arena, PlayerName, matchRifle, matchBot, seed);
+            duel = Duel.Begin(Gear.ForMatch(cfg, matchRifle), ui, rig, arena, PlayerName, matchRifle, matchBot, seed);
             Settings.SetInMenus(false);
             duel.Finished += ShowResults;
         }

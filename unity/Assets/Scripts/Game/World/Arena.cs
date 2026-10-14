@@ -18,6 +18,9 @@ namespace SniperDuel.Game.World
         public readonly List<Flag> Flags = new List<Flag>();
         public Figure? Enemy;
         public Figure? Player;
+        /// <summary>The player's outfit colour and rifle finish (the in-duel kit; menus show the defaults).</summary>
+        public Color PlayerTint = new Color(0.56f, 0.55f, 0.47f);
+        public Color? PlayerFinish;
 
         public static Arena Build(DuelMap map)
         {
@@ -101,7 +104,8 @@ namespace SniperDuel.Game.World
         public Figure PlacePlayer(Vec3 position, Stance stance, Side side)
         {
             if (Player != null) Object.Destroy(Player.gameObject);
-            Player = Figure.Create(stance, 1.8f, Root, new Color(0.56f, 0.55f, 0.47f));
+            Player = Figure.Create(stance, 1.8f, Root, PlayerTint);
+            if (PlayerFinish is Color finish) Figure.PaintRifle(Player.gameObject, finish);
             Player.name = "Player";
             Player.transform.position = Library.ToUnity(position);
             Player.transform.rotation = Quaternion.Euler(0, side == Side.A ? 0 : 180, 0);

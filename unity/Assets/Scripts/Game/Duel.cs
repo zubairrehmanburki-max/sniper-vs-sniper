@@ -49,6 +49,8 @@ namespace SniperDuel.Game
         BreathState breath = Sway.InitialBreath();
         readonly uint swaySeed = (uint)UnityEngine.Random.Range(1, int.MaxValue);
         double recoil;
+        /// <summary>How fast the recoil settles: the stock, muzzle and bipod parts.</summary>
+        double recoilRecovery = 1;
         double lastShotAt = -10;
         string hint = "";
         float hintTimer;
@@ -96,23 +98,40 @@ namespace SniperDuel.Game
         SwayOffset lastSway;
         Vector2 eyeShown;
 
-        /// <summary>The rifle the bot takes into a duel.</summary>
-        public static string BotRifle(GameConfig cfg, BotDifficulty bot, string playerRifle) => cfg.Rifles.Count > 1 ? cfg.Rifles[1].Id : playerRifle;
+        /// <summary>The rifle the bot takes into a duel: the starter .308 when easy, the 6.5 Creedmoor at medium, the .338 when hard.</summary>
+        public static string BotRifle(GameConfig cfg, BotDifficulty bot, string playerRifle)
+        {
+            string id = bot switch { BotDifficulty.Easy => "bolt308", BotDifficulty.Hard => "mag338", _ => "bolt65cm" };
+            return cfg.Rifles.Exists(r => r.Id == id) ? id : cfg.Rifles.Count > 0 ? cfg.Rifles[0].Id : playerRifle;
+        }
 
         /// <summary>A fresh match seed (the versus card rolls it so it can show the match's conditions).</summary>
         public static uint NewSeed() => (uint)(DateTime.UtcNow.Ticks ^ UnityEngine.Random.Range(0, int.MaxValue)) | 1;
 
-        public static Duel Begin(GameConfig cfg, UiHost ui, CameraRig rig, Arena arena, string playerName, string rifleId, BotDifficulty bot, uint seed)
+        /// <summary>Starts a duel with the player's kit (fitted rifle, optic, finish, outfit) against the bot.</summary>
+        public static Duel Begin(Kit kit, UiHost ui, CameraRig rig, Arena arena, string playerName, string baseRifle, BotDifficulty bot, uint seed)
         {
+            var cfg = kit.Config;
             var d = new GameObject("Duel").AddComponent<Duel>();
             d.cfg = cfg;
+            d.recoilRecovery = kit.RecoilRecovery;
+            arena.PlayerTint = kit.Outfit;
+            arena.PlayerFinish = kit.Finish;
+            rig.RifleFinish = kit.Finish;
+            // The figure is re-made in this duel's outfit and finish on the first frame.
+            if (arena.Player != null)
+            {
+                Destroy(arena.Player.gameObject);
+                arena.Player = null;
+            }
+            rig.DropViewmodel();
             d.ui = ui;
             d.rig = rig;
             d.arena = arena;
             d.map = arena.Map;
-            var botRifle = BotRifle(cfg, bot, rifleId);
+            var botRifle = BotRifle(cfg, bot, baseRifle);
             d.State = Match.CreateMatch(seed, arena.Map.Id, new PerSide<PlayerSetup>(
-                new PlayerSetup(playerName, rifleId),
+                new PlayerSetup(playerName, kit.RifleId) { Suppressed = kit.Suppressed },
                 new PlayerSetup(Catalog.BotName(bot), botRifle, bot)), 0, cfg);
             d.zoom = (int)Math.Round((cfg.Scope.MinZoom + cfg.Scope.MaxZoom) / 2);
             d.BindScreens();
@@ -735,7 +754,7 @@ namespace SniperDuel.Game
             if (paused) return;
             float dt = Mathf.Min(0.1f, Time.deltaTime);
             time += dt;
-            recoil *= Math.Exp(-dt * 6);
+            recoil *= Math.Exp(-dt * 6 * recoilRecovery);
             if (hintTimer > 0) hintTimer -= dt;
 
             if (resume != null && time >= resumeAt)

@@ -487,6 +487,34 @@ namespace SniperDuel.Game.World
         }
 
         static readonly Dictionary<Part, Material> RifleMats = new Dictionary<Part, Material>();
+        static readonly Dictionary<(Material, Color), Material> Painted = new Dictionary<(Material, Color), Material>();
+
+        /// <summary>
+        /// Repaints the rifle furniture (stock and grip) under `root` in a finish colour, keeping each
+        /// material's maps; the metal and glass stay as they are.
+        /// </summary>
+        public static void PaintRifle(GameObject root, Color finish)
+        {
+            foreach (var r in root.GetComponentsInChildren<Renderer>(true))
+            {
+                var mats = r.sharedMaterials;
+                bool changed = false;
+                for (int i = 0; i < mats.Length; i++)
+                {
+                    var m = mats[i];
+                    if (m == null || !m.name.StartsWith("Rifle " + Part.Furniture)) continue;
+                    if (!Painted.TryGetValue((m, finish), out var p) || p == null)
+                    {
+                        p = new Material(m) { name = m.name + " (finish)" };
+                        p.SetColor("_BaseColor", finish);
+                        Painted[(m, finish)] = p;
+                    }
+                    mats[i] = p;
+                    changed = true;
+                }
+                if (changed) r.sharedMaterials = mats;
+            }
+        }
 
         /// <summary>The finish for one part, keeping the model's normal map if it has one.</summary>
         static Material RifleMaterial(Part part, Material? src)

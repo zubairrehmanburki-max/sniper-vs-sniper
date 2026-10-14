@@ -37,6 +37,16 @@ namespace SniperDuel.Game.World
         /// <summary>Recoil climb in radians, for the first-person rifle.</summary>
         public float Kick;
         Viewmodel? viewmodel;
+        /// <summary>The first-person rifle's furniture colour (the loadout's finish), or the default.</summary>
+        public Color? RifleFinish;
+
+        /// <summary>Drops the first-person rifle so the next shoulder builds it in the current finish.</summary>
+        public void DropViewmodel()
+        {
+            if (viewmodel == null) return;
+            Destroy(viewmodel.gameObject);
+            viewmodel = null;
+        }
         float clock;
 
         public const float EyeFov = 55;
@@ -77,7 +87,11 @@ namespace SniperDuel.Game.World
             if (Body != null) Body.SetActive(Current != Mode.Eye || ThirdPerson);
             // First person: the rifle in front of the eye until the scope takes over.
             bool rifle = Current == Mode.Eye && !ThirdPerson && Raise < 0.999f;
-            if (rifle && viewmodel == null) viewmodel = Viewmodel.Create(Cam.transform);
+            if (rifle && viewmodel == null)
+            {
+                viewmodel = Viewmodel.Create(Cam.transform);
+                if (RifleFinish is Color finish) Figure.PaintRifle(viewmodel.gameObject, finish);
+            }
             if (viewmodel != null)
             {
                 if (viewmodel.gameObject.activeSelf != rifle) viewmodel.gameObject.SetActive(rifle);

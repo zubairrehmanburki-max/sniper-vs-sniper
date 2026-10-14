@@ -215,10 +215,10 @@ namespace SniperDuel.Game
             {
                 Name = "OPTIC", Default = 0, Options = new[]
                 {
-                    new PartInfo { Name = "5–25× FFP MIL", Note = "Full zoom range", Detail = "First focal plane: the mil marks stay true at every zoom, so holds work at any magnification." },
-                    new PartInfo { Name = "3–18× SFP", Note = "Wider view, lighter", Detail = "Second focal plane, easier to find the target with. Lighter than the long scope.", WeightKg = -0.3f },
-                    new PartInfo { Name = "6–24× LIT", Note = "Glowing reticle", Detail = "An illuminated reticle that stays readable against dark water and dusk skies.", WeightKg = 0.1f },
-                    new PartInfo { Name = "7–35× HIGH MAG", Note = "Weapon level 12", Detail = "More magnification for the longest lanes. Heavy, and the sway shows.", RecoilPct = -4, WeightKg = 0.4f, Level = 12 },
+                    new PartInfo { Name = "5–25× FFP MIL", Note = "5–25× zoom", Detail = "The all-rounder: 5× to find the target, 25× to read the wind on it. Mil marks stay true at every zoom." },
+                    new PartInfo { Name = "3–18× COMPACT", Note = "3–18× zoom, lighter", Detail = "Zooms out wider, so the target is quicker to find, but tops out at 18×. Lighter than the long scope.", WeightKg = -0.3f },
+                    new PartInfo { Name = "6–24× MID", Note = "6–24× zoom", Detail = "Starts a little closer in than the 5–25 and stops at 24×.", WeightKg = 0.1f },
+                    new PartInfo { Name = "7–35× HIGH MAG", Note = "Weapon level 12", Detail = "7× to 35×: more magnification for the longest lanes, at a weight you'll carry.", RecoilPct = -4, WeightKg = 0.4f, Level = 12 },
                 },
             },
             new SlotInfo
@@ -237,7 +237,7 @@ namespace SniperDuel.Game
                 {
                     new PartInfo { Name = "24\" STANDARD", Note = "Factory length", Detail = "The factory barrel. Balanced and quick to bring on target." },
                     new PartInfo { Name = "27\" FLUTED", Note = "More velocity", Detail = "Longer for more speed, fluted to keep the weight down.", VelocityMps = 15, WindPct = 2, WeightKg = 0.2f },
-                    new PartInfo { Name = "30\" HEAVY", Note = "Fastest, heaviest", Detail = "The most muzzle velocity and the steadiest hold, at a weight you'll feel.", VelocityMps = 25, WindPct = 4, RecoilPct = 4, WeightKg = 0.9f },
+                    new PartInfo { Name = "30\" HEAVY", Note = "Fastest, heaviest", Detail = "The most muzzle velocity, at a weight you'll feel.", VelocityMps = 25, WindPct = 4, RecoilPct = 4, WeightKg = 0.9f },
                     new PartInfo { Name = "20\" CARBON", Note = "Weapon level 10", Detail = "Short and light. Gives up velocity for handling.", VelocityMps = -20, RecoilPct = -4, WeightKg = -0.8f, Level = 10 },
                 },
             },
@@ -266,9 +266,9 @@ namespace SniperDuel.Game
                 Name = "BIPOD", Default = 0, Options = new[]
                 {
                     new PartInfo { Name = "EMPTY", Note = "No bipod", Detail = "Shoot off a pack or the deck. Nothing to carry." },
-                    new PartInfo { Name = "HARRIS 6–9\"", Note = "Steadier prone", Detail = "A spring bipod. Steadies the rifle and soaks up some recoil.", RecoilPct = 6, WeightKg = 0.4f },
-                    new PartInfo { Name = "ATLAS V8", Note = "Cant and pan", Detail = "Lets the rifle cant and pan on the legs for quick level corrections.", RecoilPct = 9, WeightKg = 0.5f },
-                    new PartInfo { Name = "SPIGOT RIG", Note = "Weapon level 12", Detail = "A tripod rest for the steadiest hold there is.", RecoilPct = 12, WeightKg = 0.7f, Level = 12 },
+                    new PartInfo { Name = "HARRIS 6–9\"", Note = "Steadier prone", Detail = "A spring bipod: the rifle soaks up recoil and settles sooner.", RecoilPct = 6, WeightKg = 0.4f },
+                    new PartInfo { Name = "ATLAS V8", Note = "Cant and pan", Detail = "A pan-and-cant bipod: settles the rifle after the shot faster than the Harris.", RecoilPct = 9, WeightKg = 0.5f },
+                    new PartInfo { Name = "SPIGOT RIG", Note = "Weapon level 12", Detail = "A tripod rest: the fastest recovery from recoil there is.", RecoilPct = 12, WeightKg = 0.7f, Level = 12 },
                 },
             },
         };
