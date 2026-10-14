@@ -77,7 +77,9 @@ namespace SniperDuel.Game.World
             terrain.materialTemplate = new Material(Library.Template("Terrain"));
             terrain.heightmapPixelError = 4;
             terrain.basemapDistance = 600;
-            terrain.drawInstanced = true;
+            // Instanced terrain needs shader variants the template material doesn't carry, so the
+            // build strips them and the terrain draws nothing; the plain path uses the template's.
+            terrain.drawInstanced = false;
             terrain.shadowCastingMode = ShadowCastingMode.TwoSided;
             return terrain;
         }
