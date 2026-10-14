@@ -141,10 +141,11 @@ namespace SniperDuel.Game
                 yield return new WaitForEndOfFrame();
                 Debug.Log($"[Capture] {path}");
             }
-            // Plain world views for review: the menu backdrop, the 1× eye and a 12× look at the enemy.
+            // Plain world views for review: the menu backdrop, the 1× eye, a 12× look at the enemy, then
+            // the kill cam: the X-ray just after the round meets bone, and the round in flight.
             ui.HideAll();
-            XRay? xray = null;
-            foreach (var (label, screen) in new[] { ("World-Menu", "Title"), ("World-Eye", "Hud"), ("World-Scope", "Scope"), ("World-Enemy", ""), ("World-XRay", "") })
+            BulletCam? killcam = null;
+            foreach (var (label, screen) in new[] { ("World-Menu", "Title"), ("World-Eye", "Hud"), ("World-Scope", "Scope"), ("World-Enemy", ""), ("World-XRay", ""), ("World-Bullet", "") })
             {
                 Frame(screen);
                 if (screen == "" && arena?.Enemy != null)
@@ -157,16 +158,15 @@ namespace SniperDuel.Game
                     rig.Cam.transform.LookAt(e + new Vector3(0, 0.3f, 0.3f));
                     var b = Library.BoundsOf(arena.Enemy.gameObject);
                     Debug.Log($"[Capture] enemy at {e} bounds {b.center} size {b.size}");
-                    if (label == "World-XRay")
+                    if (label != "World-Enemy")
                     {
-                        // The kill cam's X-ray on a chest hit, seen from beside the bullet's path.
-                        var shotDir = (e - rig.Eye).normalized;
+                        // The kill cam on a chest shot from the player's eye.
+                        if (killcam != null) killcam.Finish();
                         Vector3 chest = b.center;
                         if (arena.Enemy.Bones.TryGetValue("Spine2", out var s2)) chest = s2.position;
-                        xray = XRay.Begin(arena.Enemy, chest, shotDir);
-                        rig.Cam.transform.position = chest - shotDir * 1.1f + Vector3.up * 0.5f + Vector3.Cross(Vector3.up, shotDir) * 0.6f;
-                        rig.Cam.transform.LookAt(chest);
-                        rig.Cam.fieldOfView = 50;
+                        killcam = BulletCam.Rehearse(rig.Eye, chest, rig, arena.Root, arena.Enemy, HitZone.Chest);
+                        if (label == "World-XRay") killcam.SeekImpact(0.22f);
+                        else killcam.Seek(0.55f);
                     }
                 }
                 for (int f = 0; f < 6; f++) yield return null;
@@ -174,9 +174,9 @@ namespace SniperDuel.Game
                 yield return null;
                 yield return new WaitForEndOfFrame();
             }
+            if (killcam != null) killcam.Finish();
             // First person: the rifle shouldered, then nearly at the eye as it comes up to the
             // scope, and the scope wound out to full magnification.
-            if (xray != null) xray.End();
             foreach (var (label, screen) in new[] { ("World-Aim", "Aim"), ("World-Raise", "Raise"), ("Scope-25x", "Scope25") })
             {
                 Frame(screen);
