@@ -36,6 +36,9 @@ namespace SniperDuel.Game.World
             bloom.threshold.Override(1.1f);
             bloom.intensity.Override(0.55f);
             bloom.scatter.Override(0.65f);
+            // A centimetre-sized polished surface up close (the kill cam round) can return a huge
+            // specular value; clamp what feeds the bloom so it can never blow out into a white disc.
+            bloom.clamp.Override(12f);
             bloom.highQualityFiltering.Override(true);
             grade = profile.Add<ColorAdjustments>(true);
             scope = 0;

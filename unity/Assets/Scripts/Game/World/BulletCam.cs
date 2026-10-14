@@ -325,7 +325,7 @@ namespace SniperDuel.Game.World
                 }
                 var mb = new MeshBuilder();
                 Shapes.Loft(mb, rings, Vector3.zero, new Vector3(0, 0, Bear + Ogive + 0.0003f));
-                mb.Object("Bullet", Library.Plain(new Color(0.86f, 0.5f, 0.3f), 0.85f, 1), r.spinner, shadows: false);
+                mb.Object("Bullet", Library.Plain(new Color(0.86f, 0.5f, 0.3f), 0.55f, 0.6f), r.spinner, shadows: false);
                 // Rifling: six engraved grooves twisting along the bearing surface.
                 var grooves = new MeshBuilder();
                 for (int g = 0; g < 6; g++)
@@ -339,7 +339,7 @@ namespace SniperDuel.Game.World
                         grooves.Face(P(a0 - 0.1f, z0), P(a0 + 0.1f, z0), P(a1 + 0.1f, z1), P(a1 - 0.1f, z1), outward);
                     }
                 }
-                grooves.Object("Rifling", Library.Plain(new Color(0.5f, 0.26f, 0.15f), 0.55f, 1), r.spinner, shadows: false);
+                grooves.Object("Rifling", Library.Plain(new Color(0.5f, 0.26f, 0.15f), 0.4f, 0.6f), r.spinner, shadows: false);
 
                 // The air: a tube of rings trailing back, then the shock cone off the tip.
                 var go = new GameObject("Trail");
