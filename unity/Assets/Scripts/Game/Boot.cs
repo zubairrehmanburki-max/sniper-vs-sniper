@@ -174,25 +174,6 @@ namespace SniperDuel.Game
                 yield return null;
                 yield return new WaitForEndOfFrame();
             }
-            // Diagnostics for the bright disc over the bullet close-up: the same frame without the
-            // wake, without the round, and without post-processing.
-            if (killcam != null)
-            {
-                foreach (var diag in new[] { "Diag-NoTrail", "Diag-NoRound", "Diag-NoPost" })
-                {
-                    foreach (var t in killcam.GetComponentsInChildren<Transform>(true))
-                    {
-                        if (t.name == "Trail") t.gameObject.SetActive(diag != "Diag-NoTrail");
-                        if (t.name == "Bullet" || t.name == "Rifling") t.gameObject.SetActive(diag != "Diag-NoRound");
-                    }
-                    foreach (var v in UnityEngine.Object.FindObjectsByType<UnityEngine.Rendering.Volume>(FindObjectsSortMode.None)) v.enabled = diag != "Diag-NoPost";
-                    for (int f = 0; f < 6; f++) yield return null;
-                    ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"{++n:00}-{diag}.png"));
-                    yield return null;
-                    yield return new WaitForEndOfFrame();
-                }
-                foreach (var v in UnityEngine.Object.FindObjectsByType<UnityEngine.Rendering.Volume>(FindObjectsSortMode.None)) v.enabled = true;
-            }
             if (killcam != null) killcam.Finish();
             // First person: the rifle shouldered, then nearly at the eye as it comes up to the
             // scope, and the scope wound out to full magnification.
