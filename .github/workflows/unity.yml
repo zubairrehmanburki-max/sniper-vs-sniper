@@ -178,7 +178,7 @@ jobs:
   testflight:
     needs: ios
     if: github.event_name == 'workflow_dispatch' && inputs.testflight
-    runs-on: macos-latest
+    runs-on: macos-15
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
