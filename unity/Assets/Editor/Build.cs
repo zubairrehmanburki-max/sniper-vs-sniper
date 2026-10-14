@@ -104,6 +104,9 @@ namespace SniperDuel.EditorTools
             PlayerSettings.iOS.appleEnableAutomaticSigning = false;
             PlayerSettings.iOS.requiresFullScreen = true;
             PlayerSettings.iOS.hideHomeButton = true;
+            // A thumb sliding off the fire button or a scope knob toward the edge mustn't pull up the
+            // home bar or Control Centre: the first swipe at the top and bottom edges goes to the game.
+            PlayerSettings.iOS.deferSystemGesturesMode = UnityEngine.iOS.SystemGestureDeferMode.TopEdge | UnityEngine.iOS.SystemGestureDeferMode.BottomEdge;
             PlayerSettings.statusBarHidden = true;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.iOS, ScriptingImplementation.IL2CPP);
 

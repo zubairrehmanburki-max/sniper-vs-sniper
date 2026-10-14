@@ -425,7 +425,7 @@ namespace SniperDuel.Game
         // ---- menus -------------------------------------------------------------------------
 
         /// <summary>Taps whose action makes its own sound (the rifle and scope controls).</summary>
-        static readonly HashSet<string> OwnSound = new HashSet<string> { "fire", "elevUp", "elevDown", "windLeft", "windRight", "zoomIn", "zoomOut", "scope", "exit" };
+        static readonly HashSet<string> OwnSound = new HashSet<string> { "scope", "exit" };
         static readonly HashSet<string> Confirms = new HashSet<string> { "deploy", "find", "quickplay", "rematch", "equip", "save", "continue", "bot" };
         static readonly HashSet<string> Backs = new HashSet<string> { "back", "cancel" };
 

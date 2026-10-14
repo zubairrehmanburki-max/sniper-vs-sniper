@@ -68,10 +68,15 @@ namespace SniperDuel.Game.Ui
             if (safe == null || Screen.width == 0) return;
             float scale = Mathf.Min(Screen.width / RefWidth, Screen.height / RefHeight);
             var sa = Screen.safeArea;
-            // The mockups already keep a 20 px margin; only the part of the inset beyond that counts.
+            // The mockups already keep a 20 px margin at the sides; only the part of the inset beyond
+            // that counts. Top and bottom (the home indicator) keep a smaller margin, so most of
+            // their inset counts. Screen.safeArea measures y up from the bottom.
             float left = Mathf.Max(0, sa.xMin / scale - 12), right = Mathf.Max(0, (Screen.width - sa.xMax) / scale - 12);
+            float bottom = Mathf.Max(0, sa.yMin / scale - 8), top = Mathf.Max(0, (Screen.height - sa.yMax) / scale - 8);
             safe.style.left = left;
             safe.style.right = right;
+            safe.style.top = top;
+            safe.style.bottom = bottom;
         }
 
         /// <summary>Raised once per screen when its layout is first built, for screen-specific setup.</summary>

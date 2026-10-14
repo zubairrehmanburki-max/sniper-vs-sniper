@@ -9,12 +9,14 @@ namespace SniperDuel.Game
     /// Drives the custom HUD editor: three layouts, tap an element to select it, size and opacity
     /// sliders, mirror, the hold-to-fire switch (the same option as in Settings), reset and save.
     /// Edits are pending until SAVE; closing discards them. Saved layouts live in PlayerPrefs and
-    /// the active one is applied to the duel HUD (fire button, wind panel, range card).
+    /// the active one is applied to the duel screens (the HUD outside the scope and the scope view).
     /// </summary>
     public sealed class HudLayoutMenu
     {
-        static readonly string[] Ids = { "card", "compass", "score", "wind", "ammo", "fire", "scope", "breath", "stance" };
-        static readonly string[] Names = { "RANGE CARD", "COMPASS", "SCORE + TIMER", "WIND", "AMMO + TOOLS", "FIRE BUTTON", "SCOPE BUTTON", "BREATH", "STANCE" };
+        static readonly string[] Ids = { "score", "wind", "dials", "dialled", "laser", "fire", "scope" };
+        /// <summary>The element each one is in the duel screens (Hud outside the scope, Scope inside).</summary>
+        static readonly string[] Binds = { "scoreBox", "windBox", "dials", "dialled", "lrfBox", "fireRing", "scopeBtn" };
+        static readonly string[] Names = { "SCORE + TIMER", "WIND", "SCOPE DIALS", "DIALLED READ-OUT", "LASER", "FIRE BUTTON", "SCOPE IN / OUT" };
         const int Layouts = 3, Fire = 5;
         const int SizeMin = 60, SizeMax = 150, SizeStep = 10, OpacityMin = 20, OpacityMax = 100, OpacityStep = 5;
 
@@ -46,7 +48,7 @@ namespace SniperDuel.Game
             }
             Slider("size", SizeMin, SizeMax, SizeStep, () => size[selected], v => size[selected] = v);
             Slider("opacity", OpacityMin, OpacityMax, OpacityStep, () => opacity[selected], v => opacity[selected] = v);
-            s.On("release", () => { Settings.FireHold = !Settings.FireHold; status = Settings.FireHold ? "Fire needs a short hold." : "Fire on tap."; Render(); });
+            s.On("release", () => { Settings.FireHold = !Settings.FireHold; status = Settings.FireHold ? "Release fires only after a short hold." : "A quick tap fires."; Render(); });
             s.On("mirror", () => { mirror = !mirror; Edited(); });
             s.On("reset", () =>
             {
@@ -179,20 +181,24 @@ namespace SniperDuel.Game
             s.Text(id + "-value", v + "%");
         }
 
-        /// <summary>Applies the active saved layout to the duel HUD where it has matching elements.</summary>
-        public static void ApplyTo(UiScreen hud)
+        /// <summary>
+        /// Applies the active saved layout to a duel screen (the HUD outside the scope, or the scope
+        /// view) where it has matching elements. `baseScale` is the HUD scale already set on the
+        /// screen's top-level groups, kept for those.
+        /// </summary>
+        public static void ApplyTo(UiScreen screen, float baseScale = 1)
         {
             int l = Active;
-            void Set(VisualElement? e, int el)
+            var layer = screen.Root.childCount > 0 ? screen.Root[0] : null;
+            for (int i = 0; i < Ids.Length; i++)
             {
-                if (e == null) return;
-                float sz = Mathf.Clamp(PlayerPrefs.GetInt(Key(l, el, "size"), 100), SizeMin, SizeMax) / 100f;
+                if (!screen.Has(Binds[i])) continue;
+                var e = screen[Binds[i]];
+                float sz = Mathf.Clamp(PlayerPrefs.GetInt(Key(l, i, "size"), 100), SizeMin, SizeMax) / 100f;
+                if (e.parent == layer) sz *= baseScale;
                 e.style.scale = new Scale(new Vector2(sz, sz));
-                e.style.opacity = Mathf.Clamp(PlayerPrefs.GetInt(Key(l, el, "opacity"), 100), OpacityMin, OpacityMax) / 100f;
+                e.style.opacity = Mathf.Clamp(PlayerPrefs.GetInt(Key(l, i, "opacity"), 100), OpacityMin, OpacityMax) / 100f;
             }
-            if (hud.Has("fireBtn")) Set(hud["fireBtn"], Fire);
-            if (hud.Has("windArrow0")) Set(hud["windArrow0"].parent?.parent?.parent, 3);
-            if (hud.Has("cardTarget")) Set(hud["cardTarget"].parent?.parent, 0);
         }
     }
 }

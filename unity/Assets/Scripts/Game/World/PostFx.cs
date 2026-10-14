@@ -6,15 +6,17 @@ namespace SniperDuel.Game.World
 {
     /// <summary>
     /// The camera's film look: ACES tonemapping, soft bloom on the sun and water glints, a touch of
-    /// contrast and a light vignette. One global volume; the scope view draws its own vignette,
-    /// fringing and lens tint on top (ScopeMask), and the glass adds a little contrast (Scope). The
-    /// X-ray kill cam drains and darkens the frame (Xray) and flashes it white at the impact (Flash).
+    /// contrast and a light vignette. One global volume; the scope view draws its own vignette and
+    /// tube on top (ScopeMask), the glass adds a little contrast (Scope) and goes soft while the side
+    /// focus is off the range (Defocus). The X-ray kill cam drains and darkens the frame (Xray) and
+    /// flashes it white at the impact (Flash).
     /// </summary>
     public static class PostFx
     {
         static ColorAdjustments? grade;
         static Vignette? vignette;
-        static float scope = -1, xray, flash;
+        static DepthOfField? dof;
+        static float scope = -1, xray, flash, defocus;
 
         public static Volume Setup(Camera cam, Transform parent)
         {
@@ -45,6 +47,8 @@ namespace SniperDuel.Game.World
             vignette = profile.Add<Vignette>(true);
             vignette.intensity.Override(0.22f);
             vignette.smoothness.Override(0.45f);
+            dof = profile.Add<DepthOfField>(true);
+            dof.mode.Override(DepthOfFieldMode.Off);
             Apply();
             return volume;
         }
@@ -58,6 +62,18 @@ namespace SniperDuel.Game.World
             amount = Mathf.Clamp01(amount);
             if (Mathf.Abs(amount - scope) < 0.005f) return;
             scope = amount;
+            Apply();
+        }
+
+        /// <summary>
+        /// The scope's side focus set wrong, 0 sharp to 1 fully soft: a gaussian depth of field
+        /// that softens the far picture until the focus knob matches the range.
+        /// </summary>
+        public static void Defocus(float amount)
+        {
+            amount = Mathf.Clamp01(amount);
+            if (Mathf.Abs(amount - defocus) < 0.01f && (amount > 0 || defocus == 0)) return;
+            defocus = amount;
             Apply();
         }
 
@@ -87,6 +103,19 @@ namespace SniperDuel.Game.World
             grade.contrast.Override(Mathf.Lerp(12f, 18f, sc) + 14f * xray);
             grade.saturation.Override(Mathf.Lerp(-6f, 0f, sc) - 35f * xray);
             if (vignette != null) vignette.intensity.Override(0.22f + 0.2f * xray);
+            if (dof != null)
+            {
+                if (defocus < 0.03f) dof.mode.Override(DepthOfFieldMode.Off);
+                else
+                {
+                    // Everything from well short of the target out goes soft, more as the focus is further off.
+                    dof.mode.Override(DepthOfFieldMode.Gaussian);
+                    dof.gaussianStart.Override(Mathf.Lerp(300f, 20f, defocus));
+                    dof.gaussianEnd.Override(Mathf.Lerp(700f, 120f, defocus));
+                    dof.gaussianMaxRadius.Override(Mathf.Lerp(0.6f, 1.5f, defocus));
+                    dof.highQualitySampling.Override(true);
+                }
+            }
         }
     }
 }

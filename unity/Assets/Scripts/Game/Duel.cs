@@ -57,18 +57,33 @@ namespace SniperDuel.Game
         Stance playerStanceShown = (Stance)(-1);
         Vec3 playerPosShown;
 
+        /// <summary>Side focus (parallax) knob position, 0 to ScopeDials.FocusMax; starts near, so the far bridge is soft until it is set.</summary>
+        double focus = 2;
+        string laserText = "--- m";
+
+        /// <summary>The finger aiming by dragging the screen, and the screen root that holds it.</summary>
         int? lookPointer;
+        VisualElement? lookRoot;
         Vector2 lookLast;
-        bool zoomDragging;
+        /// <summary>The thumb on the scope's fire button: holding breath, fine-aiming, firing on release.</summary>
+        int? firePointer;
+        VisualElement? firePad, fireButton;
+        Vector2 fireLast;
+        bool fireCancel;
         float fireDownAt = -10;
+        bool breathSpent;
+        /// <summary>The fire button's how-to shows until it is first used.</summary>
+        static bool fireTaught;
         /// <summary>With the hold-to-fire setting, how long the fire button must be held.</summary>
         const float FireHoldSeconds = 0.3f;
+        /// <summary>Aim per thumb movement on the fire button, relative to dragging the screen.</summary>
+        const float FineAim = 0.3f;
+        /// <summary>How far the thumb can wander from the fire button's centre, in button radii, before release cancels.</summary>
+        const float FireReach = 1.45f;
         bool director;
 
         /// <summary>Seconds to bring the rifle from the shoulder to the eye, and to lower it again.</summary>
         const float RaiseSeconds = 0.42f, LowerSeconds = 0.26f;
-        /// <summary>Magnification steps for the zoom buttons (clamped to the scope's range).</summary>
-        static readonly int[] ZoomLevels = { 5, 8, 10, 12, 15, 18, 20, 25 };
         /// <summary>0 rifle shouldered (or third person), 1 eye at the scope.</summary>
         float raise;
         /// <summary>+1 raising to the scope, -1 lowering out of it, 0 still.</summary>
@@ -94,7 +109,6 @@ namespace SniperDuel.Game
                 new PlayerSetup(playerName, rifleId),
                 new PlayerSetup(Catalog.BotName(bot), botRifle, bot)), 0, cfg);
             d.zoom = (int)Math.Round((cfg.Scope.MinZoom + cfg.Scope.MaxZoom) / 2);
-            ScopeReticle.Holds = Holdovers(cfg, rifleId, Match.ActiveConditions(d.State).Atmosphere);
             d.BindScreens();
             d.EnterPhase();
             d.LookAtEnemy();
@@ -106,125 +120,195 @@ namespace SniperDuel.Game
 
         void BindScreens()
         {
+            // Outside the scope: turn the knobs on the rifle's scope, drag elsewhere to look, scope in.
             var hud = ui.Get("Hud");
             hud.On("scope", () => SetScoped(true));
-            hud.On("fire", Fire);
-            hud.On("lrf", Laser);
-            hud.On("dope", () => Call(Solution()));
             hud.On("pause", Quit);
-            hud.On("prone", () => Call("Stance is fixed on this map"));
-            hud.On("crouch", () => Call("Stance is fixed on this map"));
-            hud.OnHold("breath", SetBreath);
+            // The marker shows a range only once the laser has measured one.
+            hud.Text("markerRange", "");
             Look(hud.Root);
-            ApplyHudSettings(hud);
-            HudLayoutMenu.ApplyTo(hud);
+            ApplyHudSettings(hud, ui.Get("Scope"));
+            HudLayoutMenu.ApplyTo(hud, Settings.HudScales[Settings.HudScale] / 100f);
+            ScopeDials.MinElevation = -2;
+            ScopeDials.MaxElevation = cfg.Scope.MaxElevationMrad;
+            ScopeDials.MaxWindage = cfg.Scope.MaxWindageMrad;
+            ScopeDials.MinZoom = (int)cfg.Scope.MinZoom;
+            ScopeDials.MaxZoom = (int)cfg.Scope.MaxZoom;
+            ScopeDials.Turned = Turn;
 
+            // Inside: one fire button (hold breath, fine-aim, release to fire), the laser, scope out.
             var scope = ui.Get("Scope");
             scope.On("exit", () => SetScoped(false));
-            scope.On("fire", Fire);
-            scope.On("elevUp", () => Dial(ref elevMrad, 1, cfg.Scope.MaxElevationMrad, -2, true));
-            scope.On("elevDown", () => Dial(ref elevMrad, -1, cfg.Scope.MaxElevationMrad, -2, true));
-            scope.On("windRight", () => Dial(ref windMrad, 1, cfg.Scope.MaxWindageMrad, -cfg.Scope.MaxWindageMrad, false));
-            scope.On("windLeft", () => Dial(ref windMrad, -1, cfg.Scope.MaxWindageMrad, -cfg.Scope.MaxWindageMrad, false));
-            scope.OnHold("breath", SetBreath);
-            scope.On("zoomIn", () => ZoomStep(1));
-            scope.On("zoomOut", () => ZoomStep(-1));
+            scope.On("lrf", Laser);
             Look(scope.Root);
-            foreach (var screen in new[] { hud, scope })
-                if (screen.Has("fireBtn"))
-                    screen["fireBtn"].RegisterCallback<PointerDownEvent>(_ => fireDownAt = Time.unscaledTime, TrickleDown.TrickleDown);
-            if (scope.Has("zoomTrack"))
-            {
-                var track = scope["zoomTrack"];
-                track.RegisterCallback<PointerDownEvent>(e => { zoomDragging = true; track.CapturePointer(e.pointerId); ZoomFrom(track, e.localPosition); e.StopPropagation(); });
-                track.RegisterCallback<PointerMoveEvent>(e => { if (zoomDragging) ZoomFrom(track, e.localPosition); });
-                track.RegisterCallback<PointerUpEvent>(e => { zoomDragging = false; track.ReleasePointer(e.pointerId); });
-            }
+            HudLayoutMenu.ApplyTo(scope);
+            if (scope.Has("fireRing")) FirePad(scope["fireRing"]);
         }
 
-        void ZoomFrom(VisualElement track, Vector3 local)
+        /// <summary>A knob on the scope turned by some detents: a click and a buzz for each move.</summary>
+        void Turn(ScopeDials.Dial dial, int clicks)
         {
-            float h = Mathf.Max(1, track.layout.height);
-            float f = 1 - Mathf.Clamp01(local.y / h);
-            int was = zoom;
-            zoom = (int)Math.Round(cfg.Scope.MinZoom + f * (cfg.Scope.MaxZoom - cfg.Scope.MinZoom));
-            if (zoom != was) Sound.Zoom();
-        }
-
-        void ZoomStep(int dir)
-        {
-            int next = zoom;
-            if (dir > 0)
+            switch (dial)
             {
-                foreach (int z in ZoomLevels)
-                    if (z > zoom) { next = z; break; }
+                case ScopeDials.Dial.Elevation:
+                    Dial(ref elevMrad, clicks, cfg.Scope.MaxElevationMrad, -2, true);
+                    break;
+                case ScopeDials.Dial.Windage:
+                    Dial(ref windMrad, clicks, cfg.Scope.MaxWindageMrad, -cfg.Scope.MaxWindageMrad, false);
+                    break;
+                case ScopeDials.Dial.Zoom:
+                {
+                    int was = zoom;
+                    zoom = (int)Math.Max(cfg.Scope.MinZoom, Math.Min(cfg.Scope.MaxZoom, zoom + clicks));
+                    if (zoom == was) break;
+                    Sound.Zoom();
+                    Haptics.Click();
+                    break;
+                }
+                case ScopeDials.Dial.Focus:
+                {
+                    double was = focus;
+                    focus = Math.Max(0, Math.Min(ScopeDials.FocusMax, Math.Round(focus * 10 + clicks) / 10));
+                    if (focus == was) break;
+                    Sound.Zoom();
+                    Haptics.Click();
+                    break;
+                }
             }
-            else
-            {
-                for (int i = ZoomLevels.Length - 1; i >= 0; i--)
-                    if (ZoomLevels[i] < zoom) { next = ZoomLevels[i]; break; }
-            }
-            int was = zoom;
-            zoom = (int)Math.Max(cfg.Scope.MinZoom, Math.Min(cfg.Scope.MaxZoom, next));
-            if (zoom != was) Sound.Zoom();
-            Haptics.Click();
         }
 
         /// <summary>
-        /// Elevation holds for the reticle's range marks: mrad up from the rifle's zero at each 100 m
-        /// from 200 m out to where the bullet still reaches, in the map's air.
+        /// Drag on empty screen to aim: up looks up, left looks left. The first finger down keeps
+        /// the aim until it lifts (or the system cancels it); a second finger landing on empty
+        /// screen is ignored, so a thumb that misses a button can't steal the aim.
         /// </summary>
-        public static List<(double range, double mrad)> Holdovers(GameConfig cfg, string rifleId, Atmosphere atmosphere)
-        {
-            var holds = new List<(double, double)>();
-            try
-            {
-                var shot = RifleSetup.RifleShot(cfg.RifleById(rifleId), cfg);
-                var env = new SniperDuel.Ballistics.Environment { Atmosphere = atmosphere };
-                for (double r = 200; r <= 1200; r += 100)
-                {
-                    var row = Solutions.DopeTable(shot, env, new[] { r })[0];
-                    holds.Add((r, row.ElevationMrad));
-                }
-            }
-            catch (Exception e) when (e is InvalidOperationException || e is KeyNotFoundException)
-            {
-                // Past the bullet's reach (or an unknown rifle): keep the ranges found so far.
-            }
-            return holds;
-        }
-
-        /// <summary>Drag on empty screen to aim; scaled to the field of view so the scope stays usable.</summary>
         void Look(VisualElement root)
         {
             root.pickingMode = PickingMode.Position;
             root.RegisterCallback<PointerDownEvent>(e =>
             {
+                // Screens outlive a duel; a finished one (destroyed) leaves the input alone.
+                if (!this) return;
                 for (var t = e.target as VisualElement; t != null && t != root; t = t.parent)
                     if (t.ClassListContains(Layout.ActionClass)) return;
+                // Still held by a live finger: keep it.
+                if (lookPointer != null && lookRoot != null && lookRoot.HasPointerCapture(lookPointer.Value)) return;
                 lookPointer = e.pointerId;
+                lookRoot = root;
                 lookLast = e.position;
                 root.CapturePointer(e.pointerId);
             });
             root.RegisterCallback<PointerMoveEvent>(e =>
             {
-                if (lookPointer != e.pointerId) return;
+                if (lookPointer != e.pointerId || lookRoot != root) return;
                 Vector2 p = e.position;
-                var d = p - lookLast;
+                Steer(p - lookLast, 1);
                 lookLast = p;
-                double radPerUnit = SensitivityFov() * Mathf.Deg2Rad / UiHost.RefHeight * 0.9
-                    * (scoped ? Settings.ScopeSensitivity : Settings.LookSensitivity);
-                if (scoped && Settings.InvertScopeDrag) d = -d;
-                if (Settings.InvertLookY) d.y = -d.y;
-                yaw += d.x * radPerUnit;
-                pitch = Math.Max(-0.3, Math.Min(0.3, pitch + d.y * radPerUnit * Settings.VerticalSensitivity));
             });
-            root.RegisterCallback<PointerUpEvent>(e =>
+            root.RegisterCallback<PointerUpEvent>(e => EndLook(root, e.pointerId, true));
+            root.RegisterCallback<PointerCancelEvent>(e => EndLook(root, e.pointerId, true));
+            root.RegisterCallback<PointerCaptureOutEvent>(e => EndLook(root, e.pointerId, false));
+        }
+
+        void EndLook(VisualElement root, int pointerId, bool release)
+        {
+            if (lookPointer != pointerId || lookRoot != root) return;
+            lookPointer = null;
+            lookRoot = null;
+            if (release && root.HasPointerCapture(pointerId)) root.ReleasePointer(pointerId);
+        }
+
+        /// <summary>Lets go of any aiming finger (the screen it was on is going away).</summary>
+        void DropLook()
+        {
+            int? id = lookPointer;
+            var root = lookRoot;
+            lookPointer = null;
+            lookRoot = null;
+            if (id != null && root != null && root.HasPointerCapture(id.Value)) root.ReleasePointer(id.Value);
+        }
+
+        /// <summary>
+        /// Turns the aim by a drag in UI units, scaled to the field of view so the scope stays
+        /// usable. Screen y runs down, so dragging up (negative y) raises the view.
+        /// </summary>
+        void Steer(Vector2 d, float gain)
+        {
+            double radPerUnit = SensitivityFov() * Mathf.Deg2Rad / UiHost.RefHeight * 0.9
+                * (scoped ? Settings.ScopeSensitivity : Settings.LookSensitivity) * gain;
+            if (scoped && Settings.InvertScopeDrag) d = -d;
+            if (Settings.InvertLookY) d.y = -d.y;
+            yaw += d.x * radPerUnit;
+            pitch = Math.Max(-0.3, Math.Min(0.3, pitch - d.y * radPerUnit * Settings.VerticalSensitivity));
+        }
+
+        /// <summary>
+        /// The scope's one fire button. Press and hold: the breath is held (the ring drains).
+        /// Sliding the same thumb nudges the aim, slowly, for the last fine correction. Lifting
+        /// fires. Sliding well off the button arms a cancel: lifting there doesn't shoot, sliding
+        /// back re-arms. The thumb is captured, so drifting never drops the breath.
+        /// </summary>
+        void FirePad(VisualElement pad)
+        {
+            firePad = pad;
+            pad.pickingMode = PickingMode.Position;
+            pad.AddToClassList(Layout.ActionClass);
+            var button = fireButton = ui.Get("Scope").Has("fireBtn") ? ui.Get("Scope")["fireBtn"] : pad;
+            pad.RegisterCallback<PointerDownEvent>(e =>
             {
-                if (lookPointer != e.pointerId) return;
-                lookPointer = null;
-                root.ReleasePointer(e.pointerId);
+                e.StopPropagation();
+                if (!this || firePointer != null) return;
+                firePointer = e.pointerId;
+                fireLast = e.position;
+                fireCancel = false;
+                fireDownAt = Time.unscaledTime;
+                fireTaught = true;
+                pad.CapturePointer(e.pointerId);
+                button.style.scale = new Scale(new Vector2(0.94f, 0.94f));
+                SetBreath(true);
             });
+            pad.RegisterCallback<PointerMoveEvent>(e =>
+            {
+                if (firePointer != e.pointerId) return;
+                Vector2 p = e.position;
+                var box = pad.worldBound;
+                bool off = (p - box.center).magnitude > box.width * 0.5f * FireReach;
+                if (off != fireCancel)
+                {
+                    fireCancel = off;
+                    Haptics.Click();
+                }
+                if (!off) Steer(p - fireLast, FineAim);
+                fireLast = p;
+            });
+            pad.RegisterCallback<PointerUpEvent>(e => EndFire(e.pointerId, shoot: true));
+            pad.RegisterCallback<PointerCancelEvent>(e => EndFire(e.pointerId, shoot: false));
+            pad.RegisterCallback<PointerCaptureOutEvent>(e => EndFire(e.pointerId, shoot: false));
+
+            void EndFire(int id, bool shoot)
+            {
+                if (firePointer != id) return;
+                firePointer = null;
+                if (pad.HasPointerCapture(id)) pad.ReleasePointer(id);
+                button.style.scale = new Scale(Vector2.one);
+                bool cancelled = fireCancel;
+                fireCancel = false;
+                // The shot goes while the breath is still held; then the breath is let go.
+                if (shoot && !cancelled) Fire();
+                else if (shoot) Call("Shot cancelled");
+                SetBreath(false);
+            }
+        }
+
+        /// <summary>Lets go of the fire button without shooting (scoping out, the screen changing).</summary>
+        void DropFire()
+        {
+            int? id = firePointer;
+            firePointer = null;
+            fireCancel = false;
+            if (id != null && firePad != null && firePad.HasPointerCapture(id.Value)) firePad.ReleasePointer(id.Value);
+            if (fireButton != null) fireButton.style.scale = new Scale(Vector2.one);
+            SetBreath(false);
         }
 
         /// <summary>
@@ -235,18 +319,43 @@ namespace SniperDuel.Game
             scoped && Settings.ScopeScaling == 1 ? Math.Pow(Fov(), 0.8) * Math.Pow(cfg.Scope.EyeFovDeg, 0.2) : Fov();
 
         /// <summary>The HUD options from Settings: which panels show, opacity and scale.</summary>
-        static void ApplyHudSettings(UiScreen hud)
+        static void ApplyHudSettings(UiScreen hud, UiScreen scope)
         {
-            // The wind panel and range card have no bind of their own; reach them from their contents.
-            if (hud.Has("windArrow0") && hud["windArrow0"].parent?.parent?.parent is VisualElement wind)
-                wind.style.display = Settings.WindArrows ? DisplayStyle.Flex : DisplayStyle.None;
-            if (hud.Has("cardTarget") && hud["cardTarget"].parent?.parent is VisualElement card)
-                card.style.display = Settings.RangeCard ? DisplayStyle.Flex : DisplayStyle.None;
+            foreach (var s in new[] { hud, scope })
+            {
+                s.Show("windBox", Settings.WindArrows);
+                s.Show("dialled", Settings.RangeCard);
+            }
+            foreach (var card in new[] { "cardElevBox", "cardWindBox", "cardZoomBox", "cardFocusBox" })
+                hud.Show(card, Settings.RangeCard);
             hud.Show("marker", Settings.RangeMarker);
             hud.Show("crosshair", Settings.Crosshair);
             hud.Root.style.opacity = Settings.HudOpacity;
+            // Each group shrinks toward the corner or edge it is anchored to, so corners stay put.
             float scale = Settings.HudScales[Settings.HudScale] / 100f;
-            foreach (var top in hud.Root.Children()) top.style.scale = new Scale(new Vector2(scale, scale));
+            foreach (var layer in hud.Root.Children())
+            foreach (var top in layer.Children())
+            {
+                float x = Origin(top.style.left, top.style.right, top.style.width, UiHost.RefWidth);
+                float y = Origin(top.style.top, top.style.bottom, top.style.height, UiHost.RefHeight);
+                top.style.transformOrigin = new TransformOrigin(Length.Percent(x), Length.Percent(y), 0);
+                top.style.scale = new Scale(new Vector2(scale, scale));
+            }
+        }
+
+        /// <summary>
+        /// Where along one axis a HUD group should shrink toward, in percent: the far edge when it is
+        /// anchored there, the near edge when it sits in the near third, else its middle.
+        /// </summary>
+        static float Origin(StyleLength near, StyleLength far, StyleLength size, float span)
+        {
+            bool n = near.keyword == StyleKeyword.Undefined, f = far.keyword == StyleKeyword.Undefined;
+            if (n && f) return 50;
+            if (f) return 100;
+            if (!n) return 50;
+            if (near.value.unit != LengthUnit.Pixel) return 0;
+            float centre = near.value.value + (size.keyword == StyleKeyword.Undefined && size.value.unit == LengthUnit.Pixel ? size.value.value / 2 : 0);
+            return centre < span / 3 ? 0 : centre > span * 2 / 3 ? 100 : 50;
         }
 
         void ShowHud()
@@ -274,6 +383,9 @@ namespace SniperDuel.Game
                 if (raise <= 0) ui.Show("Hud");
                 return;
             }
+            // The screen changes under any finger still down: nothing carries over, and the breath goes.
+            DropLook();
+            DropFire();
             scoped = false;
             raising = on ? 1 : -1;
             Sound.Raise(on);
@@ -316,7 +428,7 @@ namespace SniperDuel.Game
             bool was = breath.Holding;
             float strain = Strain();
             breath = hold ? Sway.HoldBreath(breath, time, cfg) : Sway.ReleaseBreath(breath, time, cfg);
-            // Release fires on pointer-up and on leave; only a real change makes a sound.
+            // Only a real change makes a sound (scoping out lets go of a breath that was never held).
             if (breath.Holding != was) Sound.Breath(breath.Holding, strain);
         }
 
@@ -379,7 +491,7 @@ namespace SniperDuel.Game
             }
             else if (s.Phase == PhaseKind.Shot)
             {
-                Call(s.Actor == Me ? "Your shot. Dial, hold your breath, squeeze." : "Enemy shot. Stay still.");
+                Call(s.Actor == Me ? "Your shot. Set the dials, scope in, hold fire and let go." : "Enemy shot. Stay still.");
             }
             else if (s.Phase == PhaseKind.Move && s.Actor == Me)
             {
@@ -559,24 +671,15 @@ namespace SniperDuel.Game
             if (scoped && Settings.UnscopeAfterShot) SetScoped(false);
         }
 
+        /// <summary>The laser rangefinder: measures along the line of sight and shows it. It never dials anything.</summary>
         void Laser()
         {
             var e = State.Players[Side.B];
             var targets = new List<Silhouette> { Combat.SilhouetteFor("B", e.Position, e.Stance, Combat.FacingYaw(Side.B), cfg) };
             var d = Hits.Rangefind(Eye(), TrueAim(), targets, map.Ground, 3000, map.Cover);
             Call(d.HasValue ? $"Laser: {d.Value:0} m" : "Laser: no return");
-            if (d.HasValue)
-            {
-                ui.Get("Scope").Text("lrf", $"LRF {d.Value:0} m");
-                ui.Get("Hud").Text("markerRange", $"{d.Value:0} m");
-            }
-        }
-
-        string Solution()
-        {
-            var e = State.Players[Side.B];
-            double range = Math.Abs(e.Position.Z - State.Players[Me].Position.Z);
-            return $"Range {range:0} m · dial {Fmt(elevMrad, "U", "D")} · {Fmt(windMrad, "R", "L")}";
+            laserText = d.HasValue ? $"{d.Value:0} m" : "no return";
+            if (d.HasValue) ui.Get("Hud").Text("markerRange", $"{d.Value:0} m");
         }
 
         static string Fmt(double mrad, string pos, string neg) =>
@@ -621,7 +724,12 @@ namespace SniperDuel.Game
             rig.Kick = (float)recoil;
             ScopeEye(dt);
             PostFx.Scope(scoped ? scopeOpen : 0);
-            ScopeReticle.DialMrad = elevMrad;
+            PostFx.Defocus(scoped && !director ? Defocus() * scopeOpen : 0);
+            ScopeDials.Elevation = elevMrad;
+            ScopeDials.Windage = windMrad;
+            ScopeDials.Zoom = zoom;
+            ScopeDials.Focus = focus;
+            Steadiness();
 
             var wind = Match.ActiveConditions(State).Wind;
             arena.SetWind(wind);
@@ -643,6 +751,51 @@ namespace SniperDuel.Game
             else if (shownFov <= 0) shownFov = target;
             else shownFov = Mathf.Exp(Mathf.Lerp(Mathf.Log(shownFov), Mathf.Log(target), 1 - Mathf.Exp(-dt * 9)));
             return shownFov;
+        }
+
+        /// <summary>
+        /// How soft the picture is with the side focus where it is: sharp within about 12% of the
+        /// target's range, fully soft by a factor of about 2.5 off.
+        /// </summary>
+        float Defocus()
+        {
+            var a = State.Players[Me].Position;
+            var b = State.Players[Side.B].Position;
+            double range = Math.Max(20, Math.Sqrt(Sq(b.X - a.X) + Sq(b.Z - a.Z)));
+            double set = Math.Min(20000, ScopeDials.FocusMetres(focus));
+            return Mathf.Clamp01((float)((Math.Abs(Math.Log(set / range)) - 0.12) / 0.8));
+        }
+
+        /// <summary>
+        /// The breath ring and the heart rate for the scope view. The ring drains over the steady
+        /// part of a held breath (a buzz when it runs out) and refills as the shooter recovers; the
+        /// pulse climbs with the strain and with a wound.
+        /// </summary>
+        void Steadiness()
+        {
+            var hb = cfg.Sway.HoldBreath;
+            double bf = Sway.BreathFactor(breath, time, cfg);
+            float recovering = Mathf.Clamp01((float)((bf - 1) / Math.Max(0.01, hb.MaxStrainFactor - 1)));
+            float left;
+            if (breath.Holding)
+            {
+                left = 1 - Mathf.Clamp01((float)((time - breath.Since) / Math.Max(0.1, hb.SteadySeconds)));
+                if (left <= 0 && !breathSpent)
+                {
+                    breathSpent = true;
+                    Haptics.Snap();
+                }
+            }
+            else
+            {
+                left = 1 - recovering;
+                breathSpent = false;
+            }
+            float strain = breath.Holding ? Strain() : recovering;
+            ScopeGauges.Breath = left;
+            ScopeGauges.Holding = breath.Holding;
+            ScopeGauges.Cancelling = firePointer != null && fireCancel;
+            ScopeGauges.Bpm = 66 + 56 * strain + (State.Players[Me].Wounds > 0 ? 14 : 0) + 1.5f * Mathf.Sin((float)time * 0.8f);
         }
 
         /// <summary>
@@ -677,7 +830,9 @@ namespace SniperDuel.Game
         {
             // Back to the bare eye for the menus.
             PostFx.Scope(0);
+            PostFx.Defocus(0);
             rig.Raise = 1;
+            if (ScopeDials.Turned?.Target == (object)this) ScopeDials.Turned = null;
         }
 
         void SyncEnemy()
@@ -714,59 +869,66 @@ namespace SniperDuel.Game
             string score = $"{s.Players.A.Kills} – {s.Players.B.Kills}";
             Color turnColor = s.Actor == Me ? new Color(0.95f, 0.70f, 0.24f) : new Color(0.90f, 0.28f, 0.23f);
             bool can = CanFire() && time - lastShotAt >= CycleSeconds;
+            string elev = Fmt(elevMrad, "U", "D"), windage = Fmt(windMrad, "R", "L");
+            string zoomText = $"{zoom}×", focusText = ScopeDials.FocusText(focus);
 
-            var hud = ui.Get("Hud");
-            hud.Text("turn", turn);
-            hud.Color("turn", turnColor);
-            hud.Text("timer", clock);
-            hud.Text("round", Match.IsSuddenDeath(s, cfg) ? $"ROUND {s.Round + 1} · SUDDEN DEATH" : $"ROUND {s.Round + 1} · FIRST TO {cfg.Rules.KillsToWin}");
-            hud.Text("enemy", s.Players.B.Name);
-            hud.Text("hint", hintTimer > 0 ? hint : "Drag to aim. Scope in to dial and fire.");
-            hud.Text("cardDial", $"{Fmt(elevMrad, "UP", "DN")} · {Fmt(windMrad, "R", "L")}");
-            double range = Math.Abs(s.Players.B.Position.Z - s.Players.A.Position.Z);
-            hud.Text("cardTarget", $"{range:0} m");
-            hud.Text("cardAngle", $"{pitch * Mathf.Rad2Deg:+0.0;−0.0}°");
+            // The mid-lane wind: speed, and an arrow showing where it blows relative to our facing.
             float heading = Mathf.Repeat((float)(yaw * Mathf.Rad2Deg), 360);
-            hud.Text("heading", $"{heading:000}°");
-            hud["fireBtn"].style.opacity = can ? 1 : 0.45f;
+            var mid = wind.Zones.Count > 1 ? wind.Zones[wind.Zones.Count / 2] : wind.Zones.Count > 0 ? wind.Zones[0] : new Vec3(0, 0, 0);
+            string windSpeed = $"{Math.Sqrt(mid.X * mid.X + mid.Z * mid.Z):0.0} m/s";
+            var u = Library.ToUnity(mid);
+            float windAngle = Mathf.Atan2(u.x, u.z) * Mathf.Rad2Deg - heading;
 
-            // Wind in the three lane zones, as speed across the lane and an arrow showing where it blows.
-            for (int i = 0; i < 3 && i < wind.Zones.Count; i++)
+            foreach (var screen in new[] { ui.Get("Hud"), ui.Get("Scope") })
             {
-                var w = wind.Zones[i];
-                float speed = (float)Math.Sqrt(w.X * w.X + w.Z * w.Z);
-                hud.Text("wind" + i, speed.ToString("0.0"));
-                if (hud.Has("windArrow" + i))
-                {
-                    // Arrow art points right at 90°; screen angle of the wind relative to our facing.
-                    var u = Library.ToUnity(w);
-                    float ang = Mathf.Atan2(u.x, u.z) * Mathf.Rad2Deg - heading;
-                    hud["windArrow" + i].style.rotate = new Rotate(Angle.Degrees(ang));
-                }
+                screen.Text("turn", turn);
+                screen.Color("turn", turnColor);
+                screen.Text("timer", clock);
+                screen.Text("score", score);
+                screen.Text("windSpeed", windSpeed);
+                screen.Text("windZone", "WIND · MID");
+                if (screen.Has("windArrow")) screen["windArrow"].style.rotate = new Rotate(Angle.Degrees(windAngle));
             }
 
+            var hud = ui.Get("Hud");
+            hud.Text("hint", hintTimer > 0 ? hint : "Drag the sky to look around");
+            hud.Text("cardElev", elev);
+            hud.Text("cardWind", windage);
+            hud.Text("cardZoom", zoomText);
+            hud.Text("cardFocus", focusText);
+            Marker(hud);
+
             var scope = ui.Get("Scope");
-            scope.Text("turn", turn);
-            scope.Color("turn", turnColor);
-            scope.Text("timer", clock);
-            scope.Text("score", score);
-            scope.Text("elev", elevMrad == 0 ? "0.0" : $"{(elevMrad > 0 ? "U" : "D")} {Math.Abs(elevMrad):0.0}");
-            scope.Text("windage", Fmt(windMrad, "R", "L"));
-            scope.Text("zoom", zoom.ToString());
-            scope.Text("mag", $"{cfg.Scope.FovAt1xDeg / Math.Max(0.01, rig.Fov):0.0}×");
-            float zf = (float)((zoom - cfg.Scope.MinZoom) / (cfg.Scope.MaxZoom - cfg.Scope.MinZoom));
-            if (scope.Has("zoomFill")) scope["zoomFill"].style.height = Length.Percent(zf * 100);
-            if (scope.Has("zoomKnob")) scope["zoomKnob"].style.bottom = new StyleLength(new Length(zf * 100, LengthUnit.Percent));
-            if (scope.Has("zoomKnob")) scope["zoomKnob"].style.marginBottom = -14;
-            var mid = wind.Zones.Count > 1 ? wind.Zones[wind.Zones.Count / 2] : wind.Zones.Count > 0 ? wind.Zones[0] : new Vec3(0, 0, 0);
-            scope.Text("windRead", $"{Math.Sqrt(mid.X * mid.X + mid.Z * mid.Z):0.0} m/s");
-            scope.Text("solutionLabel", $"Range {range:0} m");
+            scope.Text("dialZoom", zoomText);
+            scope.Text("dialElev", elev);
+            scope.Text("dialWind", windage);
+            scope.Text("dialFocus", focusText);
+            scope.Text("lrf", laserText);
             scope.Text("solution", hintTimer > 0 ? hint : "");
-            double bf = Sway.BreathFactor(breath, time, cfg);
-            float steady = Mathf.Clamp01((float)(1.6 - bf) / 1.2f);
-            scope.Fill("breath", steady);
-            scope.Text("breathText", breath.Holding ? (bf < 1 ? "STEADY" : "STRAINING") : bf > 1.05 ? "RECOVERING" : "BREATHE");
-            scope["fireBtn"].style.opacity = can ? 1 : 0.45f;
+            scope.Show("solution", hintTimer > 0);
+            scope.Show("fireTip", !fireTaught && !director);
+            scope.Show("fireCancel", firePointer != null && fireCancel);
+            if (scope.Has("fireBtn")) scope["fireBtn"].style.opacity = firePointer != null && fireCancel ? 0.35f : can ? 1 : 0.5f;
+        }
+
+        /// <summary>The enemy marker over their head, wherever they are on screen; hidden when behind or off it.</summary>
+        void Marker(UiScreen hud)
+        {
+            if (!hud.Has("marker")) return;
+            var marker = hud["marker"];
+            var root = marker.panel?.visualTree;
+            var e = State.Players[Side.B];
+            var head = Library.ToUnity(Combat.EyeOf(e.Position, e.Stance, cfg)) + Vector3.up * 0.6f;
+            var vp = rig.Cam.WorldToViewportPoint(head);
+            bool on = Settings.RangeMarker && root != null && marker.parent != null && vp.z > 0 && vp.x > 0.02f && vp.x < 0.98f && vp.y > 0.05f && vp.y < 0.95f;
+            marker.style.display = on ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!on) return;
+            var wb = root!.worldBound;
+            var at = marker.parent!.WorldToLocal(new Vector2(wb.xMin + vp.x * wb.width, wb.yMin + (1 - vp.y) * wb.height));
+            // The diamond's foot sits on the point; the range reads above it.
+            marker.style.left = at.x;
+            marker.style.top = at.y;
+            marker.style.translate = new Translate(Length.Percent(-50), Length.Percent(-100));
         }
     }
 }

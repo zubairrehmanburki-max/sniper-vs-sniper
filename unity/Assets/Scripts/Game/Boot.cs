@@ -53,9 +53,12 @@ namespace SniperDuel.Game
             ui = UiHost.Create();
             ui.Created += s =>
             {
+                if (s.Name == "Hud" && s.Has("dials")) ScopeDials.Attach(s["dials"]);
                 if (s.Name != "Scope") return;
                 if (s.Has("reticle")) ScopeReticle.Attach(s["reticle"]);
                 if (s.Has("mask")) ScopeMask.Attach(s["mask"]);
+                if (s.Has("heart")) ScopeGauges.AttachHeart(s["heart"]);
+                if (s.Has("fireRing")) ScopeGauges.AttachBreathRing(s["fireRing"]);
             };
             try { BuildArena("twin-bridges"); }
             catch (Exception e) { Debug.LogException(e); }
@@ -116,11 +119,21 @@ namespace SniperDuel.Game
             ScopeMask.Open = 1;
             // The scope shadow a little off centre, as with the eye a touch low and left.
             ScopeMask.EyeOffset = scope ? new Vector2(-9, 6) : Vector2.zero;
+            // The knobs as the mockup has them: 12×, up 3.1, right 0.5, focus 600 m; the breath part
+            // held and the pulse steady.
+            ScopeDials.Zoom = screen == "Scope25" ? (int)Config.Scope.MaxZoom : 12;
+            ScopeDials.Elevation = 3.1;
+            ScopeDials.Windage = 0.5;
+            ScopeDials.Focus = 3.6;
+            ScopeGauges.Bpm = 72;
+            ScopeGauges.Breath = 0.7f;
+            ScopeGauges.Holding = true;
             if (scope)
             {
                 var s = ui.Get("Scope");
-                s.Text("zoom", screen == "Scope25" ? $"{Config.Scope.MaxZoom:0}" : "12");
-                s.Text("mag", screen == "Scope25" ? $"{Config.Scope.MaxZoom:0.0}×" : "12.0×");
+                s.Text("dialZoom", $"{ScopeDials.Zoom}×");
+                s.Text("lrf", "641 m");
+                s.Show("solution", false);
             }
         }
 
@@ -128,8 +141,6 @@ namespace SniperDuel.Game
         {
             Directory.CreateDirectory(dir);
             int n = 0;
-            if (Config.Rifles.Count > 0 && arena != null)
-                ScopeReticle.Holds = Duel.Holdovers(Config, Config.Rifles[0].Id, RifleSetup.AtmosphereFor(0, 15, 0.5));
             foreach (var name in AllScreens)
             {
                 try { Frame(name); ui.Show(name); }

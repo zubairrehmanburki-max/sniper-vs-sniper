@@ -237,10 +237,27 @@ namespace SniperDuel.Game.Ui
             string? hold = node.Get("data-hold");
             if (hold != null)
             {
+                // The finger is captured: drifting off the element doesn't let go, only lifting
+                // (or the system cancelling the touch) does. A second finger is ignored.
                 e.pickingMode = PickingMode.Position;
-                e.RegisterCallback<PointerDownEvent>(_ => screen.Hold(hold, true), TrickleDown.TrickleDown);
-                e.RegisterCallback<PointerUpEvent>(_ => screen.Hold(hold, false));
-                e.RegisterCallback<PointerLeaveEvent>(_ => screen.Hold(hold, false));
+                int? holder = null;
+                void Release(int id, bool uncapture)
+                {
+                    if (holder != id) return;
+                    holder = null;
+                    if (uncapture && e.HasPointerCapture(id)) e.ReleasePointer(id);
+                    screen.Hold(hold, false);
+                }
+                e.RegisterCallback<PointerDownEvent>(ev =>
+                {
+                    if (holder != null) return;
+                    holder = ev.pointerId;
+                    e.CapturePointer(ev.pointerId);
+                    screen.Hold(hold, true);
+                }, TrickleDown.TrickleDown);
+                e.RegisterCallback<PointerUpEvent>(ev => Release(ev.pointerId, true));
+                e.RegisterCallback<PointerCancelEvent>(ev => Release(ev.pointerId, true));
+                e.RegisterCallback<PointerCaptureOutEvent>(ev => Release(ev.pointerId, false));
             }
             if (node.Tag == "button" || on != null || hold != null)
             {
@@ -306,11 +323,26 @@ namespace SniperDuel.Game.Ui
             }
         }
 
+        /// <summary>A slight press-in while held; restores whatever scale the element had (a HUD layout size).</summary>
         static void PressFeedback(VisualElement e)
         {
-            e.RegisterCallback<PointerDownEvent>(_ => e.style.scale = new Scale(new Vector2(0.96f, 0.96f)), TrickleDown.TrickleDown);
-            e.RegisterCallback<PointerUpEvent>(_ => e.style.scale = new Scale(Vector2.one));
-            e.RegisterCallback<PointerLeaveEvent>(_ => e.style.scale = new Scale(Vector2.one));
+            StyleScale? rest = null;
+            void Up()
+            {
+                if (rest == null) return;
+                e.style.scale = rest.Value;
+                rest = null;
+            }
+            e.RegisterCallback<PointerDownEvent>(_ =>
+            {
+                if (rest != null) return;
+                rest = e.style.scale;
+                var s = e.resolvedStyle.scale.value;
+                e.style.scale = new Scale(new Vector2(s.x, s.y) * 0.96f);
+            }, TrickleDown.TrickleDown);
+            e.RegisterCallback<PointerUpEvent>(_ => Up());
+            e.RegisterCallback<PointerLeaveEvent>(_ => Up());
+            e.RegisterCallback<PointerCancelEvent>(_ => Up());
         }
 
         /// <summary>
