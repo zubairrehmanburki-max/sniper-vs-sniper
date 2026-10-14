@@ -29,6 +29,8 @@ namespace SniperDuel.Game.World
             if (map.Water.HasValue) Land.Water(map, root);
             Structures.Build(map, root);
             Dressing.Build(map, root);
+            // Desert, harbor, alpine and range maps get their own terrain dressing.
+            Biomes.Build(map, root, arena.Flags);
             // The estuary maps get a city on the banks so the far horizon isn't empty water.
             if (map.Id == "twin-bridges") Skyline.Build(map, root, 260);
             // The towers stand in a drowned marsh; the rigs in open sea with a field round them.

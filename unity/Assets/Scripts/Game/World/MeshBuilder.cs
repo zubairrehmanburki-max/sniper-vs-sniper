@@ -252,6 +252,104 @@ namespace SniperDuel.Game.World
             }
         }
 
+        /// <summary>One flat-shaded triangle; front face where Cross(b − a, c − a) points. UVs projected on its main plane.</summary>
+        public void Triangle(Vector3 a, Vector3 b, Vector3 c)
+        {
+            var nm = Vector3.Cross(b - a, c - a).normalized;
+            int i = v.Count;
+            v.Add(a); v.Add(b); v.Add(c);
+            n.Add(nm); n.Add(nm); n.Add(nm);
+            uv.Add(Project(a, nm)); uv.Add(Project(b, nm)); uv.Add(Project(c, nm));
+            t.Add(i); t.Add(i + 1); t.Add(i + 2);
+        }
+
+        /// <summary>A quad a→b→c→d (clockwise seen from the front) with explicit UVs, for signs and labels.</summary>
+        public void Face(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector2 uvMin, Vector2 uvMax)
+        {
+            var nm = Vector3.Cross(b - a, c - a).normalized;
+            int i = v.Count;
+            v.Add(a); v.Add(b); v.Add(c); v.Add(d);
+            for (int k = 0; k < 4; k++) n.Add(nm);
+            uv.Add(new Vector2(uvMin.x, uvMin.y)); uv.Add(new Vector2(uvMin.x, uvMax.y));
+            uv.Add(new Vector2(uvMax.x, uvMax.y)); uv.Add(new Vector2(uvMax.x, uvMin.y));
+            t.Add(i); t.Add(i + 1); t.Add(i + 2);
+            t.Add(i); t.Add(i + 2); t.Add(i + 3);
+        }
+
+        /// <summary>
+        /// A building block: like Box, but side UVs start at the corner and at world height 0, so a
+        /// window texture lines up with the corners and every block's floors sit at the same heights.
+        /// </summary>
+        public void Block(Vector3 baseCenter, Vector3 size)
+        {
+            var h = new Vector3(size.x / 2, 0, size.z / 2);
+            Vector3 P(float x, float y, float z) => baseCenter + new Vector3(x * h.x, y * size.y, z * h.z);
+            float y0 = baseCenter.y;
+            Quad(P(-1, 1, -1), P(1, 1, -1), P(1, 1, 1), P(-1, 1, 1), Vector3.up, size.x, size.z, new Vector2(baseCenter.x, baseCenter.z));
+            Quad(P(1, 0, -1), P(1, 0, 1), P(1, 1, 1), P(1, 1, -1), Vector3.right, size.z, size.y, new Vector2(0, y0));
+            Quad(P(-1, 0, 1), P(-1, 0, -1), P(-1, 1, -1), P(-1, 1, 1), Vector3.left, size.z, size.y, new Vector2(0, y0));
+            Quad(P(1, 0, 1), P(-1, 0, 1), P(-1, 1, 1), P(1, 1, 1), Vector3.forward, size.x, size.y, new Vector2(0, y0));
+            Quad(P(-1, 0, -1), P(1, 0, -1), P(1, 1, -1), P(-1, 1, -1), Vector3.back, size.x, size.y, new Vector2(0, y0));
+        }
+
+        /// <summary>A round bar between two points at any angle (logs, poles, pipes, lattice members).</summary>
+        public void Tube(Vector3 from, Vector3 to, float radius, int sides = 8, bool caps = true)
+        {
+            var axis = to - from;
+            float len = axis.magnitude;
+            if (len < 1e-4f) return;
+            var dir = axis / len;
+            var side = Vector3.Cross(dir, Mathf.Abs(dir.y) > 0.95f ? Vector3.forward : Vector3.up).normalized;
+            var up = Vector3.Cross(side, dir);
+            float circ = 2 * Mathf.PI * radius;
+            Vector3 Ring(float a) => side * Mathf.Cos(a) + up * Mathf.Sin(a);
+            for (int s = 0; s < sides; s++)
+            {
+                float a0 = s * 2 * Mathf.PI / sides, a1 = (s + 1) * 2 * Mathf.PI / sides;
+                var r0 = Ring(a0) * radius;
+                var r1 = Ring(a1) * radius;
+                var nm = Ring((a0 + a1) / 2);
+                Quad(from + r0, from + r1, to + r1, to + r0, nm, circ / sides, len, new Vector2(circ * s / sides, 0));
+                if (!caps) continue;
+                Triangle(to, to + r1, to + r0);
+                Triangle(from, from + r0, from + r1);
+            }
+        }
+
+        /// <summary>A cone standing on its base (fir tiers, peaks, spires), flat-shaded.</summary>
+        public void Cone(Vector3 baseCenter, float radius, float height, int sides = 8, bool closed = true)
+        {
+            var apex = baseCenter + Vector3.up * height;
+            for (int s = 0; s < sides; s++)
+            {
+                float a0 = s * 2 * Mathf.PI / sides, a1 = (s + 1) * 2 * Mathf.PI / sides;
+                var p0 = baseCenter + new Vector3(Mathf.Cos(a0), 0, Mathf.Sin(a0)) * radius;
+                var p1 = baseCenter + new Vector3(Mathf.Cos(a1), 0, Mathf.Sin(a1)) * radius;
+                Triangle(p0, apex, p1);
+                if (closed) Triangle(p1, baseCenter, p0);
+            }
+        }
+
+        /// <summary>An indexed smooth-shaded mesh (boulders, mountains); UVs projected per vertex from its normal.</summary>
+        public void Smooth(IReadOnlyList<Vector3> verts, IReadOnlyList<Vector3> normals, IReadOnlyList<int> tris)
+        {
+            int i0 = v.Count;
+            for (int k = 0; k < verts.Count; k++)
+            {
+                v.Add(verts[k]);
+                n.Add(normals[k]);
+                uv.Add(Project(verts[k], normals[k]));
+            }
+            for (int k = 0; k < tris.Count; k++) t.Add(i0 + tris[k]);
+        }
+
+        Vector2 Project(Vector3 p, Vector3 nm)
+        {
+            float ax = Mathf.Abs(nm.x), ay = Mathf.Abs(nm.y), az = Mathf.Abs(nm.z);
+            var q = ay >= ax && ay >= az ? new Vector2(p.x, p.z) : ax >= az ? new Vector2(p.z, p.y) : new Vector2(p.x, p.y);
+            return q * UvScale;
+        }
+
         public Mesh Build(string name)
         {
             var m = new Mesh { name = name, indexFormat = v.Count > 65000 ? IndexFormat.UInt32 : IndexFormat.UInt16 };

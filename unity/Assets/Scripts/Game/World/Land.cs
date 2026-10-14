@@ -35,18 +35,15 @@ namespace SniperDuel.Game.World
             }
             data.SetHeights(0, 0, h);
 
-            // Layers: wet sand at the waterline, grass on gentle slopes, rock on steep ones, leaf litter in hollows.
-            var layers = new[]
-            {
-                Layer("coast_sand_rocks_02", 8),
-                Layer("sparse_grass", 10),
-                Layer("rocky_terrain_02", 14),
-                Layer("brown_mud_leaves_01", 9),
-            };
+            // Each map's own ground: four photo-scanned layers mixed by height, slope and noise (SoilFor).
+            var soil = SoilFor(map);
+            var layers = new TerrainLayer[soil.Layers.Length];
+            for (int k = 0; k < layers.Length; k++) layers[k] = Layer(soil.Layers[k]);
             data.terrainLayers = layers;
-            const int A = 512;
+            int A = soil.Resolution;
             data.alphamapResolution = A;
             var alpha = new float[A, A, layers.Length];
+            var w = new float[layers.Length];
             float water = (float)(map.Water ?? -1000);
             for (int iz = 0; iz < A; iz++)
             {
@@ -55,16 +52,12 @@ namespace SniperDuel.Game.World
                     float nx = (ix + 0.5f) / A, nz = (iz + 0.5f) / A;
                     float y = data.GetInterpolatedHeight(nx, nz) + MinY;
                     float slope = data.GetSteepness(nx, nz);
-                    float noise = Mathf.PerlinNoise(nx * 60, nz * 60);
-                    float sand = Mathf.Clamp01(1 - (y - water - 1.5f) / 3f);
-                    float rock = Mathf.Clamp01((slope - 24) / 12f);
-                    float litter = Mathf.Clamp01((noise - 0.55f) * 4) * (1 - rock);
-                    float grass = Mathf.Max(0, 1 - sand - rock - litter);
-                    float sum = sand + grass + rock + litter + 1e-5f;
-                    alpha[iz, ix, 0] = sand / sum;
-                    alpha[iz, ix, 1] = grass / sum;
-                    alpha[iz, ix, 2] = rock / sum;
-                    alpha[iz, ix, 3] = litter / sum;
+                    float n1 = Mathf.PerlinNoise(nx * 60, nz * 60);
+                    float n2 = Mathf.PerlinNoise(nx * 140 + 17.3f, nz * 140 + 5.1f);
+                    soil.Mix(origin.x + nx * Extent, origin.z + nz * Extent, y, slope, n1, n2, water, w);
+                    float sum = 1e-5f;
+                    for (int k = 0; k < w.Length; k++) sum += w[k] = Mathf.Max(0, w[k]);
+                    for (int k = 0; k < w.Length; k++) alpha[iz, ix, k] = w[k] / sum;
                 }
             }
             data.SetAlphamaps(0, 0, alpha);
@@ -75,7 +68,7 @@ namespace SniperDuel.Game.World
             go.transform.position = origin;
             var terrain = go.GetComponent<Terrain>();
             terrain.materialTemplate = new Material(Library.Template("Terrain"));
-            terrain.heightmapPixelError = 4;
+            terrain.heightmapPixelError = soil.PixelError;
             terrain.basemapDistance = 600;
             // Instanced terrain needs shader variants the template material doesn't carry, so the
             // build strips them and the terrain draws nothing; the plain path uses the template's.
@@ -84,19 +77,169 @@ namespace SniperDuel.Game.World
             return terrain;
         }
 
-        static TerrainLayer Layer(string id, float tile)
+        static TerrainLayer Layer((string id, string fallback, float tile, Color tint) l)
         {
+            // A texture the asset fetch couldn't get falls back to one it always has, tinted to suit.
+            string id = Library.Load<Texture2D>($"TP/Textures/{l.id}/{l.id}_diff_2k") != null ? l.id : l.fallback;
+            var tint = id == l.id ? l.tint : l.tint * FallbackTint(l.id);
             var layer = new TerrainLayer
             {
                 diffuseTexture = Library.Load<Texture2D>($"TP/Textures/{id}/{id}_diff_2k"),
                 normalMapTexture = Library.Load<Texture2D>($"TP/Textures/{id}/{id}_nor_gl_2k"),
                 maskMapTexture = Library.Load<Texture2D>($"Generated/{id}_mask"),
-                tileSize = new Vector2(tile, tile),
+                tileSize = new Vector2(l.tile, l.tile),
                 normalScale = 1,
                 smoothness = 0.2f,
+                diffuseRemapMin = Vector4.zero,
+                diffuseRemapMax = new Vector4(tint.r, tint.g, tint.b, 1),
             };
             return layer;
         }
+
+        /// <summary>Snow drawn with the sand texture until the snow scan is downloaded.</summary>
+        static Color FallbackTint(string missing) => missing.StartsWith("snow") ? new Color(1.45f, 1.5f, 1.65f) : Color.white;
+
+        /// <summary>Fills one weight per layer at a ground point: world x, lane distance s, height, slope (deg), two noises (0–1), water level.</summary>
+        delegate void Mix(float x, float s, float y, float slope, float n1, float n2, float water, float[] w);
+
+        /// <summary>A map's ground look: four texture layers (Poly Haven id, fallback id, tile metres, tint) and how they mix.</summary>
+        sealed class Soil
+        {
+            public (string id, string fallback, float tile, Color tint)[] Layers = null!;
+            public Mix Mix = null!;
+            /// <summary>Splat texels across the 4 km terrain: 1024 paints 4 m detail (tracks, firing pads).</summary>
+            public int Resolution = 512;
+            /// <summary>Terrain LOD tolerance in pixels; tight where buildings must hide the terrain's steps.</summary>
+            public float PixelError = 4;
+        }
+
+        static readonly Color White = Color.white;
+
+        static Soil SoilFor(DuelMap map) => map.Id switch
+        {
+            // Gravel desert floor, wind-blown sand in the wash and drifts, stony red hardpan on the benches
+            // and along the track, warm rock on every steep face.
+            "dry-valley" => new Soil
+            {
+                Resolution = 1024,
+                Layers = new[]
+                {
+                    ("gravelly_sand", "coast_sand_01", 7f, new Color(1.02f, 0.93f, 0.8f)),
+                    ("coast_sand_01", "coast_sand_01", 9f, new Color(1.08f, 0.94f, 0.76f)),
+                    ("red_laterite_soil_stones", "brown_mud_leaves_01", 8f, new Color(1f, 0.88f, 0.76f)),
+                    ("rocky_terrain_02", "rocky_terrain_02", 16f, new Color(1.05f, 0.88f, 0.72f)),
+                },
+                Mix = (x, s, y, slope, n1, n2, water, w) =>
+                {
+                    float rock = Mathf.Clamp01((slope - 20) / 10);
+                    float q = (s - 430 - 25 * Mathf.Sin(x * 0.02f)) / 38;
+                    float wash = Mathf.Exp(-q * q);
+                    float track = Mathf.Clamp01(1 - (Mathf.Abs(x - DryValley.TrackX(s)) - 2.5f) / 3f);
+                    float drift = Mathf.Clamp01((n1 - 0.58f) * 4) + wash * 1.3f;
+                    float pan = Mathf.Clamp01((n2 - 0.5f) * 3) * (1 - wash) + track * 4;
+                    w[0] = Mathf.Max(0.15f, 1 - drift - pan) * (1 - rock);
+                    w[1] = drift * (1 - rock) * (1 - track);
+                    w[2] = pan * (1 - rock);
+                    w[3] = rock * 1.5f;
+                },
+            },
+            // Meadow on the shoulder, scree on the slopes and the gully floor, cliff rock on steep faces,
+            // snow above a ragged snow line except where it is too steep to lie.
+            "alpine-ridge" => new Soil
+            {
+                Resolution = 1024,
+                Layers = new[]
+                {
+                    ("sparse_grass", "sparse_grass", 10f, new Color(0.86f, 0.9f, 0.74f)),
+                    ("rocky_terrain_02", "rocky_terrain_02", 12f, new Color(0.9f, 0.9f, 0.92f)),
+                    ("aerial_rocks_02", "rocky_terrain_02", 20f, new Color(0.85f, 0.86f, 0.9f)),
+                    ("snow_02", "coast_sand_01", 9f, White),
+                },
+                Mix = (x, s, y, slope, n1, n2, water, w) =>
+                {
+                    float snowLine = AlpineRidge.SnowLine + (n1 - 0.5f) * 44;
+                    float cliff = Mathf.Clamp01((slope - 30) / 9);
+                    float snow = Mathf.Clamp01((y - snowLine) / 14) * (1 - Mathf.Clamp01((slope - 33) / 8));
+                    float scree = Mathf.Clamp01((slope - 17) / 10) * (1 - cliff) + Mathf.Clamp01((n2 - 0.6f) * 3) * 0.6f
+                        + Mathf.Clamp01((-40 - y) / 8);
+                    w[0] = Mathf.Max(0, 1 - snow - cliff - scree);
+                    w[1] = scree * (1 - snow);
+                    w[2] = cliff;
+                    w[3] = snow;
+                },
+            },
+            // A mown range: gravel firing pads at both lines and a gravel service road, bare earth on
+            // banks and in worn patches, rock only on the steepest hillsides.
+            "training-lane" => new Soil
+            {
+                Resolution = 1024,
+                Layers = new[]
+                {
+                    ("sparse_grass", "sparse_grass", 8f, new Color(0.95f, 1.04f, 0.86f)),
+                    ("gravelly_sand", "coast_sand_rocks_02", 5f, new Color(0.92f, 0.9f, 0.86f)),
+                    ("brown_mud_leaves_01", "brown_mud_leaves_01", 9f, White),
+                    ("rocky_terrain_02", "rocky_terrain_02", 14f, White),
+                },
+                Mix = (x, s, y, slope, n1, n2, water, w) =>
+                {
+                    float pads = Band(x, -58, 58, 2) * (Band(s, TrainingRange.LineA - 22, TrainingRange.LineA + 16, 2) + Band(s, TrainingRange.LineB - 16, TrainingRange.LineB + 22, 2));
+                    float road = Mathf.Clamp01(1 - (Mathf.Abs(x - TrainingRange.RoadX) - 3) / 1.5f);
+                    float rock = Mathf.Clamp01((slope - 30) / 8);
+                    float earth = Mathf.Clamp01((slope - 14) / 8) * (1 - rock) + Mathf.Clamp01((n2 - 0.72f) * 4) * 0.7f;
+                    w[0] = Mathf.Max(0, 1 - earth - rock);
+                    w[1] = Mathf.Max(pads, road) * 4;
+                    w[2] = earth;
+                    w[3] = rock;
+                },
+            },
+            // Asphalt streets and yards, paved concrete lots, silt on the channel bed, bare dirt plots.
+            "harbor-rooftops" => new Soil
+            {
+                // The roofs are steps in the terrain; coarse LODs would push them out through the facades.
+                PixelError = 1,
+                Layers = new[]
+                {
+                    ("asphalt_02", "asphalt_02", 8f, White),
+                    ("concrete_wall_008", "concrete_wall_008", 6f, new Color(0.78f, 0.78f, 0.76f)),
+                    ("coast_sand_rocks_02", "coast_sand_rocks_02", 10f, new Color(0.7f, 0.68f, 0.62f)),
+                    ("brown_mud_leaves_01", "brown_mud_leaves_01", 9f, White),
+                },
+                Mix = (x, s, y, slope, n1, n2, water, w) =>
+                {
+                    float bed = Mathf.Clamp01((-0.4f - y) / 1f);
+                    float lots = n1 > 0.52f ? 1 : 0;
+                    float dirt = Mathf.Clamp01((n2 - 0.74f) * 5);
+                    w[0] = (1 - lots) * (1 - bed);
+                    w[1] = lots * (1 - bed) * (1 - dirt);
+                    w[2] = bed * 3;
+                    w[3] = dirt * (1 - bed);
+                },
+            },
+            // Elsewhere: wet sand at the waterline, grass on gentle slopes, rock on steep ones, leaf litter in hollows.
+            _ => new Soil
+            {
+                Layers = new[]
+                {
+                    ("coast_sand_rocks_02", "coast_sand_rocks_02", 8f, White),
+                    ("sparse_grass", "sparse_grass", 10f, White),
+                    ("rocky_terrain_02", "rocky_terrain_02", 14f, White),
+                    ("brown_mud_leaves_01", "brown_mud_leaves_01", 9f, White),
+                },
+                Mix = (x, s, y, slope, n1, n2, water, w) =>
+                {
+                    float sand = Mathf.Clamp01(1 - (y - water - 1.5f) / 3f);
+                    float rock = Mathf.Clamp01((slope - 24) / 12f);
+                    float litter = Mathf.Clamp01((n1 - 0.55f) * 4) * (1 - rock);
+                    w[0] = sand;
+                    w[1] = Mathf.Max(0, 1 - sand - rock - litter);
+                    w[2] = rock;
+                    w[3] = litter;
+                },
+            },
+        };
+
+        /// <summary>1 inside [lo, hi], fading to 0 over `soft` metres outside it.</summary>
+        static float Band(float v, float lo, float hi, float soft) => Mathf.Clamp01((v - lo) / soft + 1) * Mathf.Clamp01((hi - v) / soft + 1);
 
         /// <summary>Open water: a large plane with two scrolling wave normal layers; see Waves.</summary>
         public static GameObject Water(DuelMap map, Transform parent)

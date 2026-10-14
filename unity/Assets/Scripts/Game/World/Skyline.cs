@@ -123,7 +123,7 @@ namespace SniperDuel.Game.World
         /// A window-grid facade: wall colour, glazing with sky reflection, some windows lit. A curtain
         /// wall is glass from floor to floor between thin mullions, and shinier.
         /// </summary>
-        static Material Facade(System.Random rng, Color wall, float litShare, bool curtain)
+        internal static Material Facade(System.Random rng, Color wall, float litShare, bool curtain)
         {
             const int Px = 32; // pixels per bay and per floor
             int w = Bays * Px, h = Floors * Px;

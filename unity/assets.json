@@ -139,6 +139,33 @@
         "nor_gl",
         "arm"
       ]
+    },
+    {
+      "id": "gravelly_sand",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "red_laterite_soil_stones",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "snow_02",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
     }
   ],
   "models": [

@@ -47,10 +47,10 @@ namespace SniperDuel.Game.World
                 }
             }
 
-            // Trees on the land beyond the banks, thinning with distance.
+            // Trees on the land beyond the banks, thinning with distance. Maps with their own biome plant their own.
             string[] trees = { "island_tree_01", "island_tree_01", "shrub_02" };
-            int planted = 0;
-            for (int i = 0; i < 2000 && planted < 70; i++)
+            int planted = 0, toPlant = Biomes.Handles(map.Id) ? 0 : 70;
+            for (int i = 0; i < 2000 && planted < toPlant; i++)
             {
                 float x = ((float)rng.NextDouble() * 2 - 1) * 1400;
                 float s = -700 + (float)rng.NextDouble() * (lane + 1400);
