@@ -35,7 +35,7 @@ namespace SniperDuel.Game.World
 
         void Build()
         {
-            Texture = new RenderTexture(512, 768, 24, RenderTextureFormat.ARGB32) { name = "Studio", antiAliasing = 2 };
+            Texture = new RenderTexture(512, 768, 24, RenderTextureFormat.ARGB32) { name = "Studio" };
             var camGo = new GameObject("Studio Camera");
             camGo.transform.SetParent(transform, false);
             camGo.transform.localPosition = new Vector3(0, 1.05f, 4.6f);

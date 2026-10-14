@@ -69,7 +69,7 @@ namespace SniperDuel.Game
             {
                 bool got = Profile.Medal(i);
                 if (s.Has("medal" + i)) s["medal" + i].style.opacity = got ? 1f : 0.45f;
-                s.Text("medal" + i + "text", got ? Profile.MedalRules[i] : "Locked · " + Profile.MedalRules[i]);
+                s.Text("medal" + i + "text", Profile.MedalRules[i]);
             }
         }
 
