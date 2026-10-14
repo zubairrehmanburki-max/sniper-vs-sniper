@@ -44,7 +44,8 @@ namespace SniperDuel.Game.World
             cam.targetTexture = Texture;
             cam.cullingMask = 1 << Layer;
             cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0, 0, 0, 0);
+            // Opaque: a dark backdrop card, so the portrait never depends on the render texture's alpha.
+            cam.backgroundColor = new Color(0.075f, 0.085f, 0.08f, 1);
             cam.fieldOfView = 28;
             cam.nearClipPlane = 0.1f;
             cam.farClipPlane = 20;
@@ -88,6 +89,7 @@ namespace SniperDuel.Game.World
             figure = Figure.Create(Stance.Standing, 1.8f, transform, tint);
             foreach (var t in figure.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = Layer;
             shown = tint;
+            Debug.Log($"[Studio] dressed: {figure.GetComponentsInChildren<Renderer>().Length} renderers, bounds {Library.BoundsOf(figure.gameObject)}");
             yaw = 0;
             Pose();
         }

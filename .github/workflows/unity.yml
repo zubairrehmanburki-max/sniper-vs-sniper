@@ -109,7 +109,7 @@ jobs:
           timeout 1500 xvfb-run -a -s "-screen 0 1864x860x24" build/StandaloneLinux64/SniperDuel \
             -screen-fullscreen 0 -screen-width 1864 -screen-height 860 -force-glcore \
             -logFile "$PWD/shots/player.log" -capture-all "$PWD/shots" || true
-          grep -E "Capture|Exception|Error|error" shots/player.log | head -80 || true
+          grep -E "Capture|Studio|Figure|Exception|Error|error" shots/player.log | head -80 || true
           tail -30 shots/player.log || true
           ls -la shots
           ls shots/*.png > /dev/null
