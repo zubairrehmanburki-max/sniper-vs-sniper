@@ -183,7 +183,7 @@ namespace SniperDuel.Game.World
             fig = f;
             Root = new GameObject("Anatomy").transform;
             Root.SetParent(parent, false);
-            Bone = Glow(new Color(0.88f, 0.86f, 0.8f), new Color(0.32f, 0.33f, 0.36f), 0.35f);
+            Bone = Glow(new Color(0.8f, 0.78f, 0.72f), new Color(0.15f, 0.155f, 0.17f), 0.35f);
             cartilage = Glow(new Color(0.6f, 0.7f, 0.8f), new Color(0.16f, 0.22f, 0.3f), 0.5f);
             Dark = Library.Plain(new Color(0.035f, 0.02f, 0.025f), 0.2f);
         }

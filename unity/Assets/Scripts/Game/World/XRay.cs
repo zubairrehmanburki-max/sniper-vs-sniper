@@ -77,7 +77,7 @@ namespace SniperDuel.Game.World
             x.target = target;
             x.anatomy = Anatomy.Build(target, go.transform);
             x.anatomy.Root.gameObject.SetActive(false);
-            x.ghostMat = Tinted("Additive", new Color(0.35f, 0.72f, 1.35f, 1));
+            x.ghostMat = Tinted("Additive", new Color(0.24f, 0.5f, 0.95f, 1));
             return x;
         }
 
