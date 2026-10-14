@@ -95,7 +95,10 @@ namespace SniperDuel.Game.World
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
             // Thin enough that the city a kilometre or two away reads as hazy silhouettes, not a wall.
-            RenderSettings.fogDensity = kind == SkyKind.Clear ? 0.00045f : 0.0006f;
+            // Thin mountain air is clearer: far ranges stay distinct layers, each hazier than the one in
+            // front, instead of melting into one pale wall.
+            float thin = Mathf.Lerp(1, 0.62f, Mathf.InverseLerp(1500, 2400, (float)map.Climate.AltitudeM));
+            RenderSettings.fogDensity = (kind == SkyKind.Clear ? 0.00045f : 0.0006f) * thin;
             RenderSettings.fogColor = fog;
 
             // One realtime probe over the lane so water and metal reflect the bridges and the sky.

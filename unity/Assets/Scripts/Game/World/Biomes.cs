@@ -177,22 +177,63 @@ namespace SniperDuel.Game.World
             }
         }
 
-        /// <summary>A rooftop condenser: a sheet-metal cabinet filling the box, fan discs on top, louvres on the sides.</summary>
+        /// <summary>
+        /// A rooftop condenser filling the box exactly: a painted sheet-metal top and plinth joined by
+        /// corner posts, a dark coil behind horizontal fins on both long faces and one end, a service
+        /// panel on the other end with its refrigerant lines, and two fan guards (rim, inner ring, cross
+        /// bars, hub) over dark fan wells on top. Only the guards stand a few centimetres proud.
+        /// </summary>
         public static void AcUnit(MeshBuilder metal, MeshBuilder grille, Bounds b)
         {
-            metal.Box(b.center, b.size);
             bool alongX = b.size.x >= b.size.z;
-            float fan = Mathf.Min(b.size.x, b.size.z) * 0.36f;
-            for (int i = -1; i <= 1; i += 2)
+            float len = alongX ? b.size.x : b.size.z, wid = alongX ? b.size.z : b.size.x, h = b.size.y;
+            // Local frame: a along the long side, c across it, y up from the box's centre.
+            Vector3 P(float a, float y, float c) => b.center + (alongX ? new Vector3(a, y, c) : new Vector3(c, y, a));
+            Vector3 S(float a, float y, float c) => alongX ? new Vector3(a, y, c) : new Vector3(c, y, a);
+            const float Top = 0.12f, Plinth = 0.14f, Post = 0.07f, Inset = 0.04f;
+            float coilH = h - Top - Plinth, coilY = -h / 2 + Plinth + coilH / 2;
+
+            // Cabinet: top, plinth, posts, and the dark coil inside them.
+            metal.Box(P(0, h / 2 - Top / 2, 0), S(len, Top, wid));
+            grille.Box(P(0, -h / 2 + Plinth / 2, 0), S(len - 0.02f, Plinth, wid - 0.02f));
+            foreach (float ea in new[] { -1f, 1f })
+                foreach (float ec in new[] { -1f, 1f })
+                    metal.Box(P(ea * (len - Post) / 2, coilY, ec * (wid - Post) / 2), S(Post, coilH, Post));
+            grille.Box(P(0, coilY, 0), S(len - 2 * Inset, coilH, wid - 2 * Inset));
+
+            // Fins across the coil faces, set just inside the box so the outline stays the box.
+            float fins = Mathf.Max(4, Mathf.Floor(coilH / 0.085f));
+            for (int i = 0; i < fins; i++)
             {
-                var c = b.center + (alongX ? new Vector3(i * b.size.x * 0.24f, 0, 0) : new Vector3(0, 0, i * b.size.z * 0.24f));
-                grille.Cylinder(new Vector3(c.x, b.max.y, c.z), fan, 0.03f, 14);
+                float y = coilY - coilH / 2 + (i + 0.5f) * coilH / fins;
+                foreach (float ec in new[] { -1f, 1f })
+                    metal.Box(P(0, y, ec * (wid / 2 - 0.012f)), S(len - 2 * Post, 0.022f, 0.02f));
+                metal.Box(P(len / 2 - 0.012f, y, 0), S(0.02f, 0.022f, wid - 2 * Post));
             }
-            // Louvres on both long faces.
+            // A mid post splits each long coil into two bays.
+            foreach (float ec in new[] { -1f, 1f })
+                metal.Box(P(0, coilY, ec * (wid / 2 - 0.02f)), S(0.06f, coilH, 0.04f));
+            // Service end: a solid panel and two insulated lines down to the roof and away along it.
+            metal.Box(P(-len / 2 + 0.02f, coilY, 0), S(0.04f, coilH, wid - 2 * Post));
             for (int i = -1; i <= 1; i += 2)
             {
-                if (alongX) grille.Box(new Vector3(b.center.x, b.center.y - 0.05f, b.center.z + i * (b.size.z / 2 + 0.005f)), new Vector3(b.size.x * 0.8f, b.size.y * 0.6f, 0.01f));
-                else grille.Box(new Vector3(b.center.x + i * (b.size.x / 2 + 0.005f), b.center.y - 0.05f, b.center.z), new Vector3(0.01f, b.size.y * 0.6f, b.size.z * 0.8f));
+                var a = P(-len / 2 - 0.04f, coilY - coilH * 0.15f, i * 0.12f);
+                var foot = new Vector3(a.x, b.min.y + 0.08f, a.z);
+                grille.Tube(a, foot, 0.028f, 6, false);
+                grille.Tube(foot, foot + (alongX ? Vector3.left : Vector3.back) * 0.7f, 0.028f, 6, false);
+            }
+
+            // Fans on top: a dark well under a guard of rim, ring, cross bars and hub.
+            float fan = Mathf.Min(len / 2, wid) * 0.4f;
+            for (int i = -1; i <= 1; i += 2)
+            {
+                var c = P(i * len * 0.24f, h / 2, 0);
+                grille.Cylinder(c, fan, 0.025f, 16);
+                metal.Annulus(c + Vector3.up * 0.045f, fan * 0.93f, fan * 1.04f, 16);
+                metal.Annulus(c + Vector3.up * 0.045f, fan * 0.5f, fan * 0.56f, 12);
+                metal.Box(c + Vector3.up * 0.04f, new Vector3(fan * 2, 0.012f, 0.025f));
+                metal.Box(c + Vector3.up * 0.04f, new Vector3(0.025f, 0.012f, fan * 2));
+                metal.Cylinder(c, fan * 0.16f, 0.05f, 10);
             }
         }
 

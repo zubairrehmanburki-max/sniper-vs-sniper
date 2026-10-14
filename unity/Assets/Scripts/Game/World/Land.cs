@@ -153,15 +153,22 @@ namespace SniperDuel.Game.World
                     ("sparse_grass", "sparse_grass", 10f, new Color(0.86f, 0.9f, 0.74f)),
                     ("rocky_terrain_02", "rocky_terrain_02", 12f, new Color(0.9f, 0.9f, 0.92f)),
                     ("cliff_side", "aerial_rocks_02", 20f, new Color(0.85f, 0.86f, 0.9f)),
-                    ("snow_02", "coast_sand_01", 9f, White),
+                    ("snow_02", "coast_sand_01", 9f, new Color(0.95f, 0.96f, 0.99f)),
                 },
                 Mix = (x, s, y, slope, n1, n2, water, w) =>
                 {
                     float snowLine = AlpineRidge.SnowLine + (n1 - 0.5f) * 44;
                     float cliff = Mathf.Clamp01((slope - 30) / 9);
-                    float snow = Mathf.Clamp01((y - snowLine) / 14) * (1 - Mathf.Clamp01((slope - 33) / 8));
+                    // The snowfield's edge melts out over ~40 m: patches and tongues (a finer noise) lie
+                    // on wet scree below the line, bare islands show through above it, rather than one
+                    // hard white edge on the meadow.
+                    float patch = Mathf.PerlinNoise(x * 0.06f + 11.3f, s * 0.06f + 4.7f) * 0.6f + n2 * 0.4f;
+                    float cover = (y - snowLine) / 40 + 0.5f;
+                    float snow = Mathf.SmoothStep(0, 1, Mathf.Clamp01((cover + (patch - 0.5f) * 0.9f - 0.35f) / 0.3f))
+                        * (1 - Mathf.Clamp01((slope - 30) / 12));
+                    float fringe = Mathf.Clamp01(1 - Mathf.Abs(cover - 0.4f) * 2.2f) * (1 - snow);
                     float scree = Mathf.Clamp01((slope - 17) / 10) * (1 - cliff) + Mathf.Clamp01((n2 - 0.6f) * 3) * 0.6f
-                        + Mathf.Clamp01((-40 - y) / 8);
+                        + Mathf.Clamp01((-40 - y) / 8) + fringe * 0.9f;
                     w[0] = Mathf.Max(0, 1 - snow - cliff - scree);
                     w[1] = scree * (1 - snow);
                     w[2] = cliff;

@@ -7,10 +7,12 @@ namespace SniperDuel.Game.World
     /// <summary>
     /// Harbor Rooftops: two blocks facing each other across a dock channel. A's roof is 12 m up, B's
     /// 16 m (the rules' ground function); each building's roof slab tops out at exactly that height
-    /// and carries the rules' parapets, stair housings and AC units plus water tanks, vents and masts
-    /// behind the shooters. Between them: the quays with container stacks, ship-to-shore cranes and
-    /// moored ships, the rules' warehouse, crane tower, office and shed. Around them a dense harbor
-    /// district of window-facade blocks, thinning to warehouses toward the hills on the horizon.
+    /// and carries the rules' parapets, stair housings and AC units on a gravel-and-membrane deck,
+    /// with water tanks, a motor room, fans, skylights, dishes, pipes and a cell mast behind the
+    /// shooters (never in the sight corridor). Between them: the quays with container stacks,
+    /// ship-to-shore cranes and moored ships, the rules' warehouse, crane tower, office and shed.
+    /// Around them a dense harbor district of window-facade blocks with parapets and rooftop kit
+    /// (richest near the firing buildings), thinning to warehouses toward the hills on the horizon.
     /// </summary>
     public static class Harbor
     {
@@ -27,10 +29,15 @@ namespace SniperDuel.Game.World
         {
             public readonly MeshBuilder[] Facades = new MeshBuilder[6];
             public readonly Material[] FacadeMats = new Material[6];
-            public readonly MeshBuilder Concrete = new MeshBuilder(), RoofDeck = new MeshBuilder(), Roofs = new MeshBuilder(), Plant = new MeshBuilder();
+            public readonly MeshBuilder Concrete = new MeshBuilder(), Roofs = new MeshBuilder(), Plant = new MeshBuilder();
             public readonly MeshBuilder Iron = new MeshBuilder(), Rust = new MeshBuilder(), Dark = new MeshBuilder(), Steel = new MeshBuilder();
             public readonly MeshBuilder[] Boxes = new MeshBuilder[5];
             public readonly MeshBuilder CraneA = new MeshBuilder(), CraneB = new MeshBuilder(), Beacons = new MeshBuilder(), Lamps = new MeshBuilder();
+            /// <summary>Roof finishes and rooftop kit: ballast, felt, single-ply membrane, galvanised flashing, skylight glass, white dishes.</summary>
+            public readonly MeshBuilder Gravel = new MeshBuilder(), Felt = new MeshBuilder(), Membrane = new MeshBuilder(), Flashing = new MeshBuilder();
+            public readonly MeshBuilder Glass = new MeshBuilder(), White = new MeshBuilder();
+            /// <summary>The sight corridor between the spots: rooftop kit never stands in it.</summary>
+            public Biomes.Lane Lane;
         }
 
         public static void Build(DuelMap map, Transform root)
@@ -40,7 +47,7 @@ namespace SniperDuel.Game.World
             // Roof heights straight from the rules' ground, so the slab is where the shooter stands.
             float roofA = (float)ground(0, -20), roofB = (float)ground(0, -420);
 
-            var k = new Kit();
+            var k = new Kit { Lane = Biomes.LaneOf(map) };
             // Harbor-town facades: limestone, ochre, brick red, harbor blue-grey, pale render, dark glass.
             var tones = new[]
             {
@@ -54,8 +61,8 @@ namespace SniperDuel.Game.World
             }
             for (int i = 0; i < 5; i++) k.Boxes[i] = new MeshBuilder();
 
-            FiringBuilding(map, k, roofA, A0, A1, Side.A);
-            FiringBuilding(map, k, roofB, B0, B1, Side.B);
+            FiringBuilding(map, k, rng, roofA, A0, A1, Side.A);
+            FiringBuilding(map, k, rng, roofB, B0, B1, Side.B);
             LaneBuildings(map, k);
             Quays(root, k, rng);
             Cranes(k);
@@ -65,7 +72,12 @@ namespace SniperDuel.Game.World
             for (int i = 0; i < 6; i++)
                 if (k.Facades[i].VertexCount > 0) k.Facades[i].Object("Facades " + i, k.FacadeMats[i], root);
             k.Concrete.Object("Concrete", Library.Surface("concrete_wall_008", 4, new Color(0.74f, 0.73f, 0.7f)), root);
-            k.RoofDeck.Object("Roof decks", Library.Surface("concrete_wall_008", 3, new Color(0.6f, 0.6f, 0.58f)), root);
+            k.Gravel.Object("Roof gravel", Library.Surface("gravelly_sand", 2.5f, new Color(0.66f, 0.66f, 0.65f)), root);
+            k.Felt.Object("Roof felt", Library.Surface("asphalt_02", 3, new Color(0.52f, 0.52f, 0.54f)), root);
+            k.Membrane.Object("Roof membrane", Library.Plain(new Color(0.6f, 0.61f, 0.6f), 0.25f), root);
+            k.Flashing.Object("Flashing", Library.Plain(new Color(0.6f, 0.62f, 0.63f), 0.45f, 0.6f), root);
+            if (k.Glass.VertexCount > 0) k.Glass.Object("Skylights", Library.Plain(new Color(0.13f, 0.16f, 0.19f), 0.85f), root);
+            if (k.White.VertexCount > 0) k.White.Object("Dishes", Library.Plain(new Color(0.8f, 0.8f, 0.78f), 0.4f), root);
             k.Roofs.Object("Roofs", Library.Plain(new Color(0.33f, 0.33f, 0.32f), 0.2f), root);
             k.Plant.Object("Rooftop plant", Library.Plain(new Color(0.62f, 0.64f, 0.63f), 0.35f, 0.3f), root);
             k.Iron.Object("Corrugated iron", Library.Surface("corrugated_iron_02", 3, new Color(0.62f, 0.66f, 0.7f)), root);
@@ -96,27 +108,33 @@ namespace SniperDuel.Game.World
         // ---- the two firing buildings --------------------------------------------------------------
 
         /// <summary>
-        /// A firing building: facade floors, a concrete cornice, the roof slab with its top at exactly
-        /// `roof`, the rules' furniture on it, and plant (tanks, vents, a mast, ducts) behind the zone.
+        /// A firing building: facade floors with string courses, pilasters, downpipes and shuttered
+        /// loading bays, a concrete cornice, the roof deck with its top at exactly `roof` (gravel and
+        /// felt bays between membrane walkways), capped edge parapets, the rules' furniture on it, and
+        /// plant (tanks, a motor room, fans, dishes, skylights, pipes, a mast) behind the zone.
         /// </summary>
-        static void FiringBuilding(DuelMap map, Kit k, float roof, float s0, float s1, Side side)
+        static void FiringBuilding(DuelMap map, Kit k, System.Random rng, float roof, float s0, float s1, Side side)
         {
             float sc = (s0 + s1) / 2, depth = s1 - s0, width = 2 * BuildingHalfX;
-            // Whole floors of windows, then a cornice band up to the slab.
+            // Whole floors of windows, then a cornice band up to the deck.
             float facadeTop = Mathf.Floor((roof - 1.4f) / FloorM) * FloorM;
             k.Facades[side == Side.A ? 0 : 4].Block(new Vector3(0, -0.5f, sc), new Vector3(width, facadeTop + 0.5f, depth));
             k.Concrete.Box(new Vector3(0, (facadeTop + roof - 0.3f) / 2, sc), new Vector3(width + 0.3f, roof - 0.3f - facadeTop, depth + 0.3f));
-            k.RoofDeck.Box(new Vector3(0, roof - 0.15f, sc), new Vector3(width, 0.3f, depth));
+            // A moulded cornice at the top of the windows.
+            k.Concrete.Box(new Vector3(0, facadeTop + 0.12f, sc), new Vector3(width + 0.6f, 0.24f, depth + 0.6f));
+            // The deck: its finish is the top 0.3 m, so nothing lies just under the visible surface.
+            RoofFinish(k, rng, -width / 2, width / 2, s0, s1, roof, 10, 0.3f);
             // A plinth course at street level, and a loading dock along the front.
             k.Concrete.Box(new Vector3(0, 0.3f, sc), new Vector3(width + 0.2f, 1.2f, depth + 0.2f));
             float front = side == Side.A ? s1 : s0, ahead = side == Side.A ? 1 : -1;
             k.Concrete.Box(new Vector3(0, 0.35f, front + ahead * 2.5f), new Vector3(width, 1.3f, 5));
+            FacadeRelief(k, width, s0, s1, facadeTop, front);
 
-            // Edge parapets on the sides and the back; the front keeps only the rules' parapet.
+            // Edge parapets with cap flashing on the sides and the back; the front keeps only the rules' parapet.
             float back = side == Side.A ? s0 + 0.2f : s1 - 0.2f;
-            k.Concrete.Box(new Vector3(0, roof + 0.5f, back), new Vector3(width, 1.0f, 0.4f));
+            Parapet(k, k.Concrete, new Vector3(0, roof + 0.5f, back), new Vector3(width, 1.0f, 0.4f));
             foreach (float e in new[] { -1f, 1f })
-                k.Concrete.Box(new Vector3(e * (BuildingHalfX - 0.2f), roof + 0.5f, sc), new Vector3(0.4f, 1.0f, depth));
+                Parapet(k, k.Concrete, new Vector3(e * (BuildingHalfX - 0.2f), roof + 0.5f, sc), new Vector3(0.4f, 1.0f, depth));
 
             // The rules' boxes on this roof.
             foreach (var box in map.Cover)
@@ -140,42 +158,276 @@ namespace SniperDuel.Game.World
                 }
             }
 
-            // Plant behind the zone: never between the spots.
+            // Plant behind the zone: never between the spots. Positions are (x, metres in from the back edge).
             float r = side == Side.A ? 1 : -1;
             float rear = side == Side.A ? s0 : s1;
-            WaterTank(k, new Vector3(-24, roof, rear + r * 7.5f));
-            WaterTank(k, new Vector3(16, roof, rear + r * 9.5f));
-            Mast(k, new Vector3(side == Side.A ? 45.5f : -45.5f, roof, rear + r * 26), 10);
+            Vector3 At(float x, float ds) => new Vector3(x, roof, rear + r * ds);
+            bool Clear(Vector3 p, float radius) => !k.Lane.Contains(p.x, p.z, radius);
+            WaterTank(k, At(-24, 7.5f), true);
+            WaterTank(k, At(16, 9.5f), true);
+            Mast(k, At(side == Side.A ? 45.5f : -45.5f, 26), 10, true);
             foreach (var (x, ds) in new[] { (-40f, 13f), (-8f, 4f), (32f, 11f), (2f, 15f) })
-                k.Rust.Tube(new Vector3(x, roof, rear + r * ds), new Vector3(x, roof + 1.3f, rear + r * ds), 0.16f, 8);
+                VentStack(k, At(x, ds), 1.3f, 0.16f);
             // A duct run along the side strip outside the zone.
             float dx = side == Side.A ? 45.6f : -45.6f;
             k.Plant.Box(new Vector3(dx, roof + 0.4f, rear + r * 32), new Vector3(0.6f, 0.6f, 48));
             for (float s = 10; s < 56; s += 6) k.Steel.Box(new Vector3(dx, roof + 0.05f, rear + r * s), new Vector3(0.9f, 0.1f, 0.1f));
-            // Roof hatches.
-            k.Plant.Box(new Vector3(-2, roof + 0.25f, rear + r * 5), new Vector3(1.2f, 0.5f, 1.2f));
-            k.Plant.Box(new Vector3(30, roof + 0.25f, rear + r * 3), new Vector3(1.2f, 0.5f, 1.2f));
+            // Roof hatches, one with a guard rail.
+            Hatch(k, At(-2, 5), true);
+            Hatch(k, At(30, 3), false);
+            // A lift motor room, extract fans, skylights over the stairwell, a pipe run, condensers, dishes.
+            MotorRoom(k, At(-38, 24), 6, 5, 3);
+            foreach (var (x, ds) in new[] { (-16f, 22f), (8f, 26f), (24f, 20f) })
+                if (Clear(At(x, ds), 1)) ExhaustFan(k, At(x, ds));
+            foreach (float x in new[] { -12f, -3f, 6f })
+                if (Clear(At(x, 30), 2)) Skylight(k, At(x, 30), 2.4f, 2.4f);
+            PipeRun(k, At(-20, 18), At(20, 18));
+            foreach (var x in new[] { -30f, -27.6f })
+            {
+                var c = At(x, 18) + Vector3.up * 0.6f;
+                Biomes.AcUnit(k.Plant, k.Dark, new Bounds(c, new Vector3(1.0f, 1.2f, 1.8f)));
+            }
+            foreach (var (x, ds, size, yaw) in new[] { (14f, 40f, 1.0f, 150f), (-22f, 40f, 0.7f, 200f), (40f, 40f, 1.2f, 170f) })
+                if (Clear(At(x, ds), size + 1)) Dish(k, At(x, ds), size, yaw);
         }
 
-        /// <summary>A rooftop water tank: a riveted steel drum on a four-leg stand, conical lid.</summary>
-        static void WaterTank(Kit k, Vector3 foot)
+        /// <summary>
+        /// Relief on a firing building's four faces, all within 0.2 m of the wall: a string course at
+        /// every floor, pilasters every four window bays (lined up with the facade texture's bays,
+        /// which count from each face's first corner) with a downpipe beside every other one, and
+        /// steel roller shutters with canopies over the loading dock along the `front` face.
+        /// </summary>
+        static void FacadeRelief(Kit k, float width, float s0, float s1, float facadeTop, float front)
+        {
+            float depth = s1 - s0, sc = (s0 + s1) / 2, hw = width / 2;
+            for (float y = FloorM; y < facadeTop - 0.5f; y += FloorM)
+                k.Concrete.Box(new Vector3(0, y, sc), new Vector3(width + 0.24f, 0.16f, depth + 0.24f));
+            const float Bay = 4 * 3f, Proud = 0.12f;
+            // (start corner, direction along the face, outward normal, face length) for +Z, −Z, +X, −X.
+            var faces = new[]
+            {
+                (new Vector3(hw, 0, s1), Vector3.left, Vector3.forward, width),
+                (new Vector3(-hw, 0, s0), Vector3.right, Vector3.back, width),
+                (new Vector3(hw, 0, s0), Vector3.forward, Vector3.right, depth),
+                (new Vector3(-hw, 0, s1), Vector3.back, Vector3.left, depth),
+            };
+            foreach (var (corner, along, normal, length) in faces)
+            {
+                bool isFront = Mathf.Abs(corner.z - front) < 0.01f && Mathf.Abs(normal.x) < 0.5f;
+                int n = 0;
+                for (float u = Bay; u < length - 2; u += Bay, n++)
+                {
+                    var p = corner + along * u + normal * (Proud / 2 - 0.04f);
+                    var size = Mathf.Abs(normal.x) > 0.5f ? new Vector3(Proud + 0.08f, facadeTop, 0.5f) : new Vector3(0.5f, facadeTop, Proud + 0.08f);
+                    k.Concrete.Box(p + Vector3.up * (facadeTop / 2), size);
+                    if (n % 2 == 0)
+                    {
+                        var pipe = corner + along * (u + 0.5f) + normal * 0.12f;
+                        k.Steel.Tube(pipe + Vector3.up * 0.4f, pipe + Vector3.up * (facadeTop + 0.3f), 0.06f, 6, false);
+                    }
+                    // Shutters over the dock in every other bay between pilasters on the front.
+                    if (isFront && n % 2 == 1 && u + Bay < length - 2)
+                    {
+                        var mid = corner + along * (u + Bay / 2);
+                        var shutterSize = new Vector3(Mathf.Abs(along.x) * 4.2f + 0.06f * Mathf.Abs(normal.x), 2.3f, Mathf.Abs(along.z) * 4.2f + 0.06f * Mathf.Abs(normal.z));
+                        k.Iron.Box(mid + normal * 0.03f + Vector3.up * 2.15f, shutterSize);
+                        var canopy = new Vector3(Mathf.Abs(along.x) * 4.8f + 1.2f * Mathf.Abs(normal.x), 0.1f, Mathf.Abs(along.z) * 4.8f + 1.2f * Mathf.Abs(normal.z));
+                        k.Steel.Box(mid + normal * 0.6f + Vector3.up * 3.45f, canopy);
+                    }
+                }
+            }
+        }
+
+        /// <summary>A parapet wall in `wall` filling `size` at `centre`, under a galvanised cap that laps 5 cm down both faces.</summary>
+        static void Parapet(Kit k, MeshBuilder wall, Vector3 centre, Vector3 size)
+        {
+            const float Cap = 0.06f;
+            wall.Box(centre + Vector3.down * (Cap / 2), new Vector3(size.x, size.y - Cap, size.z));
+            var cap = size.x >= size.z ? new Vector3(size.x, Cap, size.z + 0.1f) : new Vector3(size.x + 0.1f, Cap, size.z);
+            k.Flashing.Box(centre + Vector3.up * (size.y / 2 - Cap / 2), cap);
+        }
+
+        /// <summary>
+        /// A flat roof's finish over x0..x1 × s0..s1, `thick` deep with its top at `top`: a membrane
+        /// margin and walkways between bays of gravel ballast, the odd bay (or a whole re-laid roof)
+        /// in felt, a drain in some bays. The pieces tile the roof without overlapping.
+        /// </summary>
+        static void RoofFinish(Kit k, System.Random rng, float x0, float x1, float s0, float s1, float top, float bay, float thick)
+        {
+            const float Edge = 1.5f, Walk = 1.1f;
+            float yc = top - thick / 2, xc = (x0 + x1) / 2, zc = (s0 + s1) / 2;
+            float fw = x1 - x0 - 2 * Edge, fd = s1 - s0 - 2 * Edge;
+            if (fw < 3 || fd < 3)
+            {
+                (rng.NextDouble() < 0.5 ? k.Gravel : k.Felt).Box(new Vector3(xc, yc, zc), new Vector3(x1 - x0, thick, s1 - s0));
+                return;
+            }
+            k.Membrane.Box(new Vector3(xc, yc, s0 + Edge / 2), new Vector3(x1 - x0, thick, Edge));
+            k.Membrane.Box(new Vector3(xc, yc, s1 - Edge / 2), new Vector3(x1 - x0, thick, Edge));
+            k.Membrane.Box(new Vector3(x0 + Edge / 2, yc, zc), new Vector3(Edge, thick, fd));
+            k.Membrane.Box(new Vector3(x1 - Edge / 2, yc, zc), new Vector3(Edge, thick, fd));
+            int nx = Mathf.Max(1, Mathf.RoundToInt((fw + Walk) / (bay + Walk))), ns = Mathf.Max(1, Mathf.RoundToInt((fd + Walk) / (bay + Walk)));
+            float bw = (fw - (nx - 1) * Walk) / nx, bd = (fd - (ns - 1) * Walk) / ns;
+            for (int i = 1; i < nx; i++)
+                k.Membrane.Box(new Vector3(x0 + Edge + i * (bw + Walk) - Walk / 2, yc, zc), new Vector3(Walk, thick, fd));
+            for (int j = 1; j < ns; j++)
+                k.Membrane.Box(new Vector3(xc, yc, s0 + Edge + j * (bd + Walk) - Walk / 2), new Vector3(fw, thick, Walk));
+            bool relaid = rng.NextDouble() < 0.3;
+            for (int i = 0; i < nx; i++)
+            {
+                for (int j = 0; j < ns; j++)
+                {
+                    var c = new Vector3(x0 + Edge + i * (bw + Walk) + bw / 2, yc, s0 + Edge + j * (bd + Walk) + bd / 2);
+                    (relaid ^ (rng.NextDouble() < 0.18) ? k.Felt : k.Gravel).Box(c, new Vector3(bw, thick, bd));
+                    if (rng.NextDouble() < 0.3) k.Dark.Cylinder(new Vector3(c.x + bw * 0.3f, top, c.z - bd * 0.3f), 0.16f, 0.015f, 8);
+                }
+            }
+        }
+
+        /// <summary>A rooftop water tank: a riveted steel drum on a braced four-leg stand, conical lid, and optionally a ladder.</summary>
+        static void WaterTank(Kit k, Vector3 foot, bool ladder = false)
         {
             const float R = 1.7f, Stand = 2.2f, H = 3.2f;
             foreach (var (x, z) in new[] { (-1, -1), (-1, 1), (1, -1), (1, 1) })
                 k.Steel.Box(foot + new Vector3(x * R * 0.6f, Stand / 2, z * R * 0.6f), new Vector3(0.14f, Stand, 0.14f));
+            // Cross braces between the legs.
+            foreach (float e in new[] { -1f, 1f })
+            {
+                k.Steel.Beam(foot + new Vector3(-R * 0.6f, 0.2f, e * R * 0.6f), foot + new Vector3(R * 0.6f, Stand - 0.2f, e * R * 0.6f), 0.05f, 0.05f);
+                k.Steel.Beam(foot + new Vector3(e * R * 0.6f, 0.2f, -R * 0.6f), foot + new Vector3(e * R * 0.6f, Stand - 0.2f, R * 0.6f), 0.05f, 0.05f);
+            }
             k.Steel.Box(foot + new Vector3(0, Stand - 0.1f, 0), new Vector3(R * 1.5f, 0.2f, R * 1.5f));
             k.Rust.Cylinder(foot + Vector3.up * Stand, R, H, 16);
             k.Rust.Cone(foot + Vector3.up * (Stand + H), R + 0.08f, 0.7f, 16, false);
+            if (!ladder) return;
+            // A ladder up the side to the lid.
+            foreach (float e in new[] { -0.22f, 0.22f })
+                k.Steel.Box(foot + new Vector3(R + 0.12f, (Stand + H) / 2 + 0.2f, e), new Vector3(0.05f, Stand + H + 0.4f, 0.05f));
+            for (float y = 0.35f; y < Stand + H; y += 0.35f)
+                k.Steel.Box(foot + new Vector3(R + 0.12f, y, 0), new Vector3(0.03f, 0.03f, 0.44f));
         }
 
-        /// <summary>A guyed radio mast with a red light on top.</summary>
-        static void Mast(Kit k, Vector3 foot, float height)
+        /// <summary>A guyed radio mast with a red light on top; a cell mast also carries three panel antennas and a microwave dish.</summary>
+        static void Mast(Kit k, Vector3 foot, float height, bool cell = false)
         {
             k.Steel.Tube(foot, foot + Vector3.up * height, 0.07f, 6);
             for (float y = 2.5f; y < height; y += 2.5f) k.Steel.Beam(foot + new Vector3(-0.6f, y, 0), foot + new Vector3(0.6f, y, 0), 0.04f, 0.04f);
             foreach (var d in new[] { new Vector3(2.5f, 0, 2.5f), new Vector3(-2.5f, 0, 2.5f), new Vector3(0, 0, -3.4f) })
                 k.Steel.Beam(foot + Vector3.up * height * 0.75f, foot + d, 0.015f, 0.015f);
             k.Beacons.Box(foot + Vector3.up * (height + 0.15f), new Vector3(0.25f, 0.3f, 0.25f));
+            if (!cell) return;
+            for (int i = 0; i < 3; i++)
+            {
+                float a = i * 120 * Mathf.Deg2Rad;
+                var o = new Vector3(Mathf.Cos(a), 0, Mathf.Sin(a));
+                var c = foot + Vector3.up * (height - 1.2f) + o * 0.42f;
+                k.White.Box(c, new Vector3(0.3f, 1.4f, 0.12f), Quaternion.LookRotation(o));
+                k.Steel.Beam(foot + Vector3.up * (height - 1.2f), c, 0.04f, 0.04f);
+            }
+            var dishAt = foot + Vector3.up * (height * 0.55f);
+            k.White.Tube(dishAt + Vector3.right * 0.12f, dishAt + Vector3.right * 0.32f, 0.12f, 0.36f, 12, true);
+        }
+
+        /// <summary>A vent stack: a pipe with a mushroom cap on a flashed collar.</summary>
+        static void VentStack(Kit k, Vector3 foot, float height, float radius)
+        {
+            k.Flashing.Cylinder(foot, radius * 1.8f, 0.12f, 8);
+            k.Rust.Tube(foot, foot + Vector3.up * height, radius, 8);
+            k.Plant.Cylinder(foot + Vector3.up * (height + 0.06f), radius * 2.2f, 0.12f, 10);
+            k.Plant.Cone(foot + Vector3.up * (height + 0.18f), radius * 2.2f, radius * 1.2f, 10, false);
+        }
+
+        /// <summary>A roof hatch: a concrete curb, a steel lid with hinges, and optionally a guard rail on three sides.</summary>
+        static void Hatch(Kit k, Vector3 foot, bool rail)
+        {
+            k.Concrete.Box(foot + Vector3.up * 0.25f, new Vector3(1.2f, 0.5f, 1.2f));
+            k.Plant.Box(foot + Vector3.up * 0.54f, new Vector3(1.32f, 0.08f, 1.32f));
+            k.Steel.Box(foot + new Vector3(-0.3f, 0.6f, 0.62f), new Vector3(0.18f, 0.06f, 0.08f));
+            k.Steel.Box(foot + new Vector3(0.3f, 0.6f, 0.62f), new Vector3(0.18f, 0.06f, 0.08f));
+            if (!rail) return;
+            var corners = new[] { new Vector3(-1, 0, 1), new Vector3(-1, 0, -1), new Vector3(1, 0, -1), new Vector3(1, 0, 1) };
+            for (int i = 0; i < corners.Length; i++)
+            {
+                var p = foot + corners[i] * 1.05f;
+                k.Flashing.Tube(p, p + Vector3.up * 1.1f, 0.03f, 6, false);
+                if (i > 0)
+                {
+                    var q = foot + corners[i - 1] * 1.05f;
+                    k.Flashing.Tube(q + Vector3.up * 1.1f, p + Vector3.up * 1.1f, 0.03f, 6, false);
+                    k.Flashing.Tube(q + Vector3.up * 0.55f, p + Vector3.up * 0.55f, 0.025f, 6, false);
+                }
+            }
+        }
+
+        /// <summary>A lift motor room w × d × h: concrete with cap flashing, louvred vents and a steel door.</summary>
+        static void MotorRoom(Kit k, Vector3 foot, float w, float d, float h)
+        {
+            Parapet(k, k.Concrete, foot + Vector3.up * (h / 2), new Vector3(w, h, d));
+            k.Dark.Box(foot + new Vector3(w / 2 + 0.02f, h * 0.6f, -d * 0.2f), new Vector3(0.04f, 0.9f, 1.6f));
+            for (float y = h * 0.6f - 0.36f; y < h * 0.6f + 0.4f; y += 0.12f)
+                k.Plant.Box(foot + new Vector3(w / 2 + 0.05f, y, -d * 0.2f), new Vector3(0.04f, 0.03f, 1.6f));
+            k.Plant.Box(foot + new Vector3(0, 1.05f, d / 2 + 0.03f), new Vector3(1.0f, 2.1f, 0.06f));
+            VentStack(k, foot + new Vector3(-w * 0.3f, h, 0), 0.8f, 0.12f);
+        }
+
+        /// <summary>A mushroom-hood extract fan on a square upstand.</summary>
+        static void ExhaustFan(Kit k, Vector3 foot)
+        {
+            k.Flashing.Box(foot + Vector3.up * 0.2f, new Vector3(1.1f, 0.4f, 1.1f));
+            k.Plant.Cylinder(foot + Vector3.up * 0.4f, 0.42f, 0.35f, 12);
+            k.Plant.Cone(foot + Vector3.up * 0.75f, 0.62f, 0.3f, 12);
+            k.Dark.Cylinder(foot + Vector3.up * 0.62f, 0.44f, 0.1f, 12);
+        }
+
+        /// <summary>A pyramid rooflight w × d: a concrete curb under cap flashing and a hipped glass light with glazing bars.</summary>
+        static void Skylight(Kit k, Vector3 foot, float w, float d)
+        {
+            Parapet(k, k.Concrete, foot + Vector3.up * 0.2f, new Vector3(w, 0.4f, d));
+            var b = foot + Vector3.up * 0.4f;
+            k.Glass.Frustum(b, new Vector2(w - 0.1f, d - 0.1f), b + Vector3.up * 0.6f, new Vector2(0.2f, 0.2f));
+            foreach (var (x, z) in new[] { (-1, -1), (-1, 1), (1, -1), (1, 1) })
+                k.Flashing.Beam(b + new Vector3(x * (w - 0.1f) / 2, 0, z * (d - 0.1f) / 2), b + new Vector3(x * 0.1f, 0.6f, z * 0.1f), 0.05f, 0.05f);
+        }
+
+        /// <summary>Two service pipes from a to b (both at deck level) on sleepers every 3 m, a riser at each end.</summary>
+        static void PipeRun(Kit k, Vector3 a, Vector3 b)
+        {
+            var dir = (b - a).normalized;
+            var side = Vector3.Cross(Vector3.up, dir);
+            float len = (b - a).magnitude;
+            for (float t = 0; t <= len; t += 3)
+                k.Steel.Box(a + dir * t + Vector3.up * 0.12f, new Vector3(Mathf.Abs(side.x) * 0.9f + 0.12f * Mathf.Abs(dir.x), 0.24f, Mathf.Abs(side.z) * 0.9f + 0.12f * Mathf.Abs(dir.z)));
+            k.Steel.Tube(a + Vector3.up * 0.34f + side * 0.2f, b + Vector3.up * 0.34f + side * 0.2f, 0.1f, 8, false);
+            k.Rust.Tube(a + Vector3.up * 0.32f - side * 0.2f, b + Vector3.up * 0.32f - side * 0.2f, 0.07f, 8, false);
+            foreach (var end in new[] { a, b })
+            {
+                k.Steel.Tube(end + Vector3.up * 0.24f + side * 0.2f, end + Vector3.up * 1.6f + side * 0.2f, 0.1f, 8, false);
+                k.Plant.Cylinder(end + Vector3.up * 1.6f + side * 0.2f, 0.16f, 0.12f, 8);
+            }
+        }
+
+        /// <summary>
+        /// A satellite dish of radius `r` on a ballast frame: a post, the dish tilted up toward
+        /// `yawDeg` (0 = +z), its feed arm and the receiver.
+        /// </summary>
+        static void Dish(Kit k, Vector3 foot, float r, float yawDeg)
+        {
+            float frame = r * 1.1f + 0.3f;
+            foreach (float e in new[] { -1f, 1f })
+            {
+                k.Steel.Box(foot + new Vector3(e * frame / 2, 0.06f, 0), new Vector3(0.08f, 0.12f, frame + 0.08f));
+                k.Concrete.Box(foot + new Vector3(e * frame / 2, 0.12f, frame / 2 - 0.15f), new Vector3(0.4f, 0.24f, 0.3f));
+                k.Concrete.Box(foot + new Vector3(e * frame / 2, 0.12f, -frame / 2 + 0.15f), new Vector3(0.4f, 0.24f, 0.3f));
+            }
+            float postH = r + 0.5f;
+            k.Steel.Tube(foot, foot + Vector3.up * postH, 0.05f, 6);
+            var aim = Quaternion.Euler(-32, yawDeg, 0) * Vector3.forward;
+            var c = foot + Vector3.up * postH;
+            // A shallow bowl: a short wide frustum, back closed, rim open toward the sky.
+            k.White.Tube(c - aim * 0.05f, c + aim * r * 0.28f, r * 0.3f, r, 16, true);
+            var feed = c + aim * r * 0.9f;
+            k.Steel.Beam(c + aim * r * 0.2f - Vector3.up * r * 0.85f, feed, 0.03f, 0.03f);
+            k.Dark.Box(feed, new Vector3(0.1f, 0.1f, 0.1f));
         }
 
         // ---- the rules' buildings between the roofs ------------------------------------------------
@@ -503,19 +755,135 @@ namespace SniperDuel.Game.World
             }
         }
 
-        /// <summary>A city block: window facade, cornice, roof with plant and the odd water tank.</summary>
+        /// <summary>
+        /// A city block: window facade and a roof whose detail falls off with distance from the firing
+        /// buildings. Near ones (in the scope behind the enemy) get a cornice and a first-floor string
+        /// course, a finished deck inside capped parapets, and a few pieces of rooftop kit; the middle
+        /// distance a plain deck of gravel, felt or membrane inside parapets and some plant; far ones a
+        /// slab with plant boxes and the odd water tank.
+        /// </summary>
         static void Block(Kit k, System.Random rng, float x, float s, float w, float d, int floors)
         {
             float h = floors * FloorM;
             k.Facades[rng.Next(k.Facades.Length)].Block(new Vector3(x, -0.5f, s), new Vector3(w, h + 0.5f, d));
-            k.Roofs.Box(new Vector3(x, h + 0.45f, s), new Vector3(w + 0.3f, 0.9f, d + 0.3f));
-            int plant = rng.Next(3);
-            for (int i = 0; i < plant; i++)
+            float near = Mathf.Min(new Vector2(x, s - (A0 + A1) / 2).magnitude, new Vector2(x, s - (B0 + B1) / 2).magnitude);
+            if (near > 560)
             {
-                float px = x + ((float)rng.NextDouble() - 0.5f) * w * 0.6f, pz = s + ((float)rng.NextDouble() - 0.5f) * d * 0.6f;
-                k.Plant.Box(new Vector3(px, h + 1.6f, pz), new Vector3(2 + (float)rng.NextDouble() * 3, 1.6f, 2 + (float)rng.NextDouble() * 3));
+                k.Roofs.Box(new Vector3(x, h + 0.45f, s), new Vector3(w + 0.3f, 0.9f, d + 0.3f));
+                int plant = rng.Next(3);
+                for (int i = 0; i < plant; i++)
+                {
+                    float px = x + ((float)rng.NextDouble() - 0.5f) * w * 0.6f, pz = s + ((float)rng.NextDouble() - 0.5f) * d * 0.6f;
+                    k.Plant.Box(new Vector3(px, h + 1.6f, pz), new Vector3(2 + (float)rng.NextDouble() * 3, 1.6f, 2 + (float)rng.NextDouble() * 3));
+                }
+                if (rng.NextDouble() < 0.12) WaterTank(k, new Vector3(x + w * 0.2f, h + 0.9f, s - d * 0.2f));
+                return;
             }
-            if (rng.NextDouble() < 0.12) WaterTank(k, new Vector3(x + w * 0.2f, h + 0.9f, s - d * 0.2f));
+
+            // Parapets stand on the facade's top edge, 12 cm proud of it, so no face lies just in front of another.
+            const float Wall = 0.3f, Up = 1.1f, Deck = 0.3f;
+            bool rich = near < 180;
+            float hw = w / 2 + 0.12f, hd = d / 2 + 0.12f;
+            void Edge(Vector3 c, Vector3 size)
+            {
+                if (rich) Parapet(k, k.Concrete, c, size);
+                else k.Concrete.Box(c, size);
+            }
+            Edge(new Vector3(x, h + Up / 2, s - hd + Wall / 2), new Vector3(2 * hw, Up, Wall));
+            Edge(new Vector3(x, h + Up / 2, s + hd - Wall / 2), new Vector3(2 * hw, Up, Wall));
+            Edge(new Vector3(x - hw + Wall / 2, h + Up / 2, s), new Vector3(Wall, Up, 2 * hd - 2 * Wall));
+            Edge(new Vector3(x + hw - Wall / 2, h + Up / 2, s), new Vector3(Wall, Up, 2 * hd - 2 * Wall));
+            // The deck sits inside the parapets, its top 0.3 m above the facade's top face.
+            float x0 = x - hw + Wall, x1 = x + hw - Wall, s0 = s - hd + Wall, s1 = s + hd - Wall, top = h + Deck;
+            if (!rich)
+            {
+                var finish = new[] { k.Gravel, k.Felt, k.Membrane, k.Roofs }[rng.Next(4)];
+                finish.Box(new Vector3(x, top - 0.25f, s), new Vector3(x1 - x0, 0.5f, s1 - s0));
+                int plant = rng.Next(3);
+                for (int i = 0; i < plant; i++)
+                {
+                    float px = x + ((float)rng.NextDouble() - 0.5f) * w * 0.5f, pz = s + ((float)rng.NextDouble() - 0.5f) * d * 0.5f;
+                    k.Plant.Box(new Vector3(px, top + 0.8f, pz), new Vector3(1.5f + (float)rng.NextDouble() * 2.5f, 1.6f, 1.5f + (float)rng.NextDouble() * 2.5f));
+                }
+                if (rng.NextDouble() < 0.15) WaterTank(k, new Vector3(x + w * 0.2f, top, s - d * 0.2f));
+                return;
+            }
+
+            k.Concrete.Box(new Vector3(x, h - 0.18f, s), new Vector3(w + 0.4f, 0.3f, d + 0.4f));
+            k.Concrete.Box(new Vector3(x, FloorM, s), new Vector3(w + 0.2f, 0.16f, d + 0.2f));
+            RoofFinish(k, rng, x0, x1, s0, s1, top, 10, 0.5f);
+            // Rooftop kit in a grid of ~5 m cells, each cell at most one piece, never in the lane.
+            int nx = Mathf.Max(1, Mathf.FloorToInt((x1 - x0 - 1) / 5)), ns = Mathf.Max(1, Mathf.FloorToInt((s1 - s0 - 1) / 5));
+            float cw = (x1 - x0 - 1) / nx, cd = (s1 - s0 - 1) / ns;
+            int pieces = 2 + rng.Next(4);
+            for (int n = 0; n < pieces; n++)
+            {
+                int i = rng.Next(nx), j = rng.Next(ns);
+                var foot = new Vector3(x0 + 0.5f + (i + 0.5f) * cw, top, s0 + 0.5f + (j + 0.5f) * cd);
+                if (k.Lane.Contains(foot.x, foot.z, 4)) continue;
+                float room = Mathf.Min(cw, cd);
+                switch (rng.Next(8))
+                {
+                    case 0:
+                        if (room > 4.2f) WaterTank(k, foot);
+                        else VentStack(k, foot, 1.2f, 0.14f);
+                        break;
+                    case 1:
+                        Condenser(k, foot, rng.Next(2) == 0);
+                        break;
+                    case 2:
+                        Hatch(k, foot, false);
+                        break;
+                    case 3:
+                        ExhaustFan(k, foot);
+                        break;
+                    case 4:
+                        if (room > 3.2f) Skylight(k, foot, 2.2f, 2.2f);
+                        else Hatch(k, foot, false);
+                        break;
+                    case 5:
+                        Dish(k, foot, 0.5f + (float)rng.NextDouble() * 0.5f, 140 + (float)rng.NextDouble() * 80);
+                        break;
+                    case 6:
+                        Antenna(k, foot, 3.5f + (float)rng.NextDouble() * 3);
+                        break;
+                    default:
+                        if (room > 4.2f) MotorRoom(k, foot, 3, 3.5f, 2.6f);
+                        else VentStack(k, foot, 1.0f, 0.12f);
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// A small condenser for the district roofs (lighter than the rules' AC units): a cabinet on
+        /// steel sleepers, a dark coil face and a fan well with a guard on top.
+        /// </summary>
+        static void Condenser(Kit k, Vector3 foot, bool alongX)
+        {
+            var size = alongX ? new Vector3(1.6f, 1.0f, 0.8f) : new Vector3(0.8f, 1.0f, 1.6f);
+            foreach (float e in new[] { -0.5f, 0.5f })
+                k.Steel.Box(foot + (alongX ? new Vector3(e, 0.06f, 0) : new Vector3(0, 0.06f, e)), alongX ? new Vector3(0.1f, 0.12f, 1.0f) : new Vector3(1.0f, 0.12f, 0.1f));
+            var c = foot + Vector3.up * (0.12f + size.y / 2);
+            k.Plant.Box(c, size);
+            k.Dark.Box(c + (alongX ? new Vector3(0, -0.05f, size.z / 2 + 0.01f) : new Vector3(size.x / 2 + 0.01f, -0.05f, 0)),
+                alongX ? new Vector3(size.x * 0.84f, size.y * 0.7f, 0.02f) : new Vector3(0.02f, size.y * 0.7f, size.z * 0.84f));
+            var fan = c + Vector3.up * (size.y / 2);
+            k.Dark.Cylinder(fan, 0.32f, 0.03f, 12);
+            k.Plant.Annulus(fan + Vector3.up * 0.05f, 0.3f, 0.36f, 12);
+        }
+
+        /// <summary>A TV aerial: a guyed pole with a yagi boom and its cross elements.</summary>
+        static void Antenna(Kit k, Vector3 foot, float height)
+        {
+            k.Steel.Box(foot + Vector3.up * 0.05f, new Vector3(0.6f, 0.1f, 0.6f));
+            k.Steel.Tube(foot, foot + Vector3.up * height, 0.035f, 6);
+            var top = foot + Vector3.up * (height - 0.3f);
+            k.Steel.Beam(top + Vector3.back * 0.8f, top + Vector3.forward * 1.4f, 0.03f, 0.03f);
+            for (float z = -0.7f; z < 1.4f; z += 0.3f)
+                k.Steel.Beam(top + new Vector3(-0.35f + z * 0.08f, 0, z), top + new Vector3(0.35f - z * 0.08f, 0, z), 0.015f, 0.015f);
+            foreach (var d in new[] { new Vector3(1.2f, 0, 1.2f), new Vector3(-1.2f, 0, 1.2f), new Vector3(0, 0, -1.6f) })
+                k.Steel.Beam(foot + Vector3.up * height * 0.6f, foot + d, 0.012f, 0.012f);
         }
 
         /// <summary>A port shed: corrugated walls on a concrete plinth, a shallow roof.</summary>
