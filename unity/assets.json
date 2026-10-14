@@ -166,6 +166,24 @@
         "nor_gl",
         "arm"
       ]
+    },
+    {
+      "id": "rock_boulder_dry",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "cliff_side",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
     }
   ],
   "models": [

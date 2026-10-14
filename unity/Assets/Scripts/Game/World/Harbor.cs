@@ -67,7 +67,7 @@ namespace SniperDuel.Game.World
             k.Concrete.Object("Concrete", Library.Surface("concrete_wall_008", 4, new Color(0.74f, 0.73f, 0.7f)), root);
             k.RoofDeck.Object("Roof decks", Library.Surface("concrete_wall_008", 3, new Color(0.6f, 0.6f, 0.58f)), root);
             k.Roofs.Object("Roofs", Library.Plain(new Color(0.33f, 0.33f, 0.32f), 0.2f), root);
-            k.Plant.Object("Rooftop plant", Library.Surface("metal_plate", 2, new Color(0.7f, 0.71f, 0.7f), 0.5f), root);
+            k.Plant.Object("Rooftop plant", Library.Plain(new Color(0.62f, 0.64f, 0.63f), 0.35f, 0.3f), root);
             k.Iron.Object("Corrugated iron", Library.Surface("corrugated_iron_02", 3, new Color(0.62f, 0.66f, 0.7f)), root);
             k.Rust.Object("Rusty steel", Library.Surface("rusty_metal_02", 2), root);
             k.Dark.Object("Openings", Library.Plain(new Color(0.05f, 0.055f, 0.06f), 0.6f), root, shadows: false);

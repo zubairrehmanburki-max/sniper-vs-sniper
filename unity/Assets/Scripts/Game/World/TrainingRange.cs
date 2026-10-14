@@ -24,7 +24,7 @@ namespace SniperDuel.Game.World
             var lane = Biomes.LaneOf(map);
             float length = (float)map.LaneLength;
 
-            Biomes.Cover(map, root, new Biomes.CoverKit { Rock = Library.Surface("rocky_terrain_02", 3), Default = CoverLook.Concrete });
+            Biomes.Cover(map, root, new Biomes.CoverKit { Rock = Library.Rock(3), Default = CoverLook.Concrete });
 
             FiringLines(map, root, Y);
             Boards(root, Y);

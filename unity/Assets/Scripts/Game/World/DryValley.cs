@@ -25,7 +25,7 @@ namespace SniperDuel.Game.World
             var lane = Biomes.LaneOf(map);
             float length = (float)map.LaneLength;
 
-            var rock = Library.Surface("rocky_terrain_02", 3, new Color(0.98f, 0.82f, 0.66f));
+            var rock = Library.Rock(3, new Color(1f, 0.86f, 0.72f));
             Biomes.Cover(map, root, new Biomes.CoverKit { Rock = rock });
 
             Outcrops(map, root, rng, lane, Y);
@@ -53,7 +53,7 @@ namespace SniperDuel.Game.World
                 MinHeight = 90,
                 MaxHeight = 280,
                 Mesa = true,
-                Rock = Library.Surface("rocky_terrain_02", 60, new Color(0.96f, 0.76f, 0.58f)),
+                Rock = Library.Rock(60, new Color(1f, 0.82f, 0.64f)),
                 Seed = 34,
                 Ground = Y,
             });
@@ -109,7 +109,7 @@ namespace SniperDuel.Game.World
                 float size = 0.12f + (float)rng.NextDouble() * 0.2f;
                 Biomes.Boulder(pebbles, new Vector3(x, Y(x, s) - size * 0.35f, s), new Vector3(size * 1.3f, size, size * 1.1f), rng.Next(1000), 0.8f, 0.25f, (float)rng.NextDouble() * 360);
             }
-            var stone = Library.Surface("rocky_terrain_02", 3, new Color(0.98f, 0.82f, 0.66f));
+            var stone = Library.Rock(3, new Color(1f, 0.86f, 0.72f));
             boulders.Object("Boulders", stone, root);
             pebbles.Object("Pebbles", stone, root, shadows: false);
         }

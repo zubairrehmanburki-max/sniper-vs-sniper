@@ -473,8 +473,8 @@ namespace SniperDuel.Rules
                     LaneHalfWidth = 60,
                     Palette = new Palette
                     {
-                        Sky = SkyKind.Sunrise,
-                        SunAzimuthDeg = 250,
+                        Sky = SkyKind.Clear,
+                        SunAzimuthDeg = 140,
                         Lane = V(0.08, 0.05, 0.5),
                         Outside = V(0.58, 0.25, 0.42),
                         Water = V(0.56, 0.35, 0.32),

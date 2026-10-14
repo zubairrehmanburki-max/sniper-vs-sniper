@@ -55,6 +55,17 @@ namespace SniperDuel.Game.World
             return mat;
         }
 
+        /// <summary>
+        /// Bare rock for boulders, outcrops and far hills: the first scanned rock set that was
+        /// downloaded (rocky_terrain_02 is grassy ground, not rock).
+        /// </summary>
+        public static Material Rock(float tileMetres, Color? tint = null)
+        {
+            foreach (var id in new[] { "rock_boulder_dry", "cliff_side", "aerial_rocks_02" })
+                if (Load<Texture2D>($"TP/Textures/{id}/{id}_diff_2k") != null) return Surface(id, tileMetres, tint);
+            return Surface("aerial_rocks_02", tileMetres, tint);
+        }
+
         public static Material Plain(Color color, float smoothness = 0.3f, float metallic = 0)
         {
             var mat = new Material(Template("LitPlain"));

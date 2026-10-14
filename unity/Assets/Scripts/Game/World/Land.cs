@@ -127,7 +127,7 @@ namespace SniperDuel.Game.World
                     ("gravelly_sand", "coast_sand_01", 7f, new Color(1.02f, 0.93f, 0.8f)),
                     ("coast_sand_01", "coast_sand_01", 9f, new Color(1.08f, 0.94f, 0.76f)),
                     ("red_laterite_soil_stones", "brown_mud_leaves_01", 8f, new Color(1f, 0.88f, 0.76f)),
-                    ("rocky_terrain_02", "rocky_terrain_02", 16f, new Color(1.05f, 0.88f, 0.72f)),
+                    ("rock_boulder_dry", "red_laterite_soil_stones", 16f, new Color(1.05f, 0.9f, 0.76f)),
                 },
                 Mix = (x, s, y, slope, n1, n2, water, w) =>
                 {
@@ -152,7 +152,7 @@ namespace SniperDuel.Game.World
                 {
                     ("sparse_grass", "sparse_grass", 10f, new Color(0.86f, 0.9f, 0.74f)),
                     ("rocky_terrain_02", "rocky_terrain_02", 12f, new Color(0.9f, 0.9f, 0.92f)),
-                    ("aerial_rocks_02", "rocky_terrain_02", 20f, new Color(0.85f, 0.86f, 0.9f)),
+                    ("cliff_side", "aerial_rocks_02", 20f, new Color(0.85f, 0.86f, 0.9f)),
                     ("snow_02", "coast_sand_01", 9f, White),
                 },
                 Mix = (x, s, y, slope, n1, n2, water, w) =>

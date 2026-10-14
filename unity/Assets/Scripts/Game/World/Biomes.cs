@@ -146,7 +146,7 @@ namespace SniperDuel.Game.World
             if (rock.VertexCount > 0) rock.Object("Cover rock", kit.Rock, root);
             if (snow.VertexCount > 0 && kit.Snow != null) snow.Object("Cover snow", kit.Snow, root);
             if (bark.VertexCount > 0) bark.Object("Cover logs", Bark, root);
-            if (metal.VertexCount > 0) metal.Object("Cover metal", Library.Surface("metal_plate", 2, new Color(0.78f, 0.79f, 0.77f), 0.6f), root);
+            if (metal.VertexCount > 0) metal.Object("Cover metal", Library.Plain(new Color(0.66f, 0.68f, 0.67f), 0.35f, 0.3f), root);
             if (grille.VertexCount > 0) grille.Object("Cover grilles", Library.Plain(new Color(0.06f, 0.065f, 0.07f), 0.3f, 0.6f), root, shadows: false);
             if (concrete.VertexCount > 0) concrete.Object("Cover concrete", Library.Surface("concrete_wall_008", 4, new Color(0.82f, 0.8f, 0.76f)), root);
         }

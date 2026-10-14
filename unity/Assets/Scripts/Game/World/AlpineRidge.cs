@@ -23,7 +23,7 @@ namespace SniperDuel.Game.World
             var lane = Biomes.LaneOf(map);
             float length = (float)map.LaneLength;
             var snow = Snow(4);
-            var rock = Library.Surface("rocky_terrain_02", 3, new Color(0.84f, 0.86f, 0.9f));
+            var rock = Library.Rock(3, new Color(0.84f, 0.86f, 0.9f));
 
             Biomes.Cover(map, root, new Biomes.CoverKit { Rock = rock, Snow = snow, SnowAbove = SnowLine });
 
@@ -48,7 +48,7 @@ namespace SniperDuel.Game.World
             {
                 MinHeight = 420,
                 MaxHeight = 1300,
-                Rock = Library.Surface("rocky_terrain_02", 80, new Color(0.72f, 0.75f, 0.82f)),
+                Rock = Library.Rock(80, new Color(0.72f, 0.75f, 0.82f)),
                 Snow = Snow(60),
                 SnowAbove = 260,
                 Seed = 46,

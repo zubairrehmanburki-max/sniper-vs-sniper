@@ -136,9 +136,13 @@ namespace SniperDuel.EditorTools
                     var c = px[i];
                     px[i] = new Color32(c.b, c.r, 0, (byte)(255 - c.g));
                 }
-                tex.SetPixels32(px);
-                File.WriteAllBytes(outPath, tex.EncodeToPNG());
+                // LoadImage turns a JPEG into RGB24, which would drop the smoothness alpha (every
+                // surface then reads as mirror-smooth), so write the mask from a fresh RGBA texture.
+                var mask = new Texture2D(tex.width, tex.height, TextureFormat.RGBA32, false, true);
+                mask.SetPixels32(px);
+                File.WriteAllBytes(outPath, mask.EncodeToPNG());
                 UnityEngine.Object.DestroyImmediate(tex);
+                UnityEngine.Object.DestroyImmediate(mask);
             }
         }
 
