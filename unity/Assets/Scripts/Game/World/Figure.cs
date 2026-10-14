@@ -206,6 +206,16 @@ namespace SniperDuel.Game.World
             model.rotation = turn * model.rotation;
             model.position = pivot + turn * (model.position - pivot);
 
+            // Rigid gear sitting on the head (the headset) hangs off the model root, not the skeleton,
+            // so it would stay put while the neck swings: carry it with the head instead.
+            foreach (var mr in model.GetComponentsInChildren<Renderer>())
+            {
+                if (mr.transform.IsChildOf(hips)) continue;
+                float d = Vector3.Distance(mr.bounds.center, head.position);
+                if (mr is MeshRenderer && d < 0.35f * height / 1.8f) mr.transform.SetParent(head, true);
+                if (d < 0.5f) Debug.Log($"[Figure] near head: {mr.name} ({mr.GetType().Name}) {d:0.00} m");
+            }
+
             foreach (var (bone, next, dir) in pose.Limbs)
             {
                 if (!bones.TryGetValue(bone, out var b) || !bones.TryGetValue(next, out var c)) continue;
