@@ -95,7 +95,13 @@ namespace SniperDuel.Game
         SwayOffset lastSway;
         Vector2 eyeShown;
 
-        public static Duel Begin(GameConfig cfg, UiHost ui, CameraRig rig, Arena arena, string playerName, string rifleId, BotDifficulty bot)
+        /// <summary>The rifle the bot takes into a duel.</summary>
+        public static string BotRifle(GameConfig cfg, BotDifficulty bot, string playerRifle) => cfg.Rifles.Count > 1 ? cfg.Rifles[1].Id : playerRifle;
+
+        /// <summary>A fresh match seed (the versus card rolls it so it can show the match's conditions).</summary>
+        public static uint NewSeed() => (uint)(DateTime.UtcNow.Ticks ^ UnityEngine.Random.Range(0, int.MaxValue)) | 1;
+
+        public static Duel Begin(GameConfig cfg, UiHost ui, CameraRig rig, Arena arena, string playerName, string rifleId, BotDifficulty bot, uint seed)
         {
             var d = new GameObject("Duel").AddComponent<Duel>();
             d.cfg = cfg;
@@ -103,8 +109,7 @@ namespace SniperDuel.Game
             d.rig = rig;
             d.arena = arena;
             d.map = arena.Map;
-            uint seed = (uint)(DateTime.UtcNow.Ticks ^ UnityEngine.Random.Range(0, int.MaxValue)) | 1;
-            var botRifle = cfg.Rifles.Count > 1 ? cfg.Rifles[1].Id : rifleId;
+            var botRifle = BotRifle(cfg, bot, rifleId);
             d.State = Match.CreateMatch(seed, arena.Map.Id, new PerSide<PlayerSetup>(
                 new PlayerSetup(playerName, rifleId),
                 new PlayerSetup(Catalog.BotName(bot), botRifle, bot)), 0, cfg);
@@ -582,6 +587,7 @@ namespace SniperDuel.Game
             k.Text("drop", $"{Math.Abs(last.Y):0.00} m");
             k.Text("drift", $"{Math.Abs(last.Z):0.00} m {(last.Z >= 0 ? "R" : "L")}");
             double dist = Math.Sqrt(Sq(o.Impact.Point.X - o.Eye.X) + Sq(o.Impact.Point.Z - o.Eye.Z));
+            k.Text("lane", $"{dist:0} m");
             var cam = BulletCam.Play(o, rig, arena.Root, (f, speed) =>
             {
                 k.Fill("progress", f);

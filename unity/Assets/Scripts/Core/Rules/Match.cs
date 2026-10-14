@@ -172,6 +172,12 @@ namespace SniperDuel.Rules
     {
         public static Side Other(Side s) => s == Side.A ? Side.B : Side.A;
 
+        /// <summary>
+        /// Who takes the first shot of the current round: the side that doesn't move first (on a
+        /// fixed-position map, where nobody moves, the same side). Rounds alternate.
+        /// </summary>
+        public static Side FirstShooter(MatchState state) => Other(state.FirstMover);
+
         /// <summary>Weather and layered wind for a round: rolled from the match seed, drifting a little each round.</summary>
         public static Conditions RollConditions(DuelMap map, uint seed, int round, GameConfig cfg)
         {

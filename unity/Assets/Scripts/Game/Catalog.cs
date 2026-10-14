@@ -20,8 +20,6 @@ namespace SniperDuel.Game
         /// <summary>Index into Catalog.Units (1 or 2; 0 is "all").</summary>
         public int Unit;
         public string Bio = "";
-        /// <summary>Locked operators show a silhouette and say how to earn them.</summary>
-        public string? Locked;
     }
 
     /// <summary>One attachment choice in a gunsmith slot. Effects are shown on the stat panels.</summary>
@@ -46,13 +44,18 @@ namespace SniperDuel.Game
         public PartInfo[] Options = System.Array.Empty<PartInfo>();
     }
 
-    /// <summary>A free battle pass reward.</summary>
+    /// <summary>A free battle pass reward: silver, gold, or an item (a finish, an outfit, an operator).</summary>
     public readonly struct PassReward
     {
         public readonly int Silver, Gold;
-        public PassReward(int silver, int gold) { Silver = silver; Gold = gold; }
-        public string Value => (Silver > 0 ? Silver : Gold).ToString("#,0");
-        public string Kind => Silver > 0 ? "SILVER" : "GOLD";
+        /// <summary>The item's name and kind ("ESTUARY CAMO", "FINISH"), or null for currency.</summary>
+        public readonly string? Item, ItemKind;
+        public PassReward(int silver, int gold) { Silver = silver; Gold = gold; Item = ItemKind = null; }
+        public PassReward(string item, string kind) { Silver = Gold = 0; Item = item; ItemKind = kind; }
+        public string Value => Item ?? (Silver > 0 ? Silver : Gold).ToString("#,0");
+        public string Kind => ItemKind ?? (Silver > 0 ? "SILVER" : "GOLD");
+        /// <summary>"750 silver", "the Estuary camo finish".</summary>
+        public string Describe() => Item != null ? $"{Item} ({ItemKind!.ToLowerInvariant()})" : $"{Value} {Kind.ToLowerInvariant()}";
     }
 
     /// <summary>
@@ -61,6 +64,40 @@ namespace SniperDuel.Game
     /// </summary>
     public static class Catalog
     {
+        // ---- app ------------------------------------------------------------
+
+        /// <summary>"v2.0 (build 58)": the build number matches TestFlight; local builds say "dev".</summary>
+        public static string Version
+        {
+            get
+            {
+                var t = Resources.Load<TextAsset>("BuildInfo");
+                string b = t != null ? t.text.Trim() : "";
+                return b == "" || b == "dev" ? $"v{Application.version} (dev)" : $"v{Application.version} (build {b})";
+            }
+        }
+
+        /// <summary>
+        /// Who made the third-party assets in this build, from the CREDITS file the asset fetch writes:
+        /// the CC-BY models by name and author, then the CC0 and OFL sources in one line.
+        /// </summary>
+        public static string Credits()
+        {
+            var lines = new System.Collections.Generic.List<string>();
+            var t = Resources.Load<TextAsset>("TP/CREDITS");
+            if (t != null)
+                foreach (var row in t.text.Split('\n'))
+                {
+                    var c = row.Split('|');
+                    // | Asset | Source | Author | Licence | Link |
+                    if (c.Length < 6 || !c[4].Contains("CC-BY")) continue;
+                    lines.Add($"{c[1].Trim()} by {c[3].Trim()} ({c[4].Trim()}, Sketchfab)");
+                }
+            if (lines.Count == 0) lines.Add("Soldier: Military tactical suit; rifle: Low-Poly L115A3 (CC-BY 4.0, Sketchfab)");
+            lines.Add("Skies, textures and props: Poly Haven (CC0). Fonts: Google Fonts (OFL). Every sound is synthesised in the game.");
+            return string.Join(". ", lines);
+        }
+
         // ---- modes ---------------------------------------------------------
 
         public static readonly string[] ModeNames = { "RANKED DUEL", "QUICK DUEL", "PRIVATE DUEL", "VS BOT", "TRAINING" };
@@ -84,6 +121,27 @@ namespace SniperDuel.Game
             BotDifficulty.Easy => "RECRUIT",
             BotDifficulty.Hard => "GHOSTWIND",
             _ => "VIPER",
+        };
+
+        // ---- maps ----------------------------------------------------------
+
+        /// <summary>The terrain word on a map tile ("ESTUARY") and what each side's position is called ("BRIDGE").</summary>
+        public static (string region, string spot) MapInfo(string id) => id switch
+        {
+            "twin-bridges" => ("ESTUARY", "BRIDGE"),
+            "watchtowers" => ("MARSH", "TOWER"),
+            "oil-rigs" => ("OPEN SEA", "RIG"),
+            "dry-valley" => ("DESERT", "RIDGE"),
+            "harbor-rooftops" => ("URBAN", "ROOFTOP"),
+            "alpine-ridge" => ("MOUNTAIN", "PEAK"),
+            _ => ("RANGE", "FIRING POINT"),
+        };
+
+        public static string LightName(SkyKind? sky) => sky switch
+        {
+            SkyKind.Sunrise => "SUNRISE",
+            SkyKind.Sunset => "SUNSET",
+            _ => "CLEAR DAY",
         };
 
         // ---- ranks ---------------------------------------------------------
@@ -118,12 +176,25 @@ namespace SniperDuel.Game
             new OperatorInfo { Name = "VARGA", Unit = 1, Bio = "Former harbour pilot. Reads water like a chart and never takes the first shot when the tide is turning." },
             new OperatorInfo { Name = "HOLLIS", Unit = 2, Bio = "Mountain warfare instructor. Counts the seconds between flash and crack, then waits one more." },
             new OperatorInfo { Name = "KESTREL", Unit = 1, Bio = "Saltmarsh scout. Lies still for hours and fires only when the reeds stop moving." },
-            new OperatorInfo { Name = "UNKNOWN", Unit = 2, Bio = "A season operator, still classified.", Locked = "Reach Battle Pass tier 50 to unlock this operator." },
+            new OperatorInfo { Name = "SHADE", Unit = 2, Bio = "Season 01's operator. Ex-coastguard marksman who learned to shoot from a pitching deck, so a steady bridge feels like cheating." },
         };
 
-        public static readonly string[] Outfits = { "Estuary standard", "Night ops", "Saltmarsh ghillie", "Season outfit" };
-        /// <summary>The last outfit is a season reward.</summary>
+        /// <summary>The season operator, earned on the Battle Pass free track.</summary>
+        public const int SeasonOperator = 3;
+
+        /// <summary>Why an operator can't be picked yet, or null if it can.</summary>
+        public static string? OperatorLock(int op) =>
+            op == SeasonOperator && !Profile.Claimed(SeasonOperatorTier) ? $"Claim Battle Pass tier {SeasonOperatorTier} to unlock this operator." : null;
+
+        /// <summary>The name to show for an operator: locked ones stay classified.</summary>
+        public static string OperatorName(int op) => OperatorLock(op) != null ? "CLASSIFIED" : Operators[op].Name;
+
+        public static readonly string[] Outfits = { "Estuary standard", "Night ops", "Saltmarsh ghillie", "Season 01 outfit" };
+        /// <summary>The last outfit is a Battle Pass reward.</summary>
         public const int LockedOutfit = 3;
+
+        public static string? OutfitLock(int outfit) =>
+            outfit == LockedOutfit && !Profile.Claimed(SeasonOutfitTier) ? $"Claim Battle Pass tier {SeasonOutfitTier} to unlock the season outfit." : null;
 
         // ---- gunsmith ------------------------------------------------------
 
@@ -192,15 +263,34 @@ namespace SniperDuel.Game
         };
 
         public static readonly string[] Finishes = { "CERAKOTE BLACK", "FLAT DARK EARTH", "RANGER GREEN", "SNIPER GREY", "ESTUARY CAMO", "GILT" };
-        /// <summary>Finishes from here on are premium pass rewards.</summary>
+        /// <summary>Finishes from here on are Battle Pass rewards.</summary>
         public const int FirstLockedFinish = 4;
+
+        /// <summary>The pass tier that unlocks a finish, or 0 if it's open from the start.</summary>
+        public static int FinishTier(int finish) => finish < FirstLockedFinish ? 0 : finish == FirstLockedFinish ? CamoTier : GiltTier;
+
+        public static string? FinishLock(int finish)
+        {
+            int t = FinishTier(finish);
+            return t > 0 && !Profile.Claimed(t) ? $"Claim Battle Pass tier {t} to unlock {Finishes[finish]}." : null;
+        }
 
         // ---- battle pass ---------------------------------------------------
 
         public const int PassTiers = 50;
+        public const int CamoTier = 20, SeasonOutfitTier = 30, GiltTier = 40, SeasonOperatorTier = 50;
+        public const string SeasonName = "SEASON 01 · OPEN WATER";
+        /// <summary>The season's last day (local time); the pass stays claimable until it ends.</summary>
+        public static readonly System.DateTime SeasonEnd = new System.DateTime(2026, 12, 31, 23, 59, 59);
 
-        /// <summary>The free track: silver most tiers, gold every fifth.</summary>
-        public static PassReward FreeReward(int tier) =>
-            tier % 5 == 0 ? new PassReward(0, 50 + tier * 2) : new PassReward(250 + tier * 50, 0);
+        /// <summary>The free track: silver most tiers, gold every fifth, and an item at tiers 20, 30, 40 and 50.</summary>
+        public static PassReward FreeReward(int tier) => tier switch
+        {
+            CamoTier => new PassReward(Finishes[FirstLockedFinish], "FINISH"),
+            SeasonOutfitTier => new PassReward("SEASON 01 OUTFIT", "OUTFIT"),
+            GiltTier => new PassReward(Finishes[FirstLockedFinish + 1], "FINISH"),
+            SeasonOperatorTier => new PassReward(Operators[SeasonOperator].Name, "OPERATOR"),
+            _ => tier % 5 == 0 ? new PassReward(0, 50 + tier * 2) : new PassReward(250 + tier * 50, 0),
+        };
     }
 }

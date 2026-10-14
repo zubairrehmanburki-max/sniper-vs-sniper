@@ -69,9 +69,10 @@ namespace SniperDuel.Game
 
         void Finish(int k)
         {
-            if (k >= Catalog.FirstLockedFinish)
+            var lockText = Catalog.FinishLock(k);
+            if (lockText != null)
             {
-                Toast.Show(s, Catalog.Finishes[k], "A premium Battle Pass finish. The premium track opens with the store.");
+                Toast.Show(s, "LOCKED", lockText);
                 return;
             }
             Profile.SetFinish(rifle, k);

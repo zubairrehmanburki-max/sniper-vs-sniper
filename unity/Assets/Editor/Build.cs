@@ -39,6 +39,7 @@ namespace SniperDuel.EditorTools
         {
             ConfigurePlayer();
             EnsurePipeline();
+            WriteBuildInfo();
             Prepare.All();
             EnsureScene();
             AssetDatabase.SaveAssets();
@@ -68,6 +69,24 @@ namespace SniperDuel.EditorTools
                 Debug.LogException(e);
                 EditorApplication.Exit(1);
             }
+        }
+
+        /// <summary>
+        /// Puts the build number (Title and Settings show it, to match TestFlight) and a plain-text copy
+        /// of the third-party credits (Settings › Credits) where the game can load them.
+        /// </summary>
+        static void WriteBuildInfo()
+        {
+            const string info = "Assets/Resources/BuildInfo.txt";
+            File.WriteAllText(info, Environment.GetEnvironmentVariable("BUILD_NUMBER") ?? "dev");
+            AssetDatabase.ImportAsset(info);
+            const string credits = "Assets/Resources/TP/CREDITS.md";
+            if (File.Exists(credits))
+            {
+                File.Copy(credits, "Assets/Resources/TP/CREDITS.txt", true);
+                AssetDatabase.ImportAsset("Assets/Resources/TP/CREDITS.txt");
+            }
+            else Debug.LogWarning("[Build] TP/CREDITS.md missing: Settings › Credits falls back to the short list");
         }
 
         static string? Arg(string name)

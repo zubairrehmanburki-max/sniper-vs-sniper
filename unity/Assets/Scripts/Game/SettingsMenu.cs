@@ -26,8 +26,6 @@ namespace SniperDuel.Game
         static readonly Color Line = new Color(Paper.r, Paper.g, Paper.b, 0.2f);
         static readonly Color TrackOff = new Color(Paper.r, Paper.g, Paper.b, 0.22f);
 
-        const string Credits = "Skies, ground and building textures: Poly Haven (CC0). Soldier: Mixamo, via the three.js examples. Every sound is synthesised in the game.";
-
         readonly UiScreen s;
         readonly List<Action> renders = new List<Action>();
         int tab;
@@ -94,9 +92,9 @@ namespace SniperDuel.Game
 
             // Account.
             Picker("acct-callsign", Settings.Callsigns, () => Settings.CallsignIndex, v => Settings.CallsignIndex = v, wrap: true);
-            s.Text("acct-version", "v" + Application.version);
+            s.Text("acct-version", Catalog.Version);
             s.Text("acct-profile", "GUEST · THIS DEVICE");
-            s.On("acct-credits", () => { Changed(); note = Credits; RenderInfo(); });
+            s.On("acct-credits", () => { Changed(); note = Catalog.Credits(); RenderInfo(); });
             s.On("acct-reset", () =>
             {
                 if (!resetArmed)
@@ -104,13 +102,13 @@ namespace SniperDuel.Game
                     Changed();
                     resetArmed = true;
                     s.Text("acct-reset", "TAP TO CONFIRM");
-                    note = "Tap again to clear everything saved on this device: callsign and all settings.";
+                    note = "Tap again to erase everything saved on this device: level, rating, career, Battle Pass, gear, callsign and settings. This can't be undone.";
                     RenderInfo();
                     return;
                 }
                 Settings.ResetAll();
                 Changed();
-                note = "Everything saved on this device was cleared.";
+                note = "Everything saved on this device was erased.";
                 RenderInfo();
             });
 
@@ -121,6 +119,13 @@ namespace SniperDuel.Game
         public void Refresh()
         {
             tab = 0;
+            Changed();
+        }
+
+        /// <summary>Opens on the Account tab (the title screen's account button).</summary>
+        public void OpenAccount()
+        {
+            tab = Array.IndexOf(Tabs, "account");
             Changed();
         }
 
@@ -294,8 +299,8 @@ namespace SniperDuel.Game
                     help = "The crack of a near miss arrives before the rifle's report. Keep effects up to hear where the enemy is shooting from.";
                     break;
                 default:
-                    rows = new[] { ("Callsign", Settings.Callsign), ("Status", "Guest · offline"), ("Version", "v" + Application.version) };
-                    help = "Your callsign and settings are saved on this device until online accounts arrive.";
+                    rows = new[] { ("Callsign", Settings.Callsign), ("Status", "Guest · offline"), ("Version", Catalog.Version) };
+                    help = "Your progress, callsign and settings are saved on this device until online accounts arrive.";
                     break;
             }
             for (int i = 0; i < 3; i++)

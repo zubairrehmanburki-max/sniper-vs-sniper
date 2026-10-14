@@ -72,16 +72,12 @@ namespace SniperDuel.Game
             var title = ui.Get("Title");
             title.On("deploy", () => Go("Lobby"));
             title.On("settings", () => Go("Settings"));
-            title.On("account", () => Go("Career"));
-            title.Text("version", "v" + Application.version + " · OFFLINE");
+            title.On("account", () => { settings.OpenAccount(); Go("Settings", false); });
+            title.Text("version", Catalog.Version + " · OFFLINE");
             title.Show("loading", false);
 
             WireLobby();
             WirePlay();
-
-            var mm = ui.Get("Matchmaking");
-            mm.On("cancel", () => { StopAllCoroutines(); Go("Play"); });
-            mm.On("bot", () => { StopAllCoroutines(); StartCoroutine(Versus()); });
 
             settings = new SettingsMenu(ui.Get("Settings"), () => Go("Lobby"));
             refresh["Settings"] = settings.Refresh;
@@ -101,6 +97,21 @@ namespace SniperDuel.Game
             results.On("continue", () => Go("Lobby"));
             results.On("rematch", () => StartCoroutine(Versus()));
             results.On("bulletcam", Replay);
+        }
+
+        /// <summary>Fills a screen with live data without opening it (the CI screenshot walk).</summary>
+        public void Preview(string screen)
+        {
+            if (screen == "Gunsmith") gunsmith.Open(Profile.Rifle(cfg), 1);
+            if (screen == "Versus" && arena != null)
+            {
+                matchMode = mode;
+                matchBot = Bot;
+                matchRifle = Profile.Rifle(cfg);
+                ShowVersus(arena.Map, 0x5eed);
+                ui.Get("Versus").Text("countdown", "3");
+            }
+            if (refresh.TryGetValue(screen, out var r)) r();
         }
 
         void Go(string screen, bool refreshScreen = true)
@@ -137,21 +148,20 @@ namespace SniperDuel.Game
             lobby.On("career", () => Go("Career"));
             lobby.On("hud", () => Go("HudLayout"));
             lobby.On("settings", () => Go("Settings"));
-            lobby.On("store", () => Toast.Show(lobby, "STORE · COMING SOON",
-                $"The store opens with online play. Until then, claim silver and gold on the Battle Pass free track. You have {Profile.Silver:#,0} silver and {Profile.Gold:#,0} gold."));
-            lobby.On("friends", () => Toast.Show(lobby, "FRIENDS · COMING SOON",
-                $"Friends lists arrive with online accounts. You play as {PlayerName}; change your callsign in Settings › Account."));
+            // Gold is earned on the Battle Pass free track.
+            lobby.On("gold", () => Go("Pass"));
             lobby.On("mail", () =>
             {
-                PlayerPrefs.SetInt("mail.read", 1);
-                PlayerPrefs.Save();
+                var mail = Profile.Mail;
+                int unread = Profile.MailUnread;
+                Profile.MailRead();
                 lobby.Show("mailDot", false);
-                Toast.Show(lobby, "MAIL · SEASON 01", "Open Water has begun. Every duel earns pass XP, and daily orders reset at midnight. Good hunting.", 5f);
-            });
-            lobby.On("invite", () =>
-            {
-                SetMode(GameMode.Private);
-                Go("Play");
+                // The new messages (or the latest one), newest first.
+                var shown = mail.Take(Mathf.Clamp(unread, 1, 3)).ToList();
+                if (shown.Count == 0) return;
+                string title = unread > 0 ? $"MAIL · {unread} NEW" : "MAIL";
+                string text = string.Join("\n", shown.Select(m => $"{m.title}: {m.text}"));
+                Toast.Show(lobby, title, text, 4f + 2f * shown.Count);
             });
             // Daily orders count down to midnight.
             lobby.Root.schedule.Execute(() =>
@@ -172,7 +182,7 @@ namespace SniperDuel.Game
             l.Text("rating", rating.ToString("#,0"));
             l.Text("silver", Profile.Silver.ToString("#,0"));
             l.Text("gold", Profile.Gold.ToString("#,0"));
-            l.Show("mailDot", PlayerPrefs.GetInt("mail.read", 0) == 0);
+            l.Show("mailDot", Profile.Mail.Count > 0 && Profile.MailUnread > 0);
 
             l.Text("modeName", Catalog.ModeNames[(int)mode]);
             var map = Maps.ById(MatchMap);
@@ -180,17 +190,18 @@ namespace SniperDuel.Game
             l.Text("mode", $"{map.Name} · {map.LaneLength:0} m · {tail}");
 
             int tier = Profile.PassTier, unclaimed = Profile.FirstUnclaimed();
+            l.Show("passNew", unclaimed > 0);
             l.Text("passTier", $"TIER {tier} / {Catalog.PassTiers}");
             l.Fill("passBar", (tier - 1 + Profile.Xp % Profile.XpPerTier / (float)Profile.XpPerTier) / Catalog.PassTiers);
             if (unclaimed > 0)
             {
                 var r = Catalog.FreeReward(unclaimed);
-                l.Text("passNext", $"Ready to claim: {r.Value} {r.Kind.ToLowerInvariant()} (tier {unclaimed})");
+                l.Text("passNext", $"Ready to claim: {r.Describe()} (tier {unclaimed})");
             }
             else if (tier < Catalog.PassTiers)
             {
                 var r = Catalog.FreeReward(tier + 1);
-                l.Text("passNext", $"Next: {r.Value} {r.Kind.ToLowerInvariant()} at tier {tier + 1}");
+                l.Text("passNext", $"Next: {r.Describe()} at tier {tier + 1}");
             }
             else l.Text("passNext", "Free track complete");
 
@@ -268,6 +279,12 @@ namespace SniperDuel.Game
             for (int i = 0; i < MapTiles; i++)
             {
                 if (!play.Has("map" + i)) continue;
+                if (i < Maps.Ids.Length)
+                {
+                    var m = Maps.ById(Maps.Ids[i]);
+                    play.Text("map" + i, m.Name.ToUpperInvariant());
+                    play.Text("sub" + i, $"{m.LaneLength:#,0} m · {Catalog.MapInfo(m.Id).region}");
+                }
                 bool on = !training && i < Maps.Ids.Length && Maps.Ids[i] == mapId;
                 Skin.Border(play["map" + i], on ? Skin.Amber : new Color(Skin.Paper.r, Skin.Paper.g, Skin.Paper.b, 0.2f), on ? 2 : 1);
                 play["map" + i].style.opacity = training ? 0.5f : 1f;
@@ -281,7 +298,7 @@ namespace SniperDuel.Game
             play.Text("range", $"{map.LaneLength:0} m");
             var c = map.Climate;
             play.Text("wind", $"{c.WindSpeedMps[0]:0}–{c.WindSpeedMps[1]:0} m/s");
-            play.Text("light", (map.Look.Palette?.Sky ?? SkyKind.Clear).ToString().ToUpperInvariant());
+            play.Text("light", Catalog.LightName(map.Look.Palette?.Sky));
             play.Text("format", training ? "PRACTICE" : "BEST OF 3");
 
             // Online modes may rotate maps; bot modes pick the bot instead.
@@ -297,12 +314,10 @@ namespace SniperDuel.Game
 
         void StartMatch()
         {
-            if (Catalog.Online(mode))
-            {
-                if (Profile.MapRotation) mapId = Maps.Ids[UnityEngine.Random.Range(0, Mathf.Min(MapTiles, Maps.Ids.Length))];
-                StartCoroutine(Matchmake());
-            }
-            else StartCoroutine(Versus());
+            // Online modes rotate maps if asked. Nobody is online until the server is hosted, so every
+            // mode goes straight to a bot duel rather than pretending to search.
+            if (Catalog.Online(mode) && Profile.MapRotation) mapId = Maps.Ids[UnityEngine.Random.Range(0, Mathf.Min(MapTiles, Maps.Ids.Length))];
+            StartCoroutine(Versus());
         }
 
         void EnsureArena()
@@ -314,42 +329,6 @@ namespace SniperDuel.Game
             rig.MenuFocus = Library.ToUnity(arena.Map.Spots.A[0]);
         }
 
-        IEnumerator Matchmake()
-        {
-            Go("Matchmaking");
-            var mm = ui.Get("Matchmaking");
-            var map = Maps.ById(MatchMap);
-            int rating = Profile.Rating;
-            mm.Text("mode", $"{Catalog.ModeNames[(int)mode]} · {map.Name.ToUpperInvariant()}");
-            mm.Text("headline", "SEARCHING FOR OPPONENT");
-            mm.Text("name", PlayerName);
-            mm.Text("rank", $"{Catalog.Rank(rating)} · {rating:#,0}");
-            var rifle = cfg.Rifles.Find(r => r.Id == Profile.Rifle(cfg));
-            mm.Text("kit", $"{rifle?.Name ?? "Rifle"} · {Catalog.Operators[Profile.Operator].Name[0]}{Catalog.Operators[Profile.Operator].Name.Substring(1).ToLowerInvariant()}");
-            mm.Text("opponent", "SEARCHING…");
-            mm.Color("opponent", Skin.Muted);
-            mm.Text("ratingRange", $"{rating - 120:#,0}–{rating + 120:#,0}");
-            mm.Text("region", "OFFLINE");
-            mm.Text("widens", "Online play opens soon");
-            mm.Text("bot", "PLAY BOT NOW");
-            float t = 0;
-            while (t < 3f)
-            {
-                t += Time.deltaTime;
-                mm.Text("wait", $"0:{Mathf.FloorToInt(t):00}");
-                mm.Text("clock", $"00:{Mathf.FloorToInt(t):00}");
-                if (mm.Has("radar")) mm["radar"].style.rotate = new Rotate(Angle.Degrees(t * 120));
-                yield return null;
-            }
-            // Nobody online yet: the bot takes the slot.
-            mm.Text("headline", "ONLINE PLAY OPENS SOON");
-            mm.Text("opponent", Catalog.BotName(Bot) + " · BOT");
-            mm.Color("opponent", Skin.Paper);
-            mm.Text("widens", "Playing a bot match");
-            yield return new WaitForSeconds(1.2f);
-            yield return Versus();
-        }
-
         IEnumerator Versus()
         {
             Go("Versus");
@@ -358,20 +337,56 @@ namespace SniperDuel.Game
             matchMode = mode;
             matchBot = Bot;
             matchRifle = Profile.Rifle(cfg);
+            uint seed = Duel.NewSeed();
+            ShowVersus(map, seed);
             var v = ui.Get("Versus");
-            v.Text("name", PlayerName);
-            v.Text("enemy", Catalog.BotName(matchBot));
-            v.Text("map", map.Name.ToUpperInvariant());
-            v.Text("range", $"{map.LaneLength:0} m");
-            v.Text("wind", $"{map.Climate.WindSpeedMps[0]:0}–{map.Climate.WindSpeedMps[1]:0} m/s");
             for (int n = 3; n > 0; n--)
             {
                 v.Text("countdown", n.ToString());
                 yield return new WaitForSeconds(1);
             }
-            duel = Duel.Begin(cfg, ui, rig, arena, PlayerName, matchRifle, matchBot);
+            duel = Duel.Begin(cfg, ui, rig, arena, PlayerName, matchRifle, matchBot, seed);
             Settings.SetInMenus(false);
             duel.Finished += ShowResults;
+        }
+
+        /// <summary>The versus card, from the match about to be played: both kits, who shoots first, the round 1 wind and air.</summary>
+        void ShowVersus(DuelMap map, uint seed)
+        {
+            var v = ui.Get("Versus");
+            string botRifle = Duel.BotRifle(cfg, matchBot, matchRifle);
+            var preview = Match.CreateMatch(seed, map.Id, new PerSide<PlayerSetup>(
+                new PlayerSetup(PlayerName, matchRifle), new PlayerSetup(Catalog.BotName(matchBot), botRifle, matchBot)), 0, cfg);
+            string RifleName(string id) => cfg.Rifles.Find(r => r.Id == id)?.Name.Replace("Bolt-action 6.5", "6.5") ?? id;
+
+            string spot = Catalog.MapInfo(map.Id).spot;
+            v.Text("youSpot", $"{spot} A · YOU");
+            v.Text("enemySpot", $"{spot} B · ENEMY");
+            int rating = Profile.Rating;
+            v.Text("name", PlayerName);
+            v.Text("kit", $"{Catalog.Rank(rating)} · {rating:#,0} · {RifleName(matchRifle)}");
+            v.Text("enemy", Catalog.BotName(matchBot));
+            string botLevel = Catalog.DifficultyNames[(int)matchBot] + " BOT";
+            v.Text("enemyKit", matchMode == GameMode.Ranked
+                ? $"{botLevel} · {Catalog.BotRating(matchBot):#,0} · {RifleName(botRifle)}"
+                : $"{botLevel} · {RifleName(botRifle)}");
+            bool meFirst = Match.FirstShooter(preview) == Side.A;
+            v.Text("first", meFirst ? "YOU SHOOT FIRST" : "ENEMY SHOOTS FIRST");
+            v.Color("first", Skin.Ink);
+            if (v.Has("first")) v["first"].style.backgroundColor = meFirst ? Skin.Amber : Skin.Red;
+
+            v.Text("map", map.Name.ToUpperInvariant());
+            v.Text("range", $"{map.LaneLength:#,0} m");
+            // Round 1's mid-lane wind, as the clock face a spotter calls it: where it blows from.
+            var zones = preview.Conditions.Wind.Zones;
+            var mid = zones.Count > 0 ? zones[zones.Count / 2] : new Vec3(0, 0, 0);
+            var u = Library.ToUnity(mid);
+            double speed = Math.Sqrt(mid.X * mid.X + mid.Z * mid.Z);
+            int clock = (int)Math.Round(Mathf.Repeat(Mathf.Atan2(u.x, u.z) * Mathf.Rad2Deg + 180, 360) / 30) % 12;
+            v.Text("wind", speed < 0.3 ? "Calm" : $"{speed:0.0} m/s · {(clock == 0 ? 12 : clock)} o'clock");
+            var air = preview.Conditions.Atmosphere;
+            v.Text("air", $"{air.TemperatureC:0} °C · {air.PressureHPa:0} hPa");
+            v.Text("light", Catalog.LightName(map.Look.Palette?.Sky));
         }
 
         // ---- results -------------------------------------------------------

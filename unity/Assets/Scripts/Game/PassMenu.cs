@@ -1,13 +1,14 @@
 using System;
 using SniperDuel.Game.Ui;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace SniperDuel.Game
 {
     /// <summary>
     /// Drives the Battle Pass screen: the current tier and XP from Profile, a six-tier window of
-    /// the free track around it (tap a reached tier to claim its silver or gold, saved), and the
-    /// premium track and purchase buttons, which say the store isn't open yet.
+    /// the free track around it (tap a reached tier to claim its silver, gold or item, saved), the
+    /// days left in the season and the tier 50 operator.
     /// </summary>
     public sealed class PassMenu
     {
@@ -16,20 +17,20 @@ namespace SniperDuel.Game
 
         readonly UiScreen s;
         int first = 1;
+        // The reward value's size as the mockup sets it; item names are set smaller to fit.
+        readonly StyleLength valueSize;
         string? note;
 
         public PassMenu(UiScreen screen, Action back)
         {
             s = screen;
             s.On("back", back);
+            valueSize = s.Has("free0v") ? s["free0v"].style.fontSize : new StyleLength(StyleKeyword.Null);
             for (int i = 0; i < Columns; i++)
             {
                 int k = i;
                 s.On("free" + i, () => Claim(first + k));
-                s.On("prem" + i, () => Say("Premium rewards unlock with the premium track. The store opens with online play."));
             }
-            s.On("buy", () => Say("Tiers can't be bought yet: every duel earns pass XP, 1,000 per tier."));
-            s.On("premium", () => Say("The premium track goes on sale when the store opens with online play."));
         }
 
         public void Refresh()
@@ -52,14 +53,19 @@ namespace SniperDuel.Game
         {
             var r = Catalog.FreeReward(tier);
             if (Profile.Claimed(tier)) note = $"Tier {tier} is already claimed.";
-            else if (tier > Profile.PassTier) note = $"Reach tier {tier} to claim {r.Value} {r.Kind.ToLowerInvariant()}. Each tier is 1,000 XP.";
-            else if (Profile.Claim(tier)) note = $"Claimed {r.Value} {r.Kind.ToLowerInvariant()} from tier {tier}.";
+            else if (tier > Profile.PassTier) note = $"Reach tier {tier} to claim {r.Describe()}. Each tier is {Profile.XpPerTier:#,0} XP.";
+            else if (Profile.Claim(tier)) note = $"Claimed {r.Describe()} from tier {tier}." + (r.Item != null ? " It's unlocked now." : "");
             Render();
         }
 
         void Render()
         {
             int tier = Profile.PassTier, xp = Profile.Xp;
+            var left = Catalog.SeasonEnd - DateTime.Now;
+            s.Text("daysLeft", left.TotalDays >= 2 ? $"{(int)left.TotalDays} DAYS LEFT" : left.TotalSeconds > 0 ? $"{(int)left.TotalHours} HOURS LEFT" : "SEASON ENDED");
+            bool op = Profile.Claimed(Catalog.SeasonOperatorTier);
+            s.Text("goalName", Catalog.Operators[Catalog.SeasonOperator].Name);
+            s.Text("goalText", op ? "Operator · unlocked" : $"Operator · claim tier {Catalog.SeasonOperatorTier} to unlock");
             s.Text("tier", tier.ToString());
             s.Text("tierLabel", $"TIER {tier}");
             if (tier >= Catalog.PassTiers)
@@ -82,6 +88,7 @@ namespace SniperDuel.Game
                 s.Color("t" + i, t == tier ? Skin.Amber : reached ? Skin.Paper : Skin.Muted);
                 var r = Catalog.FreeReward(t);
                 s.Text("free" + i + "v", r.Value);
+                if (s.Has("free" + i + "v")) s["free" + i + "v"].style.fontSize = r.Item != null ? new StyleLength(12f) : valueSize;
                 s.Text("free" + i + "k", claimed ? r.Kind + " · CLAIMED" : reached ? "TAP TO CLAIM" : r.Kind);
                 s.Color("free" + i + "k", reached && !claimed ? Skin.Amber : Skin.Muted);
                 if (!s.Has("free" + i)) continue;

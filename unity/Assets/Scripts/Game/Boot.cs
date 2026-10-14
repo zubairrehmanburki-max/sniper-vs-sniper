@@ -16,7 +16,7 @@ namespace SniperDuel.Game
     {
         public static readonly string[] AllScreens =
         {
-            "Title", "Lobby", "Play", "Loadout", "Operators", "Matchmaking", "Versus", "Hud", "Scope",
+            "Title", "Lobby", "Play", "Loadout", "Operators", "Versus", "Hud", "Scope",
             "Killcam", "Results", "Settings", "Gunsmith", "HudLayout", "Career", "Pass",
         };
 
@@ -69,7 +69,8 @@ namespace SniperDuel.Game
             string? capture = Arg("-capture-all");
             if (capture != null)
             {
-                yield return CaptureAll(capture);
+                // The menus filled from a fresh profile, as a new install sees them.
+                yield return CaptureAll(capture, Flow.Create(Config, ui, rig, arena));
                 yield break;
             }
             Flow.Create(Config, ui, rig, arena);
@@ -137,13 +138,13 @@ namespace SniperDuel.Game
             }
         }
 
-        IEnumerator CaptureAll(string dir)
+        IEnumerator CaptureAll(string dir, Flow flow)
         {
             Directory.CreateDirectory(dir);
             int n = 0;
             foreach (var name in AllScreens)
             {
-                try { Frame(name); ui.Show(name); }
+                try { Frame(name); flow.Preview(name); ui.Show(name); }
                 catch (Exception e) { Debug.LogException(e); continue; }
                 for (int f = 0; f < 6; f++) yield return null;
                 string path = Path.Combine(dir, $"{++n:00}-{name}.png");

@@ -46,10 +46,10 @@ namespace SniperDuel.Game
 
         void Select(int k)
         {
-            var op = Catalog.Operators[k];
-            if (op.Locked != null)
+            var lockText = Catalog.OperatorLock(k);
+            if (lockText != null)
             {
-                Toast.Show(s, "LOCKED", op.Locked);
+                Toast.Show(s, "LOCKED", lockText);
                 return;
             }
             Profile.Operator = k;
@@ -58,9 +58,10 @@ namespace SniperDuel.Game
 
         void Outfit(int k)
         {
-            if (k == Catalog.LockedOutfit)
+            var lockText = Catalog.OutfitLock(k);
+            if (lockText != null)
             {
-                Toast.Show(s, "LOCKED", "Season outfits come from the Battle Pass premium track, which opens with the store.");
+                Toast.Show(s, "LOCKED", lockText);
                 return;
             }
             Profile.SetOutfit(Profile.Operator, k);
@@ -79,8 +80,9 @@ namespace SniperDuel.Game
                 if (!s.Has("op" + i)) continue;
                 var e = s["op" + i];
                 var op = Catalog.Operators[i];
-                bool on = i == cur;
-                Skin.Border(e, on ? Skin.Amber : new Color(Skin.Paper.r, Skin.Paper.g, Skin.Paper.b, op.Locked != null ? 0.12f : 0.18f), on ? 2 : 1);
+                bool on = i == cur, locked = Catalog.OperatorLock(i) != null;
+                Skin.Border(e, on ? Skin.Amber : new Color(Skin.Paper.r, Skin.Paper.g, Skin.Paper.b, locked ? 0.12f : 0.18f), on ? 2 : 1);
+                s.Text("op" + i, locked ? $"PASS TIER {Catalog.SeasonOperatorTier}" : op.Name);
                 // The filter dims rather than hides, so the grid keeps its shape.
                 e.style.opacity = unit == 0 || op.Unit == unit ? 1f : 0.3f;
             }
@@ -100,7 +102,7 @@ namespace SniperDuel.Game
             {
                 if (!s.Has("outfit" + i)) continue;
                 bool on = i == outfit;
-                Skin.Border(s["outfit" + i], on ? Skin.Amber : new Color(Skin.Paper.r, Skin.Paper.g, Skin.Paper.b, i == Catalog.LockedOutfit ? 0.12f : 0.2f), on ? 2 : 1);
+                Skin.Border(s["outfit" + i], on ? Skin.Amber : new Color(Skin.Paper.r, Skin.Paper.g, Skin.Paper.b, Catalog.OutfitLock(i) != null ? 0.12f : 0.2f), on ? 2 : 1);
             }
             s.Text("equip", "EQUIPPED");
         }

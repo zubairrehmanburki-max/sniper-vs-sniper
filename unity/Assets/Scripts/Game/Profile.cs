@@ -60,8 +60,13 @@ namespace SniperDuel.Game
         }
 
         /// <summary>Index into Catalog.Operators.</summary>
-        public static int Operator { get => GetInt("prof.operator", 0, 0, Catalog.Operators.Length - 1); set => Set("prof.operator", value); }
-        public static int Outfit(int op) => GetInt("prof.outfit" + op, 0, 0, Catalog.Outfits.Length - 1);
+        public static int Operator
+        {
+            get { int op = GetInt("prof.operator", 0, 0, Catalog.Operators.Length - 1); return Catalog.OperatorLock(op) == null ? op : 0; }
+            set => Set("prof.operator", value);
+        }
+
+        public static int Outfit(int op) { int o = GetInt("prof.outfit" + op, 0, 0, Catalog.Outfits.Length - 1); return Catalog.OutfitLock(o) == null ? o : 0; }
         public static void SetOutfit(int op, int outfit) => Set("prof.outfit" + op, outfit);
 
         /// <summary>The fitted option (index into the slot's Options) for one rifle.</summary>
@@ -74,7 +79,7 @@ namespace SniperDuel.Game
         public static void SetPart(string rifleId, int slot, int option) => Set($"prof.part.{rifleId}.{slot}", option);
 
         /// <summary>Index into Catalog.Finishes for one rifle.</summary>
-        public static int Finish(string rifleId) => GetInt("prof.finish." + rifleId, 0, 0, Catalog.Finishes.Length - 1);
+        public static int Finish(string rifleId) { int f = GetInt("prof.finish." + rifleId, 0, 0, Catalog.Finishes.Length - 1); return Catalog.FinishLock(f) == null ? f : 0; }
         public static void SetFinish(string rifleId, int finish) => Set("prof.finish." + rifleId, finish);
 
         /// <summary>The summed effect of a rifle's fitted parts.</summary>
@@ -174,6 +179,46 @@ namespace SniperDuel.Game
 
         public static TimeSpan OrdersResetIn => DateTime.Today.AddDays(1) - DateTime.Now;
 
+        // ---- mail -----------------------------------------------------------
+
+        const int MailLength = 12;
+
+        /// <summary>Messages, newest first: level-ups, rank changes, medals, pass tiers ready.</summary>
+        public static List<(string title, string text)> Mail
+        {
+            get
+            {
+                if (!PlayerPrefs.HasKey("mail.box"))
+                {
+                    // The first message of a fresh profile.
+                    PlayerPrefs.SetString("mail.box", "");
+                    Post(Catalog.SeasonName, $"The season runs to {Catalog.SeasonEnd:d MMMM}. Every duel earns Battle Pass XP, daily orders reset at midnight, and tier {Catalog.SeasonOperatorTier} unlocks a new operator.");
+                }
+                return Split(PlayerPrefs.GetString("mail.box", "")).Select(l =>
+                {
+                    int bar = l.IndexOf('|');
+                    return bar < 0 ? (l, "") : (l.Substring(0, bar), l.Substring(bar + 1));
+                }).ToList();
+            }
+        }
+
+        public static int MailUnread => PlayerPrefs.GetInt("mail.unread", 0);
+
+        public static void MailRead()
+        {
+            PlayerPrefs.SetInt("mail.unread", 0);
+            Save();
+        }
+
+        static void Post(string title, string text)
+        {
+            var box = new List<string> { title + "|" + text.Replace('\n', ' ').Replace('|', '/') };
+            box.AddRange(Split(PlayerPrefs.GetString("mail.box", "")));
+            PlayerPrefs.SetString("mail.box", string.Join("\n", box.Take(MailLength)));
+            AddInt("mail.unread", 1);
+            Save();
+        }
+
         // ---- recording a match ---------------------------------------------
 
         /// <summary>
@@ -194,6 +239,7 @@ namespace SniperDuel.Game
             int rounds = byRound.Count;
             int firstHits = byRound.Count(g => g.OrderBy(x => x.ShotIndex).First().Verdict != Verdict.Miss);
 
+            var newMedals = new List<int>();
             var report = new MatchReport { Won = won, Mode = mode, XpBefore = Xp, RatingBefore = Rating, RatingAfter = Rating };
 
             // XP.
@@ -229,6 +275,7 @@ namespace SniperDuel.Game
                 {
                     if (!earned[i] || Medal(i)) continue;
                     PlayerPrefs.SetInt("medal." + i, 1);
+                    newMedals.Add(i);
                     lines.Add(new XpLine("Medal: " + MedalNames[i], 500));
                 }
 
@@ -293,6 +340,26 @@ namespace SniperDuel.Game
             var lines2 = new List<string> { result + "|" + detail };
             lines2.AddRange(Split(PlayerPrefs.GetString("prog.history", "")));
             PlayerPrefs.SetString("prog.history", string.Join("\n", lines2.Take(HistoryLength)));
+
+            // Mail: what changed.
+            int levelBefore = LevelAt(report.XpBefore);
+            if (Level > levelBefore)
+            {
+                string unlock = levelBefore < Catalog.HeavyRifleLevel && Level >= Catalog.HeavyRifleLevel ? " The Anti-materiel .50 is unlocked in Loadout." : "";
+                Post($"LEVEL {Level}", $"You reached level {Level}." + unlock);
+            }
+            int tierBefore = PassTierAt(report.XpBefore);
+            if (PassTier > tierBefore)
+            {
+                var r = Catalog.FreeReward(PassTier);
+                Post($"BATTLE PASS · TIER {PassTier}", $"Tier {PassTier} reached: claim {r.Describe()} on the Battle Pass.");
+            }
+            if (report.Rated && Catalog.RankIndex(report.RatingAfter) != Catalog.RankIndex(report.RatingBefore))
+            {
+                bool up = report.RatingAfter > report.RatingBefore;
+                Post(up ? "PROMOTED" : "RANK LOST", $"{(up ? "Promoted" : "Dropped")} to {Catalog.Rank(report.RatingAfter)} at {report.RatingAfter:#,0} rating.");
+            }
+            foreach (int m in newMedals) Post("MEDAL · " + MedalNames[m], "Earned: " + MedalRules[m] + ".");
 
             Save();
             return report;

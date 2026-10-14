@@ -22,3 +22,6 @@
 /CoreTests/bin/
 /CoreTests/obj/
 !/CoreTests/SniperDuel.CoreTests.csproj
+# Written by Build.WriteBuildInfo at build time
+/Assets/Resources/BuildInfo.txt
+/Assets/Resources/BuildInfo.txt.meta

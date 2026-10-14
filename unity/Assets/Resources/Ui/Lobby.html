@@ -25,10 +25,9 @@
 <div style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(10,12,11,0.55)">
 <span style="width: 12px; height: 12px; border-radius: 50%; background: #F2B33D"></span>
 <span style="font-family: 'Share Tech Mono', monospace; font-size: 14px" data-bind="gold">1,200</span>
-<span style="font-weight: 700; color: #F2B33D; margin-left: 2px">+</span>
+<button data-on="gold" aria-label="Earn gold on the Battle Pass" style="border: none; background: none; padding: 0 0 0 2px; font-weight: 700; color: #F2B33D">+</button>
 </div>
-<button data-on="friends" aria-label="Friends" style="width: 44px; height: 44px; border: none; background: none; display: grid; place-items: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c1-3.5 3.5-5 6.5-5s5.5 1.5 6.5 5"></path><circle cx="17" cy="9" r="2.5"></circle><path d="M17 14c2.5 0 4 1.3 4.8 4"></path></svg></button>
-<button data-on="mail" aria-label="Mail, 2 unread" style="width: 44px; height: 44px; border: none; background: none; display: grid; place-items: center; position: relative"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1"></rect><path d="M3 7l9 6 9-6"></path></svg><span data-bind="mailDot" style="position: absolute; top: 9px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: #E5483B"></span></button>
+<button data-on="mail" aria-label="Mail" style="width: 44px; height: 44px; border: none; background: none; display: grid; place-items: center; position: relative"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1"></rect><path d="M3 7l9 6 9-6"></path></svg><span data-bind="mailDot" style="position: absolute; top: 9px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: #E5483B"></span></button>
 <button data-on="settings" aria-label="Settings" style="width: 44px; height: 44px; border: none; background: none; display: grid; place-items: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"></path></svg></button>
 </div>
 
@@ -36,8 +35,7 @@
 <button style="text-align: left; border: none; padding: 0 0 0 12px; min-height: 40px; font-size: 26px; background: none; border-left: 3px solid #F2B33D; color: #EDEFE8" data-on="play">PLAY</button>
 <button style="text-align: left; border: none; padding: 0 0 0 15px; min-height: 34px; font-size: 19px; background: none; color: #A7AD9F" data-on="loadout">LOADOUT</button>
 <button style="text-align: left; border: none; padding: 0 0 0 15px; min-height: 34px; font-size: 19px; background: none; color: #A7AD9F" data-on="operators">OPERATORS</button>
-<button style="text-align: left; border: none; padding: 0 0 0 15px; min-height: 34px; font-size: 19px; background: none; color: #A7AD9F; display: flex; align-items: center; gap: 8px" data-on="pass">BATTLE PASS <span style="font-size: 11px; padding: 1px 5px; background: #F2B33D; color: #14120c">NEW</span></button>
-<button style="text-align: left; border: none; padding: 0 0 0 15px; min-height: 34px; font-size: 19px; background: none; color: #A7AD9F" data-on="store">STORE</button>
+<button style="text-align: left; border: none; padding: 0 0 0 15px; min-height: 34px; font-size: 19px; background: none; color: #A7AD9F; display: flex; align-items: center; gap: 8px" data-on="pass">BATTLE PASS <span data-bind="passNew" style="font-size: 11px; padding: 1px 5px; background: #F2B33D; color: #14120c">NEW</span></button>
 <button style="text-align: left; border: none; padding: 0 0 0 15px; min-height: 34px; font-size: 19px; background: none; color: #A7AD9F" data-on="career">CAREER</button>
 <button style="text-align: left; border: none; padding: 0 0 0 15px; min-height: 34px; font-size: 19px; background: none; color: #A7AD9F" data-on="hud">HUD LAYOUT</button>
 </nav>
@@ -71,10 +69,6 @@
 <button data-on="quickplay" style="height: 62px; border: none; background: #F2B33D; color: #14120c; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 34px; letter-spacing: 0.16em; clip-path: polygon(0 0, 100% 0, 100% 72%, 94% 100%, 0 100%)">PLAY</button>
 </div>
 
-<div style="position: absolute; left: 568px; top: 318px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; width: 90px">
-<button data-on="invite" aria-label="Invite a friend" style="width: 44px; height: 44px; border: 1px dashed rgba(237,239,232,0.4); background: rgba(10,12,11,0.4); display: grid; place-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
-<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.14em; color: #A7AD9F">INVITE TO PRIVATE DUEL</span>
-</div>
 <div data-on="toast" data-bind="toast" data-hidden style="position: absolute; left: 50%; top: 64px; transform: translateX(-50%); width: 400px; padding: 10px 14px; box-sizing: border-box; background: rgba(10,12,11,0.92); border: 1px solid rgba(237,239,232,0.2); border-left: 3px solid #F2B33D; display: flex; flex-direction: column; gap: 3px">
 <span data-bind="toast-title" style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.12em; color: #F2B33D">COMING SOON</span>
 <span data-bind="toast-text" style="font-size: 12px; color: #EDEFE8; line-height: 1.4">Details.</span>
