@@ -229,8 +229,8 @@ namespace SniperDuel.Game.Ui
                 e.pickingMode = PickingMode.Position;
                 e.RegisterCallback<ClickEvent>(_ =>
                 {
-                    // The fire button makes its own (much louder) sound.
-                    if (on != "fire") Sound.UiClick();
+                    // A click, or a chime to confirm or go back; rifle controls make their own sound.
+                    Sound.UiTap(on);
                     screen.Fire(on);
                 });
             }

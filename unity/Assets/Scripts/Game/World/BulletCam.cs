@@ -55,6 +55,7 @@ namespace SniperDuel.Game.World
             bullet.transform.localRotation = Quaternion.Euler(90, 0, 0);
             bc.bullet = holder;
             bc.Place();
+            Sound.KillCamBegin();
             return bc;
         }
 
@@ -87,11 +88,13 @@ namespace SniperDuel.Game.World
 
         void Update()
         {
+            Sound.KillCamPaused(Paused);
             if (Paused) return;
             double end = o.Impact.T;
             if (t < end)
             {
                 Speed = t / end > SlowFrom ? Slow : Fast;
+                Sound.KillCamSlow(Speed == Slow);
                 // Into the last stretch on a hit: the X-ray shows where it's going in.
                 if (Speed == Slow && xray == null && target != null)
                 {
@@ -100,7 +103,11 @@ namespace SniperDuel.Game.World
                 }
                 t = Math.Min(end, t + Time.deltaTime * Speed);
                 Place();
-                if (t >= end) Effects.Impact(Library.ToUnity(o.Impact.Point), false, o.Verdict != Verdict.Miss, transform.parent);
+                if (t >= end)
+                {
+                    Effects.Impact(Library.ToUnity(o.Impact.Point), false, o.Verdict != Verdict.Miss, transform.parent);
+                    Sound.KillCamImpact(o.Verdict != Verdict.Miss);
+                }
             }
             else
             {
@@ -117,6 +124,8 @@ namespace SniperDuel.Game.World
         {
             if (finished) return;
             finished = true;
+            Sound.KillCamPaused(false);
+            Sound.KillCamEnd();
             if (xray != null) xray.End();
             Destroy(gameObject);
             rig.Current = CameraRig.Mode.Eye;

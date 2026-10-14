@@ -124,6 +124,9 @@ namespace SniperDuel.EditorTools
             PlayerSettings.fullScreenMode = FullScreenMode.Windowed;
             PlayerSettings.resizableWindow = true;
             PlayerSettings.runInBackground = true;
+            // iOS audio session "Ambient": the game's sound obeys the ring/silent switch (as Apple
+            // asks of games) and mixes with the player's own music instead of stopping it.
+            PlayerSettings.muteOtherAudioSources = false;
             PlayerSettings.SplashScreen.show = false;
             PlayerSettings.SplashScreen.showUnityLogo = false;
         }

@@ -1,31 +1,67 @@
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using SniperDuel.Rules;
 using UnityEngine;
 
 namespace SniperDuel.Game
 {
     /// <summary>
-    /// Every sound in the game, synthesised at start-up so nothing needs downloading or licensing:
-    /// your rifle's blast with its echo off the banks, the enemy's distant report, the supersonic
-    /// crack of a near miss, the far-off thump of a hit, the bolt cycling, menu clicks, and a looped
-    /// wind-and-water bed. Each is built from shaped noise, swept tones and filtered echoes.
+    /// Plays the game's sound. Every clip is synthesised by Synth on a worker thread, the shared
+    /// ones at start-up and each map's own (its rifle reports with its echoes, its wind and its
+    /// ambience) when the map loads, then turned into AudioClips here. Only the current map's set is
+    /// kept: about 3 MB shared plus 5 MB per map of PCM.
+    ///
+    /// The mix: a pool of one-shot voices, scheduled with PlayDelayed so far-off sounds arrive at
+    /// the speed of sound; a few far voices behind low-pass filters, muffled by distance; two
+    /// looping beds (the wind, whose level and pitch follow the lane wind, and the map's life); and
+    /// the kill cam's whoosh and drone. The world ducks under the kill cam. Nothing here throws when
+    /// the machine has no audio device (the CI capture): it just stays silent.
     /// </summary>
     public sealed class Sound : MonoBehaviour
     {
-        const int Rate = 44100;
+        /// <summary>What a bullet hit, for the impact sound.</summary>
+        public enum Surface { None, Flesh, Dirt, Water, Concrete, Metal, Wood }
+
         const float SpeedOfSound = 343;
 
         static Sound? instance;
         public static bool Enabled = true;
+        /// <summary>Effects level (Settings), on top of the listener's master volume.</summary>
         public static float Volume = 1;
-        /// <summary>Level of the wind-and-water bed, on top of Volume.</summary>
+        /// <summary>Level of the wind and ambience beds, on top of the master volume.</summary>
         public static float AmbienceVolume = 1;
         /// <summary>Menu taps click.</summary>
         public static bool Clicks = true;
+        /// <summary>A world view is on screen; in the menus the beds play quietly behind.</summary>
+        public static bool AmbienceOn;
+        /// <summary>Lane wind speed, m/s: sets the wind bed's level and pitch.</summary>
+        public static float Wind = 4;
 
-        AudioClip shotNear = null!, shotFar = null!, crack = null!, thump = null!, splash = null!, bolt = null!, click = null!, ambience = null!;
-        AudioSource[] voices = null!;
-        AudioSource bed = null!;
-        int next;
+        sealed class Voice
+        {
+            public AudioSource Src = null!;
+            public AudioLowPassFilter? Filter;
+            /// <summary>Level before the effects volume and the kill-cam duck.</summary>
+            public float Level;
+            public bool Duck;
+            public float BusyUntil;
+        }
+
+        readonly List<Voice> voices = new List<Voice>();
+        readonly List<Voice> far = new List<Voice>();
+        AudioSource windBed = null!, lifeBed = null!, whoosh = null!, drone = null!;
+
+        readonly ConcurrentQueue<(string group, Synth.Clip clip)> baked = new ConcurrentQueue<(string, Synth.Clip)>();
+        readonly Dictionary<string, AudioClip> shared = new Dictionary<string, AudioClip>();
+        readonly Dictionary<string, AudioClip> local = new Dictionary<string, AudioClip>();
+        string mapId = "";
+        bool warned;
+
+        float windShown = 4, duck = 1, lastBedCheck, lastZoom = -1;
+        bool killcam, killSlow, killHit, killPaused;
+        float heartSeen = -10, heartStrain, nextBeat;
 
         public static void Init()
         {
@@ -33,281 +69,437 @@ namespace SniperDuel.Game
             var go = new GameObject("Sound");
             DontDestroyOnLoad(go);
             instance = go.AddComponent<Sound>();
-            instance.Build();
+            try { instance.Build(); }
+            catch (Exception e) { instance.Warn(e); }
+            Bake("", Synth.Common);
         }
 
         void Build()
         {
-            var rng = new System.Random(7);
-            shotNear = Make("Shot near", 2.8f, rng, ShotNear);
-            shotFar = Make("Shot far", 3.2f, rng, ShotFar);
-            crack = Make("Crack", 0.25f, rng, Crack);
-            thump = Make("Thump", 0.5f, rng, Thump);
-            splash = Make("Splash", 0.9f, rng, Splash);
-            bolt = Make("Bolt", 0.9f, rng, Bolt);
-            click = Make("Click", 0.06f, rng, Click);
-            ambience = Make("Ambience", 12f, rng, Ambience);
-
-            voices = new AudioSource[8];
-            for (int i = 0; i < voices.Length; i++)
+            for (int i = 0; i < 12; i++) voices.Add(new Voice { Src = Source(gameObject) });
+            // A low-pass filter acts on every source of its object, so each far voice has its own.
+            for (int i = 0; i < 4; i++)
             {
-                voices[i] = gameObject.AddComponent<AudioSource>();
-                voices[i].playOnAwake = false;
-                voices[i].spatialBlend = 0;
+                var go = new GameObject("Far " + i);
+                go.transform.SetParent(transform, false);
+                far.Add(new Voice { Src = Source(go), Filter = go.AddComponent<AudioLowPassFilter>() });
             }
-            bed = gameObject.AddComponent<AudioSource>();
-            bed.clip = ambience;
-            bed.loop = true;
-            bed.volume = 0;
-            bed.Play();
+            windBed = Source(gameObject, loop: true);
+            lifeBed = Source(gameObject, loop: true);
+            whoosh = Source(gameObject, loop: true);
+            drone = Source(gameObject, loop: true);
         }
 
-        void Update()
+        static AudioSource Source(GameObject go, bool loop = false)
         {
-            // The wind-and-water bed fades in when a world is on screen and is ducked in menus.
-            if (bed == null) return;
-            float target = Enabled ? AmbienceVolume * (AmbienceOn ? 0.55f : 0.18f) : 0;
-            bed.volume = Mathf.MoveTowards(bed.volume, target, Time.unscaledDeltaTime * 0.5f);
+            var s = go.AddComponent<AudioSource>();
+            s.playOnAwake = false;
+            s.spatialBlend = 0;
+            s.loop = loop;
+            s.volume = 0;
+            return s;
         }
 
-        public static bool AmbienceOn;
-
-        static void Play(Func<Sound, AudioClip> clip, float volume, float delay = 0, float pitch = 1)
+        void Warn(Exception e)
         {
-            if (!Enabled || instance == null) return;
+            if (warned) return;
+            warned = true;
+            Debug.LogWarning("[Sound] " + e.Message);
+        }
+
+        // ---- clips -------------------------------------------------------------------------
+
+        /// <summary>Synthesises a set of clips off the main thread; group "" is shared, else a map id.</summary>
+        static void Bake(string group, Func<List<Synth.Clip>> make)
+        {
             var s = instance;
-            var v = s.voices[s.next];
-            s.next = (s.next + 1) % s.voices.Length;
-            v.Stop();
-            v.clip = clip(s);
-            v.volume = volume * Volume;
-            v.pitch = pitch;
-            if (delay > 0) v.PlayDelayed(delay);
-            else v.Play();
+            if (s == null) return;
+            Task.Run(() =>
+            {
+                try
+                {
+                    foreach (var c in make()) s.baked.Enqueue((group, c));
+                }
+                catch (Exception e) { Debug.LogWarning("[Sound] synthesis failed: " + e); }
+            });
         }
+
+        /// <summary>Loads the given map's report, echoes and ambience, dropping the last map's.</summary>
+        public static void SetMap(string id)
+        {
+            var s = instance;
+            if (s == null || id == s.mapId) return;
+            s.mapId = id;
+            foreach (var c in s.local.Values) s.Release(c);
+            s.local.Clear();
+            Bake(id, () => Synth.Map(id));
+        }
+
+        /// <summary>Turns finished PCM into clips (main thread only).</summary>
+        void Receive()
+        {
+            while (baked.TryDequeue(out var b))
+            {
+                bool isShared = b.group.Length == 0;
+                if (!isShared && b.group != mapId) continue;
+                AudioClip? clip = null;
+                try
+                {
+                    clip = AudioClip.Create(b.clip.Name, b.clip.Data.Length, 1, b.clip.Rate, false);
+                    if (clip != null) clip.SetData(b.clip.Data, 0);
+                }
+                catch (Exception e) { Warn(e); }
+                if (clip == null) continue;
+                var into = isShared ? shared : local;
+                if (into.TryGetValue(b.clip.Name, out var old)) Release(old);
+                into[b.clip.Name] = clip;
+                if (!isShared && b.clip.Name == "Wind") StartBed(windBed, clip);
+                if (!isShared && b.clip.Name == "Life") StartBed(lifeBed, clip);
+                if (!isShared && local.Count == 4) LogMemory();
+            }
+        }
+
+        void LogMemory()
+        {
+            long bytes = 0;
+            foreach (var c in shared.Values) bytes += (long)c.samples * c.channels * 4;
+            foreach (var c in local.Values) bytes += (long)c.samples * c.channels * 4;
+            Debug.Log($"[Sound] {mapId}: {shared.Count + local.Count} clips, {bytes / 1048576f:0.0} MB of PCM");
+        }
+
+        void StartBed(AudioSource bed, AudioClip clip)
+        {
+            try
+            {
+                bed.Stop();
+                bed.clip = clip;
+                bed.volume = 0;
+                // Start somewhere along the loop so two visits don't sound identical.
+                bed.timeSamples = UnityEngine.Random.Range(0, Math.Max(1, clip.samples - 1));
+                bed.Play();
+            }
+            catch (Exception e) { Warn(e); }
+        }
+
+        void Release(AudioClip clip)
+        {
+            foreach (var v in voices) Unload(v, clip);
+            foreach (var v in far) Unload(v, clip);
+            foreach (var bed in new[] { windBed, lifeBed })
+                if (bed != null && bed.clip == clip) { bed.Stop(); bed.clip = null; }
+            Destroy(clip);
+        }
+
+        static void Unload(Voice v, AudioClip clip)
+        {
+            if (v.Src.clip != clip) return;
+            v.Src.Stop();
+            v.Src.clip = null;
+            v.BusyUntil = 0;
+        }
+
+        AudioClip? Clip(string name) =>
+            shared.TryGetValue(name, out var c) ? c : local.TryGetValue(name, out c) ? c : null;
+
+        // ---- playing -----------------------------------------------------------------------
+
+        /// <summary>
+        /// Plays a clip on the voice that frees up soonest. `far` voices go through a low-pass at
+        /// `cutoffHz`; `duck` lets the kill cam push it down.
+        /// </summary>
+        static void Play(string name, float level, float delay = 0, float pitch = 1, bool far = false, float cutoffHz = 22000, bool duck = true)
+        {
+            var s = instance;
+            if (s == null || !Enabled) return;
+            var clip = s.Clip(name);
+            if (clip == null) return;
+            var pool = far ? s.far : s.voices;
+            var v = pool[0];
+            foreach (var c in pool)
+                if (c.BusyUntil < v.BusyUntil) v = c;
+            v.Level = level;
+            v.Duck = duck;
+            v.BusyUntil = Time.unscaledTime + delay + clip.length / Mathf.Max(0.1f, pitch);
+            try
+            {
+                v.Src.Stop();
+                v.Src.clip = clip;
+                v.Src.pitch = pitch;
+                v.Src.volume = s.LevelOf(v);
+                if (v.Filter != null) v.Filter.cutoffFrequency = cutoffHz;
+                if (delay > 0) v.Src.PlayDelayed(delay);
+                else v.Src.Play();
+            }
+            catch (Exception e) { s.Warn(e); }
+        }
+
+        float LevelOf(Voice v) => Enabled ? v.Level * Volume * (v.Duck ? duck : 1) : 0;
+
+        static float Jitter(float amount) => 1 + UnityEngine.Random.Range(-amount, amount);
 
         /// <summary>Your own shot, then the bolt worked once the rifle settles.</summary>
         public static void FireMine()
         {
-            Play(s => s.shotNear, 1);
-            Play(s => s.bolt, 0.7f, 0.9f);
+            Play("ShotNear", 1, 0, Jitter(0.02f));
+            Play("Bolt", 0.5f, 0.85f, Jitter(0.02f));
         }
 
         /// <summary>
-        /// The enemy fires from `distanceM` away. A bullet passing close arrives before its sound:
-        /// first the crack, then the report rolling in at the speed of sound.
+        /// The enemy fires from `shooterM` away. A round passing close arrives before its sound:
+        /// first the crack (and the hit, or the strike beside you), then the report rolling in at
+        /// the speed of sound, muffled by the distance.
         /// </summary>
-        public static void FireEnemy(float distanceM, float flightS, bool nearMiss, bool hitMe)
+        public static void FireEnemy(float shooterM, float flightS, bool nearMiss, bool hitMe, float impactM, Surface surface, uint seed)
         {
-            if (nearMiss || hitMe) Play(s => s.crack, 0.9f, flightS);
-            if (hitMe) Play(s => s.thump, 1, flightS + 0.02f, 0.8f);
-            Play(s => s.shotFar, Mathf.Clamp(300 / Mathf.Max(distanceM, 1), 0.25f, 0.9f), distanceM / SpeedOfSound);
+            if (nearMiss || hitMe) Play("Crack", hitMe ? 0.8f : 1, flightS, Jitter(0.04f), duck: false);
+            if (hitMe) Play("Flesh", 1, flightS + 0.01f, 0.75f, duck: false);
+            else if (impactM < 30 && surface != Surface.None)
+                Impact(surface, Mathf.Clamp(8 / Mathf.Max(impactM, 1), 0.15f, 0.9f), flightS + impactM / SpeedOfSound, seed, false, 22000);
+            float d = Mathf.Max(shooterM, 1);
+            float cutoff = Mathf.Lerp(9000, 1500, Mathf.InverseLerp(100, 1500, d));
+            Play("ShotFar", Mathf.Clamp(400 / d, 0.35f, 1), d / SpeedOfSound, Jitter(0.03f), far: true, cutoffHz: cutoff);
         }
 
-        /// <summary>The faint sound of your bullet landing, heard after it travels back.</summary>
-        public static void Landed(float distanceM, float flightS, bool water, bool hit)
+        /// <summary>Your bullet landing `distanceM` away, heard once the sound has travelled back.</summary>
+        public static void Landed(float distanceM, float flightS, Surface surface, uint seed)
         {
-            float delay = flightS + distanceM / SpeedOfSound;
-            float volume = Mathf.Clamp(120 / Mathf.Max(distanceM, 1), 0.08f, 0.5f);
-            if (water) Play(s => s.splash, volume, delay);
-            else Play(s => s.thump, volume * (hit ? 1.2f : 0.8f), delay, hit ? 0.9f : 1.3f);
+            if (surface == Surface.None) return;
+            float d = Mathf.Max(distanceM, 1);
+            float cutoff = Mathf.Lerp(7000, 1800, Mathf.InverseLerp(100, 1200, d));
+            // A hit's thwack is what you listen for downrange; keep it audible.
+            float level = Mathf.Clamp(150 / d, surface == Surface.Flesh ? 0.3f : 0.12f, 0.7f);
+            Impact(surface, level, flightS + d / SpeedOfSound, seed, true, cutoff);
+        }
+
+        static void Impact(Surface surface, float level, float delay, uint seed, bool far, float cutoff)
+        {
+            string name = surface switch
+            {
+                Surface.Flesh => "Flesh",
+                Surface.Water => "Water",
+                Surface.Concrete => "Concrete",
+                Surface.Metal => "Metal",
+                Surface.Wood => "Wood",
+                _ => "Dirt",
+            };
+            Play(name, level, delay, Jitter(0.06f), far, cutoff);
+            // Hard surfaces sometimes send the round whining off; the match seed keeps it fair to replay.
+            float chance = surface switch { Surface.Metal => 0.7f, Surface.Concrete => 0.45f, Surface.Dirt => 0.12f, _ => 0 };
+            float roll = ((seed * 2654435761u) >> 8) / 16777216f;
+            if (roll < chance) Play("Ricochet", level * 0.8f, delay + 0.015f, 0.85f + 0.3f * roll / Mathf.Max(chance, 0.01f), far, cutoff);
+        }
+
+        /// <summary>What a shot struck, for its impact sound.</summary>
+        public static Surface SurfaceOf(ShotOutcome o, DuelMap map)
+        {
+            var i = o.Impact;
+            if (i.Kind == ImpactKind.Target || o.Verdict != Verdict.Miss) return Surface.Flesh;
+            if (i.Kind == ImpactKind.None) return Surface.None;
+            if (map.Water.HasValue && i.Point.Y <= map.Water.Value + 0.3) return Surface.Water;
+            if (i.Kind == ImpactKind.Cover && i.CoverId != null)
+            {
+                var box = map.Cover.Find(b => b.Id == i.CoverId);
+                switch (box?.Look ?? CoverLook.Rock)
+                {
+                    case CoverLook.Metal: return Surface.Metal;
+                    case CoverLook.Wood: return Surface.Wood;
+                    default: return Surface.Concrete;
+                }
+            }
+            // Ground: roofs on the harbor, steel decks on the rigs, earth elsewhere.
+            return map.Id switch
+            {
+                "harbor-rooftops" => Surface.Concrete,
+                "oil-rigs" => Surface.Metal,
+                _ => Surface.Dirt,
+            };
+        }
+
+        // ---- handling ----------------------------------------------------------------------
+
+        /// <summary>One click of an elevation or windage turret; a dull knock at the end stop.</summary>
+        public static void Turret(bool elevation, bool moved) =>
+            Play("Turret", moved ? 0.55f : 0.3f, 0, (elevation ? 0.92f : 1.06f) * (moved ? 1 : 0.7f) * Jitter(0.02f), duck: false);
+
+        /// <summary>A detent of the magnification ring (rate-limited for drags across the zoom bar).</summary>
+        public static void Zoom()
+        {
+            var s = instance;
+            if (s == null || Time.unscaledTime - s.lastZoom < 0.035f) return;
+            s.lastZoom = Time.unscaledTime;
+            Play("Zoom", 0.4f, 0, Jitter(0.05f), duck: false);
+        }
+
+        /// <summary>The rifle coming up to the eye, or down from it.</summary>
+        public static void Raise(bool up) => Play("Raise", up ? 0.4f : 0.3f, 0, up ? Jitter(0.03f) : 1.12f, duck: false);
+
+        /// <summary>Breath drawn and held, or let go (a gasp if it was held too long).</summary>
+        public static void Breath(bool hold, float strain)
+        {
+            if (hold) Play("Inhale", 0.45f, 0, Jitter(0.03f), duck: false);
+            else Play("Exhale", 0.3f + 0.5f * strain, 0, 0.96f + 0.12f * strain, duck: false);
+        }
+
+        /// <summary>
+        /// Heartbeat while the breath is held or recovering, faster and louder with the strain
+        /// (0 steady, 1 at its worst). Call every frame it should beat; it stops when calls stop.
+        /// </summary>
+        public static void Heart(float strain)
+        {
+            var s = instance;
+            if (s == null) return;
+            if (Time.unscaledTime - s.heartSeen > 0.3f) s.nextBeat = Time.unscaledTime + 0.45f;
+            s.heartSeen = Time.unscaledTime;
+            s.heartStrain = Mathf.Clamp01(strain);
+        }
+
+        // ---- kill cam ----------------------------------------------------------------------
+
+        /// <summary>The bullet cam starts: the world ducks and the round's whoosh comes up.</summary>
+        public static void KillCamBegin()
+        {
+            var s = instance;
+            if (s == null) return;
+            s.killcam = true;
+            s.killSlow = false;
+            s.killHit = false;
+            s.killPaused = false;
+            s.Loop(s.whoosh, "KillWhoosh", 0.9f);
+            s.Loop(s.drone, "KillDrone", 1);
+        }
+
+        void Loop(AudioSource src, string name, float pitch)
+        {
+            var clip = Clip(name);
+            if (clip == null || !Enabled) return;
+            try
+            {
+                src.clip = clip;
+                src.pitch = pitch;
+                src.volume = 0;
+                src.timeSamples = UnityEngine.Random.Range(0, Math.Max(1, clip.samples - 1));
+                src.Play();
+            }
+            catch (Exception e) { Warn(e); }
+        }
+
+        /// <summary>The last stretch in deep slow motion (the X-ray): the whoosh drops, the drone swells.</summary>
+        public static void KillCamSlow(bool slow)
+        {
+            if (instance != null) instance.killSlow = slow;
+        }
+
+        public static void KillCamPaused(bool paused)
+        {
+            var s = instance;
+            if (s == null || s.killPaused == paused || !s.killcam) return;
+            s.killPaused = paused;
+            try
+            {
+                foreach (var src in new[] { s.whoosh, s.drone })
+                    if (paused) src.Pause();
+                    else src.UnPause();
+            }
+            catch (Exception e) { s.Warn(e); }
+        }
+
+        /// <summary>The round arrives: on a hit the thud and crunch of the X-ray, slowed; else the strike.</summary>
+        public static void KillCamImpact(bool hit)
+        {
+            var s = instance;
+            if (s == null) return;
+            s.killHit = true;
+            if (hit)
+            {
+                Play("KillImpact", 1, 0, 0.9f, duck: false);
+                Play("Flesh", 0.6f, 0, 0.7f, duck: false);
+            }
+            else Play("Dirt", 0.8f, 0, 0.75f, duck: false);
+        }
+
+        public static void KillCamEnd()
+        {
+            if (instance != null) instance.killcam = false;
+        }
+
+        // ---- menus -------------------------------------------------------------------------
+
+        /// <summary>Taps whose action makes its own sound (the rifle and scope controls).</summary>
+        static readonly HashSet<string> OwnSound = new HashSet<string> { "fire", "elevUp", "elevDown", "windLeft", "windRight", "zoomIn", "zoomOut", "scope", "exit" };
+        static readonly HashSet<string> Confirms = new HashSet<string> { "deploy", "find", "quickplay", "rematch", "equip", "save", "continue", "bot" };
+        static readonly HashSet<string> Backs = new HashSet<string> { "back", "cancel" };
+
+        /// <summary>The sound for a tap on a UI action: a rising chime to commit, a falling one to go back, else a click.</summary>
+        public static void UiTap(string action)
+        {
+            if (!Clicks || OwnSound.Contains(action)) return;
+            Play(Confirms.Contains(action) ? "UiConfirm" : Backs.Contains(action) ? "UiBack" : "UiClick", 0.3f, duck: false);
         }
 
         public static void UiClick()
         {
-            if (Clicks) Play(s => s.click, 0.35f);
+            if (Clicks) Play("UiClick", 0.3f, duck: false);
         }
 
-        // --- Synthesis -------------------------------------------------------------------------
+        // ---- frame -------------------------------------------------------------------------
 
-        delegate void Writer(float[] d, System.Random rng);
-
-        static AudioClip Make(string name, float seconds, System.Random rng, Writer write)
+        void Update()
         {
-            int n = (int)(seconds * Rate);
-            var d = new float[n];
-            write(d, rng);
-            // Normalise to -1 dBFS and fade the last 20 ms so nothing clicks.
-            float peak = 1e-6f;
-            for (int i = 0; i < n; i++) peak = Mathf.Max(peak, Mathf.Abs(d[i]));
-            float g = 0.89f / peak;
-            int fade = Math.Min(n, Rate / 50);
-            for (int i = 0; i < n; i++)
+            Receive();
+            if (drone == null) return;
+            float dt = Time.unscaledDeltaTime;
+            float now = Time.unscaledTime;
+
+            duck = Mathf.MoveTowards(duck, killcam ? 0.3f : 1, dt * 2);
+            foreach (var v in voices) v.Src.volume = LevelOf(v);
+            foreach (var v in far) v.Src.volume = LevelOf(v);
+
+            // Beds: quieter behind the menus, ducked under the kill cam; the wind follows the lane.
+            float amb = Enabled ? AmbienceVolume * (AmbienceOn ? 1 : 0.4f) * Mathf.Lerp(0.25f, 1, (duck - 0.3f) / 0.7f) : 0;
+            windShown = Mathf.Lerp(windShown, Wind, 1 - Mathf.Exp(-dt * 0.8f));
+            Fade(windBed, amb * 0.6f * Mathf.Clamp01(0.15f + windShown / 9), dt);
+            windBed.pitch = Mathf.Clamp(0.86f + windShown * 0.025f, 0.85f, 1.2f);
+            Fade(lifeBed, amb * 0.8f, dt);
+            // An interruption or an audio route change (headphones out) stops every source; restart the loops.
+            if (now - lastBedCheck > 1)
             {
-                d[i] *= g;
-                if (i >= n - fade && name != "Ambience") d[i] *= (n - i) / (float)fade;
+                lastBedCheck = now;
+                Restart(windBed);
+                Restart(lifeBed);
             }
-            // The ambience loop already folded its last half second into its start; drop it.
-            if (name == "Ambience") { n -= Rate / 2; Array.Resize(ref d, n); }
-            var clip = AudioClip.Create(name, n, 1, Rate, false);
-            clip.SetData(d, 0);
-            return clip;
-        }
 
-        static float Noise(System.Random rng) => (float)(rng.NextDouble() * 2 - 1);
-        static float Coef(float hz) => 1 - Mathf.Exp(-2 * Mathf.PI * hz / Rate);
-
-        /// <summary>Muzzle blast: a sharp transient, a falling low boom, and a filtered roar.</summary>
-        static void Blast(float[] d, System.Random rng, int start, float gain, float brightHz, float boomGain)
-        {
-            float lp = 0, lp2 = 0;
-            float phase = 0;
-            for (int i = 0; start + i < d.Length && i < Rate * 0.6f; i++)
+            // Kill cam: the whoosh rushes until impact, slower and darker in the slow-motion close;
+            // the drone comes in under the X-ray and lingers through the hold.
+            float fx = Enabled ? Volume : 0;
+            if (!killPaused)
             {
-                float t = i / (float)Rate;
-                float n = Noise(rng);
-                float cut = Coef(brightHz * Mathf.Exp(-t / 0.05f) + 400);
-                lp += cut * (n - lp);
-                lp2 += cut * (lp - lp2);
-                float roar = lp2 * Mathf.Exp(-t / 0.045f) * 3.2f;
-                float f = 45 + 70 * Mathf.Exp(-t / 0.05f);
-                phase += 2 * Mathf.PI * f / Rate;
-                float boom = Mathf.Sin(phase) * Mathf.Exp(-t / 0.11f) * boomGain;
-                float spike = t < 0.0015f ? 1.5f * (1 - t / 0.0015f) : 0;
-                d[start + i] += gain * (roar + boom + spike);
+                Fade(whoosh, killcam && !killHit ? fx * (killSlow ? 0.8f : 0.55f) : 0, dt * (killHit ? 6 : 1.5f));
+                whoosh.pitch = Mathf.MoveTowards(whoosh.pitch, killSlow ? 0.5f : 0.9f, dt * 1.5f);
+                Fade(drone, killcam && (killSlow || killHit) ? fx * 0.6f : 0, dt * (killcam ? 1 : 0.6f));
+                if (!killcam) { StopSilent(whoosh); StopSilent(drone); }
+            }
+
+            // Heart: beats while someone keeps calling Heart().
+            if (now - heartSeen < 0.3f && now >= nextBeat)
+            {
+                Play("Heart", 0.25f + 0.55f * heartStrain, 0, 1 + 0.06f * heartStrain, duck: false);
+                nextBeat = now + 60 / (68 + 52 * heartStrain);
             }
         }
 
-        /// <summary>Diffuse tail: low-passed noise decaying over `seconds`, swelling with the echoes.</summary>
-        static void Tail(float[] d, System.Random rng, float gain, float seconds, float hz, float startS)
+        void Restart(AudioSource bed)
         {
-            float lp = 0, lp2 = 0, c = Coef(hz);
-            for (int i = (int)(startS * Rate); i < d.Length; i++)
-            {
-                float t = i / (float)Rate - startS;
-                lp += c * (Noise(rng) - lp);
-                lp2 += c * (lp - lp2);
-                float env = (1 - Mathf.Exp(-t / 0.04f)) * Mathf.Exp(-t / seconds);
-                d[i] += lp2 * env * gain * 4;
-            }
+            if (bed.clip == null || bed.isPlaying) return;
+            try { bed.Play(); }
+            catch (Exception e) { Warn(e); }
         }
 
-        static void Smear(float[] d, int from, float hz)
+        static void StopSilent(AudioSource src)
         {
-            float lp = 0, c = Coef(hz);
-            for (int i = from; i < d.Length; i++) { lp += c * (d[i] - lp); d[i] = lp; }
+            if (src.isPlaying && src.volume <= 0.001f) src.Stop();
         }
 
-        static void ShotNear(float[] d, System.Random rng)
-        {
-            Blast(d, rng, 0, 1, 7000, 0.9f);
-            Tail(d, rng, 0.22f, 0.55f, 1400, 0.03f);
-            // Slap-back off the far bank and the bridge piers, duller each time.
-            var echo = new float[d.Length];
-            Blast(echo, rng, 0, 1, 2200, 0.7f);
-            Smear(echo, 0, 1800);
-            foreach (var (at, g) in new[] { (0.42f, 0.22f), (0.95f, 0.12f), (1.6f, 0.06f) })
-            {
-                int o = (int)(at * Rate);
-                for (int i = 0; i + o < d.Length; i++) d[i + o] += echo[i] * g;
-            }
-            for (int i = 0; i < d.Length; i++) d[i] = (float)Math.Tanh(d[i] * 1.4f);
-        }
-
-        static void ShotFar(float[] d, System.Random rng)
-        {
-            Blast(d, rng, 0, 0.6f, 1100, 1.1f);
-            Tail(d, rng, 0.35f, 0.9f, 600, 0.02f);
-            Smear(d, 0, 900);
-            var copy = (float[])d.Clone();
-            int o = (int)(0.7f * Rate);
-            for (int i = 0; i + o < d.Length; i++) d[i + o] += copy[i] * 0.3f;
-        }
-
-        /// <summary>The supersonic N-wave of a bullet passing within a few metres.</summary>
-        static void Crack(float[] d, System.Random rng)
-        {
-            int nw = (int)(0.0022f * Rate);
-            for (int i = 0; i < nw; i++) d[i] = 1 - 2f * i / nw;
-            float lp = 0, c = Coef(5000);
-            for (int i = nw; i < d.Length; i++)
-            {
-                float t = (i - nw) / (float)Rate;
-                lp += c * (Noise(rng) - lp);
-                d[i] += lp * Mathf.Exp(-t / 0.03f) * 0.5f;
-            }
-        }
-
-        static void Thump(float[] d, System.Random rng)
-        {
-            float phase = 0, lp = 0, c = Coef(900);
-            for (int i = 0; i < d.Length; i++)
-            {
-                float t = i / (float)Rate;
-                phase += 2 * Mathf.PI * (70 + 60 * Mathf.Exp(-t / 0.02f)) / Rate;
-                lp += c * (Noise(rng) - lp);
-                d[i] = Mathf.Sin(phase) * Mathf.Exp(-t / 0.07f) + lp * Mathf.Exp(-t / 0.03f) * 1.5f;
-            }
-        }
-
-        static void Splash(float[] d, System.Random rng)
-        {
-            float lp = 0, hp = 0, c = Coef(2500);
-            for (int i = 0; i < d.Length; i++)
-            {
-                float t = i / (float)Rate;
-                float n = Noise(rng);
-                lp += c * (n - lp);
-                hp += Coef(300) * (lp - hp);
-                float env = Mathf.Exp(-t / 0.18f) * (1 - Mathf.Exp(-t / 0.004f));
-                // Droplets falling back.
-                float drops = rng.NextDouble() < 0.0008 * Mathf.Exp(-t / 0.4f) ? 0.8f : 0;
-                d[i] = (lp - hp) * env * 2 + drops;
-            }
-            Smear(d, 0, 4000);
-        }
-
-        /// <summary>Bolt up, back, forward, down: four metallic clicks with a ring.</summary>
-        static void Bolt(float[] d, System.Random rng)
-        {
-            foreach (var (at, g, f) in new[] { (0.0f, 0.8f, 1.0f), (0.16f, 0.6f, 0.85f), (0.44f, 0.9f, 1.1f), (0.6f, 1.0f, 0.95f) })
-            {
-                int o = (int)(at * Rate);
-                for (int i = 0; i < Rate * 0.08f && o + i < d.Length; i++)
-                {
-                    float t = i / (float)Rate;
-                    float ring = Mathf.Sin(2 * Mathf.PI * 2100 * f * t) * 0.5f + Mathf.Sin(2 * Mathf.PI * 3450 * f * t) * 0.35f + Mathf.Sin(2 * Mathf.PI * 5230 * f * t) * 0.2f;
-                    float hit = t < 0.004f ? Noise(rng) : 0;
-                    d[o + i] += g * (ring * Mathf.Exp(-t / 0.018f) + hit);
-                }
-            }
-        }
-
-        static void Click(float[] d, System.Random rng)
-        {
-            for (int i = 0; i < d.Length; i++)
-            {
-                float t = i / (float)Rate;
-                d[i] = Mathf.Sin(2 * Mathf.PI * 1900 * t) * Mathf.Exp(-t / 0.008f) + (t < 0.001f ? Noise(rng) * 0.5f : 0);
-            }
-        }
-
-        /// <summary>Wind gusting over open water and small waves on the piers, looping every 12 s.</summary>
-        static void Ambience(float[] d, System.Random rng)
-        {
-            float brown = 0, lp = 0, w1 = 0, w2 = 0;
-            float total = d.Length / (float)Rate;
-            for (int i = 0; i < d.Length; i++)
-            {
-                float t = i / (float)Rate;
-                brown = brown * 0.997f + Noise(rng) * 0.03f;
-                lp += Coef(500) * (brown - lp);
-                // Gusts on periods that divide the loop, so the end meets the start.
-                float gust = 0.55f + 0.25f * Mathf.Sin(2 * Mathf.PI * t * 3 / total) + 0.2f * Mathf.Sin(2 * Mathf.PI * t * 7 / total + 1);
-                float wind = lp * gust * 6;
-                float n = Noise(rng);
-                w1 += Coef(900) * (n - w1);
-                w2 += Coef(250) * (w1 - w2);
-                float lap = Mathf.Pow(Mathf.Max(0, Mathf.Sin(2 * Mathf.PI * t * 5 / total)), 3) * 0.7f + 0.3f;
-                d[i] = wind + (w1 - w2) * lap * 1.2f;
-            }
-            // Crossfade the last half second into the first so the loop is seamless.
-            int x = Rate / 2;
-            for (int i = 0; i < x; i++)
-            {
-                float a = i / (float)x;
-                d[i] = d[i] * a + d[d.Length - x + i] * (1 - a);
-            }
-        }
+        static void Fade(AudioSource src, float target, float dt) =>
+            src.volume = Mathf.MoveTowards(src.volume, target, dt * 0.5f);
     }
 }

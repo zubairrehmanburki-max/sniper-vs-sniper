@@ -22,6 +22,8 @@ namespace SniperDuel.Game.World
         public static Arena Build(DuelMap map)
         {
             var arena = new Arena { Map = map };
+            // This map's rifle report (with its echoes) and ambience, synthesised in the background.
+            Sound.SetMap(map.Id);
             var root = new GameObject("Arena " + map.Id).transform;
             arena.Root = root;
             arena.Sky = Atmos.Build(map, root);

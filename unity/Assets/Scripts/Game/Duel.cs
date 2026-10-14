@@ -122,10 +122,10 @@ namespace SniperDuel.Game
             var scope = ui.Get("Scope");
             scope.On("exit", () => SetScoped(false));
             scope.On("fire", Fire);
-            scope.On("elevUp", () => Dial(ref elevMrad, 1, cfg.Scope.MaxElevationMrad, -2));
-            scope.On("elevDown", () => Dial(ref elevMrad, -1, cfg.Scope.MaxElevationMrad, -2));
-            scope.On("windRight", () => Dial(ref windMrad, 1, cfg.Scope.MaxWindageMrad, -cfg.Scope.MaxWindageMrad));
-            scope.On("windLeft", () => Dial(ref windMrad, -1, cfg.Scope.MaxWindageMrad, -cfg.Scope.MaxWindageMrad));
+            scope.On("elevUp", () => Dial(ref elevMrad, 1, cfg.Scope.MaxElevationMrad, -2, true));
+            scope.On("elevDown", () => Dial(ref elevMrad, -1, cfg.Scope.MaxElevationMrad, -2, true));
+            scope.On("windRight", () => Dial(ref windMrad, 1, cfg.Scope.MaxWindageMrad, -cfg.Scope.MaxWindageMrad, false));
+            scope.On("windLeft", () => Dial(ref windMrad, -1, cfg.Scope.MaxWindageMrad, -cfg.Scope.MaxWindageMrad, false));
             scope.OnHold("breath", SetBreath);
             scope.On("zoomIn", () => ZoomStep(1));
             scope.On("zoomOut", () => ZoomStep(-1));
@@ -146,7 +146,9 @@ namespace SniperDuel.Game
         {
             float h = Mathf.Max(1, track.layout.height);
             float f = 1 - Mathf.Clamp01(local.y / h);
+            int was = zoom;
             zoom = (int)Math.Round(cfg.Scope.MinZoom + f * (cfg.Scope.MaxZoom - cfg.Scope.MinZoom));
+            if (zoom != was) Sound.Zoom();
         }
 
         void ZoomStep(int dir)
@@ -162,7 +164,9 @@ namespace SniperDuel.Game
                 for (int i = ZoomLevels.Length - 1; i >= 0; i--)
                     if (ZoomLevels[i] < zoom) { next = ZoomLevels[i]; break; }
             }
+            int was = zoom;
             zoom = (int)Math.Max(cfg.Scope.MinZoom, Math.Min(cfg.Scope.MaxZoom, next));
+            if (zoom != was) Sound.Zoom();
             Haptics.Click();
         }
 
@@ -272,6 +276,7 @@ namespace SniperDuel.Game
             }
             scoped = false;
             raising = on ? 1 : -1;
+            Sound.Raise(on);
             ui.HideAll();
         }
 
@@ -296,16 +301,32 @@ namespace SniperDuel.Game
             }
         }
 
-        void Dial(ref double value, int clicks, double max, double min)
+        void Dial(ref double value, int clicks, double max, double min, bool elevation)
         {
             double click = cfg.Scope.ClickMrad;
             double v = Math.Round(value / click + clicks) * click;
+            double was = value;
             value = Math.Min(max, Math.Max(min, Math.Round(v, 4)));
+            Sound.Turret(elevation, value != was);
             Haptics.Click();
         }
 
-        void SetBreath(bool hold) =>
+        void SetBreath(bool hold)
+        {
+            bool was = breath.Holding;
+            float strain = Strain();
             breath = hold ? Sway.HoldBreath(breath, time, cfg) : Sway.ReleaseBreath(breath, time, cfg);
+            // Release fires on pointer-up and on leave; only a real change makes a sound.
+            if (breath.Holding != was) Sound.Breath(breath.Holding, strain);
+        }
+
+        /// <summary>How strained the held breath is: 0 steady, 1 at the worst shake.</summary>
+        float Strain()
+        {
+            var hb = cfg.Sway.HoldBreath;
+            double bf = Sway.BreathFactor(breath, time, cfg);
+            return Mathf.Clamp01((float)((bf - hb.SteadyFactor) / Math.Max(0.01, hb.MaxStrainFactor - hb.SteadyFactor)));
+        }
 
         void Quit()
         {
@@ -375,17 +396,22 @@ namespace SniperDuel.Game
             bool cinematic = mine && o.Verdict != Verdict.Miss && o.Trajectory.Points.Count > 1;
             World.Effects.Shot(o, mine, arena, tracer: !cinematic);
             float range = (float)Math.Sqrt(Sq(o.Impact.Point.X - o.Eye.X) + Sq(o.Impact.Point.Z - o.Eye.Z));
+            var surface = Sound.SurfaceOf(o, arena.Map);
             if (mine)
             {
                 recoil = 0.004;
                 Haptics.Recoil();
                 Sound.FireMine();
-                bool water = arena.Map.Water.HasValue && o.Impact.Point.Y <= arena.Map.Water.Value + 0.05;
-                Sound.Landed(range, tof, water, o.Verdict != Verdict.Miss);
+                // The bullet cam plays its own impact.
+                if (!cinematic) Sound.Landed(range, tof, surface, o.Seed);
             }
             else
             {
-                Sound.FireEnemy(range, tof, o.NearMiss, o.Verdict != Verdict.Miss);
+                // The report comes from the shooter; the strike, if it lands near, from beside us.
+                var eye = Eye();
+                float shooterM = (float)Math.Sqrt(Sq(o.Eye.X - eye.X) + Sq(o.Eye.Y - eye.Y) + Sq(o.Eye.Z - eye.Z));
+                float impactM = (float)Math.Sqrt(Sq(o.Impact.Point.X - eye.X) + Sq(o.Impact.Point.Y - eye.Y) + Sq(o.Impact.Point.Z - eye.Z));
+                Sound.FireEnemy(shooterM, tof, o.NearMiss, o.Verdict != Verdict.Miss, impactM, surface, o.Seed);
                 if (o.Verdict != Verdict.Miss) Haptics.Struck(o.Verdict == Verdict.Kill);
                 else if (o.NearMiss) Haptics.Snap();
             }
@@ -599,6 +625,7 @@ namespace SniperDuel.Game
 
             var wind = Match.ActiveConditions(State).Wind;
             arena.SetWind(wind);
+            Sounds(wind);
             SyncEnemy();
             SyncPlayer();
             RenderHud(wind);
@@ -633,6 +660,17 @@ namespace SniperDuel.Game
             eyeShown = Vector2.Lerp(eyeShown, target, 1 - Mathf.Exp(-dt * (held ? 4 : 10)));
             ScopeMask.EyeOffset = eyeShown;
             ScopeMask.Open = scopeOpen;
+        }
+
+        /// <summary>The wind bed follows the lane wind; the heart beats while the breath is held or recovering.</summary>
+        void Sounds(LaneWind wind)
+        {
+            float sum = 0;
+            foreach (var w in wind.Zones) sum += (float)Math.Sqrt(w.X * w.X + w.Z * w.Z);
+            Sound.Wind = wind.Zones.Count > 0 ? sum / wind.Zones.Count : 0;
+            float strain = Strain();
+            if (breath.Holding) Sound.Heart(0.15f + 0.85f * strain);
+            else if (Sway.BreathFactor(breath, time, cfg) > 1.05) Sound.Heart(strain);
         }
 
         void OnDestroy()
