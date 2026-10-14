@@ -209,22 +209,19 @@ namespace SniperDuel.Game.World
             model.rotation = turn * model.rotation;
             model.position = pivot + turn * (model.position - pivot);
 
-            // Gear worn on top of the head (the headset) is skinned to bones other than the head, so
-            // it would stay put while the neck swings: note it here and carry it with the head on Bake.
-            var crownUp = frame.TransformDirection(pose.Up);
+            // Rigid gear (the headset) comes as a skinned mesh with no bones, so it would stay put
+            // while the neck swings: note what sits by the head and carry it with the head on Bake.
             // In the model's frame, so the final shift over the origin doesn't count as head motion.
             headRest = model.worldToLocalMatrix * head.localToWorldMatrix;
             this.head = head;
             headModel = model;
             foreach (var r in skins)
             {
-                if (System.Array.IndexOf(r.bones, head) >= 0) continue;
-                var c = r.bounds.center;
-                if (Vector3.Distance(c, head.position) < 0.35f * height / 1.8f && Vector3.Dot(c - head.position, crownUp) > 0.04f)
-                {
-                    riders.Add(r.gameObject);
-                    Debug.Log($"[Figure] head rider: {r.name}, bones {string.Join(",", System.Linq.Enumerable.Take(System.Linq.Enumerable.Select(r.bones, x => x != null ? x.name : "-"), 4))}");
-                }
+                if (r.bones.Length > 0 || r.sharedMesh == null) continue;
+                var c = r.transform.TransformPoint(r.sharedMesh.bounds.center);
+                float d = Vector3.Distance(c, head.position);
+                Debug.Log($"[Figure] boneless {r.name}: {d:0.00} m from the head");
+                if (d < 0.6f * height / 1.8f) riders.Add(r.gameObject);
             }
 
             foreach (var (bone, next, dir) in pose.Limbs)
