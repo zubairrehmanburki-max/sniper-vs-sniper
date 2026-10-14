@@ -6,10 +6,14 @@ namespace SniperDuel.Game.World
 {
     /// <summary>
     /// The camera's film look: ACES tonemapping, soft bloom on the sun and water glints, a touch of
-    /// contrast and a light vignette. One global volume; the scope view adds its own vignette on top.
+    /// contrast and a light vignette. One global volume; the scope view draws its own vignette,
+    /// fringing and lens tint on top (ScopeMask), and the glass adds a little contrast (Scope).
     /// </summary>
     public static class PostFx
     {
+        static ColorAdjustments? grade;
+        static float graded = -1;
+
         public static Volume Setup(Camera cam, Transform parent)
         {
             var data = cam.GetUniversalAdditionalCameraData();
@@ -31,14 +35,26 @@ namespace SniperDuel.Game.World
             bloom.intensity.Override(0.55f);
             bloom.scatter.Override(0.65f);
             bloom.highQualityFiltering.Override(true);
-            var grade = profile.Add<ColorAdjustments>(true);
-            grade.postExposure.Override(0.15f);
-            grade.contrast.Override(12f);
-            grade.saturation.Override(-6f);
+            grade = profile.Add<ColorAdjustments>(true);
+            Scope(0);
             var vignette = profile.Add<Vignette>(true);
             vignette.intensity.Override(0.22f);
             vignette.smoothness.Override(0.45f);
             return volume;
+        }
+
+        /// <summary>
+        /// Blends in the scope's glass: 0 the bare eye, 1 looking through the scope. Good optics
+        /// read a little crisper: more contrast and colour, a touch darker for the light lost in the glass.
+        /// </summary>
+        public static void Scope(float amount)
+        {
+            amount = Mathf.Clamp01(amount);
+            if (grade == null || Mathf.Abs(amount - graded) < 0.005f) return;
+            graded = amount;
+            grade.postExposure.Override(Mathf.Lerp(0.15f, 0.05f, amount));
+            grade.contrast.Override(Mathf.Lerp(12f, 18f, amount));
+            grade.saturation.Override(Mathf.Lerp(-6f, 0f, amount));
         }
     }
 }

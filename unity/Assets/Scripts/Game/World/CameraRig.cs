@@ -5,7 +5,8 @@ namespace SniperDuel.Game.World
     /// <summary>
     /// The one camera. Menus get a slow cinematic drift along the river beside the player's bridge;
     /// in a duel it sits at the player's eye, looking down-lane, with the field of view set by the
-    /// duel (the bare eye, or the scope's magnification).
+    /// duel (the bare eye, or the scope's magnification). Between the shoulder view and the scope
+    /// the eye view shows the player's rifle in first person as it comes up to the eye.
     /// </summary>
     public sealed class CameraRig : MonoBehaviour
     {
@@ -28,6 +29,14 @@ namespace SniperDuel.Game.World
         public GameObject? Body;
         /// <summary>Over-the-shoulder offset in the camera's frame: right, up, back (metres).</summary>
         public static readonly Vector3 ShoulderOffset = new Vector3(0.85f, 0.75f, -2.4f);
+        /// <summary>
+        /// At the eye (not third person), how far the rifle is raised: 0 shouldered with the eye off
+        /// the scope, 1 at the eyepiece, where the scope view takes over and the rifle hides.
+        /// </summary>
+        public float Raise = 1;
+        /// <summary>Recoil climb in radians, for the first-person rifle.</summary>
+        public float Kick;
+        Viewmodel? viewmodel;
         float clock;
 
         public const float EyeFov = 55;
@@ -66,6 +75,14 @@ namespace SniperDuel.Game.World
                 Cam.fieldOfView = Fov;
             }
             if (Body != null) Body.SetActive(Current != Mode.Eye || ThirdPerson);
+            // First person: the rifle in front of the eye until the scope takes over.
+            bool rifle = Current == Mode.Eye && !ThirdPerson && Raise < 0.999f;
+            if (rifle && viewmodel == null) viewmodel = Viewmodel.Create(Cam.transform);
+            if (viewmodel != null)
+            {
+                if (viewmodel.gameObject.activeSelf != rifle) viewmodel.gameObject.SetActive(rifle);
+                if (rifle) viewmodel.Pose(Raise, Kick, clock);
+            }
         }
     }
 }

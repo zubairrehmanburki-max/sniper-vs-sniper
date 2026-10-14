@@ -12,8 +12,9 @@ namespace SniperDuel.Game
     /// <summary>
     /// A duel against the bot on one map: runs the match reducer and the bot's plan on the match
     /// clock, aims the camera from the player's eye (with sway, breath and recoil), drives the HUD
-    /// and scope screens, and shows each shot (tracer, splash, hit call). Ported from the web
-    /// client's duelMode.ts and shooter.ts.
+    /// and scope screens, and shows each shot (tracer, splash, hit call). Scoping in raises the
+    /// rifle to the eye in first person before the scope view opens. Ported from the web client's
+    /// duelMode.ts and shooter.ts.
     /// </summary>
     public sealed class Duel : MonoBehaviour
     {
@@ -64,6 +65,21 @@ namespace SniperDuel.Game
         const float FireHoldSeconds = 0.3f;
         bool director;
 
+        /// <summary>Seconds to bring the rifle from the shoulder to the eye, and to lower it again.</summary>
+        const float RaiseSeconds = 0.42f, LowerSeconds = 0.26f;
+        /// <summary>Magnification steps for the zoom buttons (clamped to the scope's range).</summary>
+        static readonly int[] ZoomLevels = { 5, 8, 10, 12, 15, 18, 20, 25 };
+        /// <summary>0 rifle shouldered (or third person), 1 eye at the scope.</summary>
+        float raise;
+        /// <summary>+1 raising to the scope, -1 lowering out of it, 0 still.</summary>
+        int raising;
+        /// <summary>The eye settling into the eyepiece after the raise (0 to 1).</summary>
+        float scopeOpen = 1;
+        /// <summary>Field of view on screen, eased toward the aim's so zoom and scope-in glide.</summary>
+        float shownFov = -1;
+        SwayOffset lastSway;
+        Vector2 eyeShown;
+
         public static Duel Begin(GameConfig cfg, UiHost ui, CameraRig rig, Arena arena, string playerName, string rifleId, BotDifficulty bot)
         {
             var d = new GameObject("Duel").AddComponent<Duel>();
@@ -78,6 +94,7 @@ namespace SniperDuel.Game
                 new PlayerSetup(playerName, rifleId),
                 new PlayerSetup(Catalog.BotName(bot), botRifle, bot)), 0, cfg);
             d.zoom = (int)Math.Round((cfg.Scope.MinZoom + cfg.Scope.MaxZoom) / 2);
+            ScopeReticle.Holds = Holdovers(cfg, rifleId, Match.ActiveConditions(d.State).Atmosphere);
             d.BindScreens();
             d.EnterPhase();
             d.LookAtEnemy();
@@ -110,6 +127,8 @@ namespace SniperDuel.Game
             scope.On("windRight", () => Dial(ref windMrad, 1, cfg.Scope.MaxWindageMrad, -cfg.Scope.MaxWindageMrad));
             scope.On("windLeft", () => Dial(ref windMrad, -1, cfg.Scope.MaxWindageMrad, -cfg.Scope.MaxWindageMrad));
             scope.OnHold("breath", SetBreath);
+            scope.On("zoomIn", () => ZoomStep(1));
+            scope.On("zoomOut", () => ZoomStep(-1));
             Look(scope.Root);
             foreach (var screen in new[] { hud, scope })
                 if (screen.Has("fireBtn"))
@@ -128,6 +147,47 @@ namespace SniperDuel.Game
             float h = Mathf.Max(1, track.layout.height);
             float f = 1 - Mathf.Clamp01(local.y / h);
             zoom = (int)Math.Round(cfg.Scope.MinZoom + f * (cfg.Scope.MaxZoom - cfg.Scope.MinZoom));
+        }
+
+        void ZoomStep(int dir)
+        {
+            int next = zoom;
+            if (dir > 0)
+            {
+                foreach (int z in ZoomLevels)
+                    if (z > zoom) { next = z; break; }
+            }
+            else
+            {
+                for (int i = ZoomLevels.Length - 1; i >= 0; i--)
+                    if (ZoomLevels[i] < zoom) { next = ZoomLevels[i]; break; }
+            }
+            zoom = (int)Math.Max(cfg.Scope.MinZoom, Math.Min(cfg.Scope.MaxZoom, next));
+            Haptics.Click();
+        }
+
+        /// <summary>
+        /// Elevation holds for the reticle's range marks: mrad up from the rifle's zero at each 100 m
+        /// from 200 m out to where the bullet still reaches, in the map's air.
+        /// </summary>
+        public static List<(double range, double mrad)> Holdovers(GameConfig cfg, string rifleId, Atmosphere atmosphere)
+        {
+            var holds = new List<(double, double)>();
+            try
+            {
+                var shot = RifleSetup.RifleShot(cfg.RifleById(rifleId), cfg);
+                var env = new SniperDuel.Ballistics.Environment { Atmosphere = atmosphere };
+                for (double r = 200; r <= 1200; r += 100)
+                {
+                    var row = Solutions.DopeTable(shot, env, new[] { r })[0];
+                    holds.Add((r, row.ElevationMrad));
+                }
+            }
+            catch (Exception e) when (e is InvalidOperationException || e is KeyNotFoundException)
+            {
+                // Past the bullet's reach (or an unknown rifle): keep the ranges found so far.
+            }
+            return holds;
         }
 
         /// <summary>Drag on empty screen to aim; scaled to the field of view so the scope stays usable.</summary>
@@ -188,13 +248,52 @@ namespace SniperDuel.Game
         void ShowHud()
         {
             scoped = false;
+            raise = 0;
+            raising = 0;
             ui.Show("Hud");
         }
 
+        /// <summary>
+        /// Scoping in raises the rifle to the eye in first person, then opens the scope view;
+        /// scoping out lowers it and returns to the shoulder view. Already there, it just shows the
+        /// screen again (after a bullet cam).
+        /// </summary>
         void SetScoped(bool on)
         {
-            scoped = on;
-            ui.Show(on ? "Scope" : "Hud");
+            if (on && (scoped || raising > 0))
+            {
+                if (scoped) ui.Show("Scope");
+                return;
+            }
+            if (!on && !scoped && raising <= 0)
+            {
+                if (raise <= 0) ui.Show("Hud");
+                return;
+            }
+            scoped = false;
+            raising = on ? 1 : -1;
+            ui.HideAll();
+        }
+
+        /// <summary>Moves the raise along; at the top the scope opens, at the bottom the HUD returns.</summary>
+        void Raise(float dt)
+        {
+            if (raising == 0) return;
+            raise = Mathf.Clamp01(raise + raising * dt / (raising > 0 ? RaiseSeconds : LowerSeconds));
+            if (raising > 0 && raise >= 1)
+            {
+                raising = 0;
+                scoped = true;
+                scopeOpen = 0;
+                // The picture settles in from a touch wider as the eye finds the exit pupil.
+                shownFov = (float)Fov() * 1.35f;
+                if (!director) ui.Show("Scope");
+            }
+            else if (raising < 0 && raise <= 0)
+            {
+                raising = 0;
+                if (!director) ui.Show("Hud");
+            }
         }
 
         void Dial(ref double value, int clicks, double max, double min)
@@ -394,8 +493,7 @@ namespace SniperDuel.Game
                 Seed = swaySeed,
                 Penalty = p.Wounds > 0 ? cfg.Player.Wound.SwayFactor : 1,
             }, time, cfg);
-            // The eye drifts behind the scope with the wobble; recoil throws it up and off the axis.
-            if (scoped) ScopeMask.EyeOffset = new Vector2((float)(s.Right * 9), (float)(-s.Up * 9 - recoil * 6000));
+            lastSway = s;
             return new Aim { Yaw = yaw + s.Right / 1000, Pitch = pitch + s.Up / 1000 + recoil };
         }
 
@@ -484,19 +582,64 @@ namespace SniperDuel.Game
                 if (resume == null && State.Phase != PhaseKind.MatchOver && time >= State.PhaseEnd) Apply(MatchInput.Tick(time));
             }
 
+            Raise(dt);
+            scopeOpen = Mathf.MoveTowards(scopeOpen, 1, dt / 0.22f);
             var aim = TrueAim();
             if (!director) rig.Current = CameraRig.Mode.Eye;
             rig.Eye = Library.ToUnity(Eye());
             rig.Yaw = (float)(aim.Yaw * Mathf.Rad2Deg);
             rig.Pitch = (float)(aim.Pitch * Mathf.Rad2Deg);
-            rig.Fov = (float)Fov();
-            rig.ThirdPerson = !scoped;
+            rig.Fov = ShownFov(dt);
+            rig.ThirdPerson = !scoped && raising == 0 && raise <= 0;
+            rig.Raise = scoped ? 1 : raise;
+            rig.Kick = (float)recoil;
+            ScopeEye(dt);
+            PostFx.Scope(scoped ? scopeOpen : 0);
+            ScopeReticle.DialMrad = elevMrad;
 
             var wind = Match.ActiveConditions(State).Wind;
             arena.SetWind(wind);
             SyncEnemy();
             SyncPlayer();
             RenderHud(wind);
+        }
+
+        /// <summary>
+        /// The field of view on screen: through the scope it glides to each new magnification (in
+        /// log space, so every step feels alike); coming up to the eye it narrows a little as the
+        /// shooter focuses down the rifle.
+        /// </summary>
+        float ShownFov(float dt)
+        {
+            float target = (float)Fov();
+            if (!scoped) shownFov = Mathf.Lerp(target, target * 0.8f, Mathf.SmoothStep(0, 1, raise));
+            else if (shownFov <= 0) shownFov = target;
+            else shownFov = Mathf.Exp(Mathf.Lerp(Mathf.Log(shownFov), Mathf.Log(target), 1 - Mathf.Exp(-dt * 9)));
+            return shownFov;
+        }
+
+        /// <summary>
+        /// Where the eye sits behind the scope, for the scope shadow: it follows the rifle's wobble
+        /// and recoil and wanders a little on its own; holding the breath steadies the head, so it
+        /// drifts less and follows more smoothly.
+        /// </summary>
+        void ScopeEye(float dt)
+        {
+            bool held = breath.Holding;
+            float wander = held ? 1.2f : 4.5f;
+            float t = (float)time;
+            var drift = new Vector2(Mathf.PerlinNoise(t * 0.35f, 3.1f) - 0.5f, Mathf.PerlinNoise(7.7f, t * 0.3f) - 0.5f) * 2 * wander;
+            var target = new Vector2((float)(lastSway.Right * 28), (float)(-lastSway.Up * 28 - recoil * 6000)) + drift;
+            eyeShown = Vector2.Lerp(eyeShown, target, 1 - Mathf.Exp(-dt * (held ? 4 : 10)));
+            ScopeMask.EyeOffset = eyeShown;
+            ScopeMask.Open = scopeOpen;
+        }
+
+        void OnDestroy()
+        {
+            // Back to the bare eye for the menus.
+            PostFx.Scope(0);
+            rig.Raise = 1;
         }
 
         void SyncEnemy()
@@ -572,6 +715,7 @@ namespace SniperDuel.Game
             scope.Text("elev", elevMrad == 0 ? "0.0" : $"{(elevMrad > 0 ? "U" : "D")} {Math.Abs(elevMrad):0.0}");
             scope.Text("windage", Fmt(windMrad, "R", "L"));
             scope.Text("zoom", zoom.ToString());
+            scope.Text("mag", $"{cfg.Scope.FovAt1xDeg / Math.Max(0.01, rig.Fov):0.0}×");
             float zf = (float)((zoom - cfg.Scope.MinZoom) / (cfg.Scope.MaxZoom - cfg.Scope.MinZoom));
             if (scope.Has("zoomFill")) scope["zoomFill"].style.height = Length.Percent(zf * 100);
             if (scope.Has("zoomKnob")) scope["zoomKnob"].style.bottom = new StyleLength(new Length(zf * 100, LengthUnit.Percent));
