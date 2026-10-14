@@ -7,9 +7,10 @@ namespace SniperDuel.Game.World
     /// <summary>
     /// Bridges and towers from the map's structure list, built from scanned concrete, asphalt and
     /// painted-steel materials. Dimensions follow the hit model: the deck top is the
-    /// ground players stand on, its extent is the platform the rules know about.
+    /// ground players stand on, its extent is the platform the rules know about. Towers are in
+    /// Watchtower.cs and Rig.cs.
     /// </summary>
-    public static class Structures
+    public static partial class Structures
     {
         public static void Build(DuelMap map, Transform parent)
         {
@@ -17,7 +18,7 @@ namespace SniperDuel.Game.World
             foreach (var s in map.Look.Structures)
             {
                 if (s.Kind == StructureKind.Bridge) Bridge(map, s, parent);
-                else Tower(s, parent);
+                else Tower(map, s, parent);
             }
         }
 
@@ -183,35 +184,6 @@ namespace SniperDuel.Game.World
             }
             anchors.Object("Cable anchors", dark, root);
             cables.Object("Cables", cable, root);
-        }
-
-        static void Tower(Structure t, Transform parent)
-        {
-            var root = new GameObject($"Tower s={t.S:0}").transform;
-            root.SetParent(parent, false);
-            root.localPosition = new Vector3((float)t.X, 0, (float)t.S);
-            float top = (float)t.TopY, hs = (float)t.HalfSize;
-            var mat = t.Style == TowerStyle.Rig ? Library.Surface("rusty_metal_02", 3) : Library.Surface("concrete_wall_008", 3);
-            var mb = new MeshBuilder();
-            mb.Box(new Vector3(0, top - 0.4f, 0), new Vector3(2 * hs, 0.8f, 2 * hs));
-            foreach (var (dx, dz) in new[] { (-1, -1), (-1, 1), (1, -1), (1, 1) })
-                mb.Box(new Vector3(dx * (hs - 0.4f), (top - 0.8f) / 2 - 5, dz * (hs - 0.4f)), new Vector3(0.7f, top + 9.2f, 0.7f));
-            for (float y = 4; y < top - 2; y += 6)
-            {
-                mb.Box(new Vector3(0, y, -hs + 0.4f), new Vector3(2 * hs, 0.35f, 0.35f));
-                mb.Box(new Vector3(0, y, hs - 0.4f), new Vector3(2 * hs, 0.35f, 0.35f));
-                mb.Box(new Vector3(-hs + 0.4f, y, 0), new Vector3(0.35f, 0.35f, 2 * hs));
-                mb.Box(new Vector3(hs - 0.4f, y, 0), new Vector3(0.35f, 0.35f, 2 * hs));
-            }
-            mb.Object("Tower", mat, root);
-            var rail = new MeshBuilder();
-            foreach (var (dx, dz) in new[] { (-1, 0), (1, 0), (0, -1), (0, 1) })
-            {
-                var from = new Vector3(dx * hs + (dz != 0 ? -hs : 0), top + 1.05f, dz * hs + (dx != 0 ? -hs : 0));
-                var to = new Vector3(dx * hs + (dz != 0 ? hs : 0), top + 1.05f, dz * hs + (dx != 0 ? hs : 0));
-                rail.Beam(from, to, 0.06f, 0.06f);
-            }
-            rail.Object("Railing", Library.Surface("rusty_painted_metal", 2), root);
         }
     }
 }

@@ -64,7 +64,8 @@ namespace SniperDuel.Game.World
                 planted++;
             }
 
-            if (open) Water(map, root, rng, water);
+            // The marsh and the open sea get their own dressing (Marsh, Offshore) instead of the river's.
+            if (open && map.Id != "watchtowers" && map.Id != "oil-rigs") Water(map, root, rng, water);
             if (map.Look.Structures != null)
                 foreach (var st in map.Look.Structures)
                     if (st.Kind == StructureKind.Bridge) Roadblock(st, root, rng);
@@ -124,8 +125,11 @@ namespace SniperDuel.Game.World
             }
         }
 
-        /// <summary>Gear at a firing spot: ammo, binoculars, a crate and a can beside the shooter.</summary>
-        public static void Kit(Vector3 spot, float facingDeg, Transform parent)
+        /// <summary>
+        /// Gear at a firing spot: ammo, binoculars, a crate and a can beside the shooter, and road
+        /// barriers either side where there is room (not on a tower's small roof).
+        /// </summary>
+        public static void Kit(Vector3 spot, float facingDeg, Transform parent, bool barriers = true)
         {
             var root = new GameObject("Kit").transform;
             root.SetParent(parent, false);
@@ -140,6 +144,7 @@ namespace SniperDuel.Game.World
             Put("binoculars", new Vector3(-0.7f, 0, -0.3f), -40);
             Put("old_military_crate", new Vector3(2.2f, 0, -2.1f), 8);
             Put("metal_jerrycan_green", new Vector3(-2.4f, 0, -2.5f), 70);
+            if (!barriers) return;
             Put("concrete_road_barrier", new Vector3(6, 0, -1), 90);
             Put("concrete_road_barrier", new Vector3(-6, 0, -1), 90);
         }

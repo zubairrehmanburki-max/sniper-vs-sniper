@@ -31,6 +31,9 @@ namespace SniperDuel.Game.World
             Dressing.Build(map, root);
             // The estuary maps get a city on the banks so the far horizon isn't empty water.
             if (map.Id == "twin-bridges") Skyline.Build(map, root, 260);
+            // The towers stand in a drowned marsh; the rigs in open sea with a field round them.
+            if (map.Id == "watchtowers") Marsh.Build(map, root);
+            if (map.Id == "oil-rigs") Offshore.Build(map, root);
 
             var ground = map.Terrain ?? map.Ground;
             float water = (float)(map.Water ?? -1000);
@@ -39,26 +42,45 @@ namespace SniperDuel.Game.World
                 float x = (float)f[0], s = (float)f[1];
                 float y = Mathf.Max((float)ground(x, -s), water);
                 bool afloat = y <= water + 0.01f;
+                float bed = (float)ground(x, -s);
                 var basePos = new Vector3(x, y, s);
-                if (afloat)
+                float pole = 7;
+                if (afloat && water - bed < 4)
                 {
-                    // Over water the flag rides a marker buoy.
+                    // Shallow marsh: the flag pole is driven into the mud and stands out of the water.
+                    basePos.y = bed - 0.3f;
+                    pole = water - bed + 5.3f;
+                }
+                else if (afloat)
+                {
+                    // Over deep water the flag rides a marker buoy.
                     var buoy = Library.Place("lateral_sea_marker", basePos, 0, 1.4f, root);
                     Library.Ground(buoy, water - 0.6f);
                     basePos.y = Library.BoundsOf(buoy).max.y - 0.2f;
+                    pole = 5;
                 }
-                arena.Flags.Add(Flag.Create(basePos, afloat ? 5 : 7, new Color(0.85f, 0.25f, 0.12f), root));
+                arena.Flags.Add(Flag.Create(basePos, pole, new Color(0.85f, 0.25f, 0.12f), root));
             }
 
             for (int i = 0; i < 2; i++)
             {
                 var side = i == 0 ? Side.A : Side.B;
                 foreach (var spot in map.Spots[side])
-                    Dressing.Kit(Library.ToUnity(spot), side == Side.A ? 0 : 180, root);
+                    Dressing.Kit(Library.ToUnity(spot), side == Side.A ? 0 : 180, root, !OnSmallTower(map, spot));
             }
             // Water and steel reflect the finished scene; the probe renders once per map.
             arena.Sky.Probe.RenderProbe();
             return arena;
+        }
+
+        /// <summary>True when a spot is on a tower roof too small for the kit's road barriers.</summary>
+        static bool OnSmallTower(DuelMap map, Vec3 spot)
+        {
+            if (map.Look.Structures == null) return false;
+            foreach (var st in map.Look.Structures)
+                if (st.Kind == StructureKind.Tower && st.HalfSize < 6 && System.Math.Abs(spot.X - st.X) <= st.HalfSize && System.Math.Abs(-spot.Z - st.S) <= st.HalfSize)
+                    return true;
+            return false;
         }
 
         /// <summary>Places (or re-poses) the enemy figure at a rules position, facing the other side.</summary>
