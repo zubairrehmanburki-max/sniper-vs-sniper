@@ -38,9 +38,17 @@ namespace SniperDuel.Game.World
         Vector3 modelPos;
         Quaternion modelRot;
         readonly List<(Transform t, Quaternion r)> rest = new List<(Transform, Quaternion)>();
-        readonly List<Transform> skeleton = new List<Transform>();
-        /// <summary>How far below the lowest joint the mesh reaches, per stance (the sole, the belly).</summary>
-        readonly float[] depth = new float[3];
+        /// <summary>The joints that can touch the deck, each with how much body there is under it (m).</summary>
+        readonly List<(Transform t, float under)> contacts = new List<(Transform, float)>();
+        static readonly (string bone, float under)[] Flesh =
+        {
+            ("Hips", 0.12f), ("Spine", 0.13f), ("Spine1", 0.14f), ("Spine2", 0.14f), ("Neck", 0.07f), ("Head", 0.11f),
+            ("LeftUpLeg", 0.1f), ("RightUpLeg", 0.1f), ("LeftLeg", 0.07f), ("RightLeg", 0.07f),
+            ("LeftFoot", 0.08f), ("RightFoot", 0.08f), ("LeftToeBase", 0.03f), ("RightToeBase", 0.03f),
+            ("LeftToe_End", 0.02f), ("RightToe_End", 0.02f),
+            ("LeftArm", 0.07f), ("RightArm", 0.07f), ("LeftForeArm", 0.05f), ("RightForeArm", 0.05f),
+            ("LeftHand", 0.04f), ("RightHand", 0.04f),
+        };
         /// <summary>How much to lift the rifle off the deck when lying down.</summary>
         float rifleLift;
 
@@ -99,11 +107,34 @@ namespace SniperDuel.Game.World
             model = m;
             modelPos = m.localPosition;
             modelRot = m.localRotation;
+            // Gear skinned to no bones of its own (the headset) is frozen as it sits now and carried
+            // by the head, else it hangs where the bind pose put it, above the head.
+            if (bones.TryGetValue("Head", out var headBone))
+                foreach (var r in skins.ToArray())
+                {
+                    Debug.Log($"[Figure] live skin {r.name}: {r.bones?.Length ?? 0} bones, root {(r.rootBone != null ? r.rootBone.name : "-")}");
+                    if (r.bones != null && r.bones.Length > 1) continue;
+                    var mesh = new Mesh { name = r.name + " (on the head)" };
+                    r.BakeMesh(mesh, true);
+                    mesh.RecalculateBounds();
+                    var go = r.gameObject;
+                    var mats = r.sharedMaterials;
+                    var only = r.bones != null && r.bones.Length == 1 ? r.bones[0] : null;
+                    skins.Remove(r);
+                    DestroyImmediate(r);
+                    go.AddComponent<MeshFilter>().sharedMesh = mesh;
+                    go.AddComponent<MeshRenderer>().sharedMaterials = mats;
+                    // Worn on the head by its name, else on whatever it was rooted to.
+                    string n = go.name.ToLowerInvariant();
+                    bool head = n.Contains("head") || n.Contains("phone") || n.Contains("helmet") || n.Contains("hat") || n.Contains("cap");
+                    var carrier = head ? headBone : only != null ? only : null;
+                    if (carrier != null) go.transform.SetParent(carrier, true);
+                }
             rest.Clear();
             foreach (var t in bones.Values) rest.Add((t, t.localRotation));
-            skeleton.Clear();
-            if (bones.TryGetValue("Hips", out var hips))
-                foreach (var t in hips.GetComponentsInChildren<Transform>()) skeleton.Add(t);
+            contacts.Clear();
+            foreach (var (bone, under) in Flesh)
+                if (bones.TryGetValue(bone, out var t)) contacts.Add((t, under));
             foreach (var r in skins) r.updateWhenOffscreen = true;
         }
 
@@ -116,40 +147,25 @@ namespace SniperDuel.Game.World
             Body.localPosition = Vector3.zero;
         }
 
-        float LowestJoint()
+        /// <summary>The lowest point of the body: the lowest joint less the flesh under it.</summary>
+        float Lowest()
         {
             float y = float.MaxValue;
-            foreach (var t in skeleton) y = Mathf.Min(y, t.position.y);
+            foreach (var (t, under) in contacts) y = Mathf.Min(y, t.position.y - under);
             return y;
         }
 
-        /// <summary>
-        /// Strikes each stance once and measures how far the mesh reaches below the lowest joint,
-        /// so a blended pose can be stood on the deck from its joints alone; and how far the rifle
-        /// would sink into the deck lying down.
-        /// </summary>
+        /// <summary>Measures how far the rifle would sink into the deck lying down.</summary>
         void Calibrate()
         {
-            for (int s = 0; s < 3; s++)
+            Unpose();
+            Strike(model!, Poses[Stance.Prone], 1);
+            if (rifle != null)
             {
-                Unpose();
-                Strike(model!, Poses[(Stance)s], s == (int)Stance.Prone ? 1 : 0);
-                float joint = LowestJoint(), mesh = float.MaxValue;
-                foreach (var r in skins)
-                {
-                    var baked = new Mesh();
-                    r.BakeMesh(baked, true);
-                    foreach (var v in baked.vertices) mesh = Mathf.Min(mesh, r.transform.TransformPoint(v).y);
-                    Destroy(baked);
-                }
-                depth[s] = mesh < float.MaxValue ? Mathf.Clamp(joint - mesh, 0, 0.4f) : 0.05f;
-                if (s == (int)Stance.Prone && rifle != null)
-                {
-                    float ground = transform.position.y + 0.04f;
-                    Body.position += new Vector3(0, ground + depth[s] - joint, 0);
-                    PlaceRifle(0);
-                    rifleLift = Mathf.Max(0, ground - Library.BoundsOf(rifle.gameObject).min.y);
-                }
+                float ground = transform.position.y + 0.04f;
+                Body.position += new Vector3(0, ground - Lowest(), 0);
+                PlaceRifle(0);
+                rifleLift = Mathf.Max(0, ground - Library.BoundsOf(rifle.gameObject).min.y);
             }
             Unpose();
         }
@@ -207,10 +223,9 @@ namespace SniperDuel.Game.World
             Unpose();
             float prone = weight[(int)Stance.Prone];
             Strike(model, pose, prone);
-            // Stand it on the deck: the lowest joint, less the flesh under it.
-            float ground = transform.position.y + 0.04f, under = 0;
-            for (int s = 0; s < 3; s++) under += weight[s] * depth[s];
-            Body.position += new Vector3(0, ground + under - LowestJoint(), 0);
+            // Stand it on the deck by its lowest point.
+            float ground = transform.position.y + 0.04f;
+            Body.position += new Vector3(0, ground - Lowest(), 0);
             PlaceRifle(rifleLift * prone);
         }
 
@@ -262,9 +277,9 @@ namespace SniperDuel.Game.World
             if (stance == Stance.Crouch)
             {
                 // Leaning into the walk over the rifle.
-                into[Sp] = new Vector3(0, 1, 0.45f).normalized;
-                into[Sp1] = new Vector3(0, 1, 0.3f).normalized;
-                into[Sp2] = new Vector3(0, 1, 0.15f).normalized;
+                into[Sp] = new Vector3(0, 1, 0.75f).normalized;
+                into[Sp1] = new Vector3(0, 1, 0.45f).normalized;
+                into[Sp2] = new Vector3(0, 1, 0.2f).normalized;
                 into[Nk] = new Vector3(0, 1, 0.22f).normalized;
             }
             else if (stance == Stance.Prone)
