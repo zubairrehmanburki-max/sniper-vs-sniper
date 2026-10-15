@@ -110,6 +110,11 @@ namespace SniperDuel.Rules
         NextRound,
         /// <summary>A player quits or never comes back: the other side wins.</summary>
         Forfeit,
+        /// <summary>
+        /// A player walks, crouches or lies down within their own roaming area. Free at any time
+        /// before the match ends; it doesn't count as acting and never ends a phase.
+        /// </summary>
+        Shift,
     }
 
     public sealed class MatchInput
@@ -118,7 +123,7 @@ namespace SniperDuel.Rules
         public double Time;
         /// <summary>Place, Ready, Fire, Forfeit.</summary>
         public Side Side;
-        /// <summary>Place.</summary>
+        /// <summary>Place, Shift.</summary>
         public Vec3 Position;
         public Stance Stance;
         /// <summary>Fire.</summary>
@@ -135,6 +140,8 @@ namespace SniperDuel.Rules
         public static MatchInput Tick(double time) => new MatchInput { Type = MatchInputType.Tick, Time = time };
         public static MatchInput PlaceAt(Side side, Vec3 position, Stance stance, double time) =>
             new MatchInput { Type = MatchInputType.Place, Side = side, Position = position, Stance = stance, Time = time };
+        public static MatchInput ShiftTo(Side side, Vec3 position, Stance stance, double time) =>
+            new MatchInput { Type = MatchInputType.Shift, Side = side, Position = position, Stance = stance, Time = time };
         public static MatchInput ReadyUp(Side side, double time) => new MatchInput { Type = MatchInputType.Ready, Side = side, Time = time };
         public static MatchInput FireShot(Side side, FireInput input, double time) => new MatchInput { Type = MatchInputType.Fire, Side = side, Fire = input, Time = time };
         public static MatchInput NextRound(double time) => new MatchInput { Type = MatchInputType.NextRound, Time = time };
@@ -498,6 +505,17 @@ namespace SniperDuel.Rules
                     p.Position = target;
                     p.Stance = ClampStance(state, input.Stance, cfg);
                     state.Acted = true;
+                    return new StepResult(state);
+                }
+
+                case MatchInputType.Shift:
+                {
+                    var p = state.Players[input.Side];
+                    var target = Maps.ClampToZone(map, Maps.RoamZone(map, input.Side), input.Position);
+                    // Walking away from where they last fired: the enemy loses the flash and dust.
+                    if (p.Revealed is Vec3 seen && Geometry.HorizontalDistance(seen, target) > 0.5) p.Revealed = null;
+                    p.Position = target;
+                    p.Stance = ClampStance(state, input.Stance, cfg);
                     return new StepResult(state);
                 }
 

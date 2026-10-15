@@ -9,7 +9,7 @@ namespace SniperDuel.Game.World
     /// rifle in his hands. Faces +z; the caller turns it. The origin is on the ground under the head
     /// when prone, under the hips otherwise.
     /// </summary>
-    public sealed class Figure : MonoBehaviour
+    public sealed partial class Figure : MonoBehaviour
     {
         /// <summary>
         /// A stance as directions in the figure's frame (+z ahead, +y up, +x right): which way the
@@ -85,7 +85,12 @@ namespace SniperDuel.Game.World
         /// <summary>The soldier model's root (the rifle sits outside it).</summary>
         public Transform Body = null!;
         readonly List<SkinnedMeshRenderer> skins = new List<SkinnedMeshRenderer>();
-        public static Figure Create(Stance stance, float heightM, Transform parent, Color tint)
+        /// <summary>
+        /// Makes a soldier in a stance. A live one stays skinned and can be driven (Drive) to walk,
+        /// crouch-walk, crawl and change stance with a blend; otherwise the pose is frozen into
+        /// static meshes, which is all the enemy and the menus need.
+        /// </summary>
+        public static Figure Create(Stance stance, float heightM, Transform parent, Color tint, bool live = false)
         {
             var root = new GameObject("Figure " + stance);
             root.transform.SetParent(parent, false);
@@ -114,7 +119,22 @@ namespace SniperDuel.Game.World
             else Debug.LogWarning("[Figure] no soldier model loaded");
             Debug.Log($"[Figure] {stance}: {fig.bones.Count} bones, {root.GetComponentsInChildren<Renderer>().Length} renderers");
 
-            if (model != null) fig.Strike(model, pose, stance == Stance.Prone ? 1.75f : heightM);
+            if (model != null && live && fig.bones.ContainsKey("Hips"))
+            {
+                fig.Fit(model, heightM);
+                fig.Remember(model);
+                fig.rifle = Rifle(root.transform).transform;
+                fig.Calibrate();
+                fig.want = stance;
+                fig.weight[(int)stance] = 1;
+                fig.Animate(0);
+                return fig;
+            }
+            if (model != null)
+            {
+                fig.Fit(model, stance == Stance.Prone ? 1.75f : heightM);
+                fig.Strike(model, pose, stance == Stance.Prone ? 1 : 0);
+            }
             fig.Bake();
 
             // Ground him: the lowest point of the posed body on the road (which sits 4 cm proud).
@@ -181,15 +201,10 @@ namespace SniperDuel.Game.World
         /// scales it to the height, turns the whole body into the stance's frame, then swings each
         /// limb bone, parents first, onto its direction.
         /// </summary>
-        void Strike(Transform model, Pose pose, float height)
+        void Fit(Transform model, float height)
         {
-            if (!bones.TryGetValue("Hips", out var hips) || !bones.TryGetValue("Head", out var head)
-                || !bones.TryGetValue("LeftUpLeg", out var lul) || !bones.TryGetValue("RightUpLeg", out var rul)) return;
-            var frame = transform;
+            if (!bones.TryGetValue("Hips", out var hips) || !bones.TryGetValue("Head", out var head)) return;
             Vector3 up = (head.position - hips.position).normalized;
-            Vector3 right = Vector3.ProjectOnPlane(rul.position - lul.position, up).normalized;
-            Vector3 chest = Vector3.Cross(right, up);
-
             // Height: crown to sole along the body's up axis.
             float top = bones.TryGetValue("HeadTop_End", out var crown) ? Vector3.Dot(crown.position, up) : Vector3.Dot(head.position, up) + 0.12f * 1.7f;
             float sole = float.MaxValue;
@@ -197,6 +212,21 @@ namespace SniperDuel.Game.World
                 if (bones.TryGetValue(n, out var f)) sole = Mathf.Min(sole, Vector3.Dot(f.position, up));
             float rest = top - sole;
             if (rest > 1e-4f && sole < float.MaxValue) model.localScale *= height / (rest * 1.04f);
+        }
+
+        /// <summary>
+        /// Turns the model, from its rest pose, into the pose's frame and swings each limb onto its
+        /// direction, then stands it over the origin: under the hips, or under the head as
+        /// `proneAnchor` goes to 1.
+        /// </summary>
+        void Strike(Transform model, Pose pose, float proneAnchor)
+        {
+            if (!bones.TryGetValue("Hips", out var hips) || !bones.TryGetValue("Head", out var head)
+                || !bones.TryGetValue("LeftUpLeg", out var lul) || !bones.TryGetValue("RightUpLeg", out var rul)) return;
+            var frame = transform;
+            Vector3 up = (head.position - hips.position).normalized;
+            Vector3 right = Vector3.ProjectOnPlane(rul.position - lul.position, up).normalized;
+            Vector3 chest = Vector3.Cross(right, up);
 
             var have = Quaternion.LookRotation(chest, up);
             var want = Quaternion.LookRotation(frame.TransformDirection(pose.Chest), frame.TransformDirection(pose.Up));
@@ -214,7 +244,7 @@ namespace SniperDuel.Game.World
             }
 
             // Put him over his origin: under the head when prone, under the hips otherwise.
-            var anchor = pose.Up == Vector3.forward ? head.position : hips.position;
+            var anchor = Vector3.Lerp(hips.position, head.position, proneAnchor);
             var shift = frame.position - anchor;
             model.position += new Vector3(shift.x, 0, shift.z);
         }

@@ -168,6 +168,11 @@ namespace SniperDuel.Rules
         /// <summary>Terrain as drawn, when the hit-test ground also includes platform tops; defaults to Ground.</summary>
         public Ground? Terrain;
         public PerSide<Zone> Zones = null!;
+        /// <summary>
+        /// Where each player may walk, crouch and lie during the duel, if not their whole zone: on a
+        /// fixed-position map, the open part of their own deck or platform round the firing spot.
+        /// </summary>
+        public PerSide<Zone>? Roam;
         public Ground Ground = Hits.FlatGround;
         public List<Box> Cover = new List<Box>();
         /// <summary>Named firing positions per side (bots use these; humans may stand anywhere in the zone).</summary>
@@ -598,6 +603,17 @@ namespace SniperDuel.Rules
             return y;
         };
 
+        /// <summary>
+        /// The walkable top of each side's structure (A's is the first, B's the second): `halfX` either
+        /// way across the lane and `halfS` along it from the structure's centre line.
+        /// </summary>
+        static PerSide<Zone> RoamZones(Structure[] structures, double halfX, double halfS)
+        {
+            Zone On(Structure st, bool facesUp) =>
+                new Zone(st.X - halfX, st.X + halfX, st.S - halfS, st.S + halfS, facesUp ? st.S + halfS : st.S - halfS);
+            return new PerSide<Zone>(On(structures[0], true), On(structures[1], false));
+        }
+
         static PerSide<Zone> FixedZones(Vec3 a, Vec3 b) =>
             new PerSide<Zone>(new Zone(a.X, a.X, -a.Z, -a.Z, -a.Z), new Zone(b.X, b.X, -b.Z, -b.Z, -b.Z));
 
@@ -637,6 +653,8 @@ namespace SniperDuel.Rules
                 Water = 0,
                 Terrain = terrain,
                 Zones = FixedZones(a, b),
+                // The road between the guardrails, out to the barriers either side of the spot.
+                Roam = RoamZones(structures, 5, 4.6),
                 Ground = WithPlatforms(terrain, structures),
                 Cover = new List<Box>(),
                 Spots = new PerSide<List<Vec3>>(new List<Vec3> { a }, new List<Vec3> { b }),
@@ -710,6 +728,7 @@ namespace SniperDuel.Rules
                 Water = 0,
                 Terrain = terrain,
                 Zones = FixedZones(a, b),
+                Roam = RoamZones(structures, 2.3, 2.3),
                 Ground = WithPlatforms(terrain, structures),
                 Cover = new List<Box>(),
                 Spots = new PerSide<List<Vec3>>(new List<Vec3> { a }, new List<Vec3> { b }),
@@ -772,6 +791,7 @@ namespace SniperDuel.Rules
                 Water = 0,
                 Terrain = terrain,
                 Zones = FixedZones(a, b),
+                Roam = RoamZones(structures, 15, 15),
                 Ground = WithPlatforms(terrain, structures),
                 Cover = new List<Box>(),
                 Spots = new PerSide<List<Vec3>>(new List<Vec3> { a }, new List<Vec3> { b }),
@@ -859,6 +879,9 @@ namespace SniperDuel.Rules
             }
             return c;
         }
+
+        /// <summary>Where a side may move freely during the duel: its roaming area, else its zone.</summary>
+        public static Zone RoamZone(DuelMap map, Side side) => map.Roam?[side] ?? map.Zones[side];
 
         /// <summary>Clamp a world position into a zone and onto the ground, outside any cover box.</summary>
         public static Vec3 ClampToZone(DuelMap map, Zone zone, Vec3 p)

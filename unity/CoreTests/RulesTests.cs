@@ -529,6 +529,31 @@ namespace SniperDuel.Tests
         }
 
         [Test]
+        public void ShiftWalksAndChangesStanceWithinTheDeckAtAnyTime()
+        {
+            var s = Match.CreateMatch(3, "twin-bridges", new PerSide<PlayerSetup>(new PlayerSetup("A", "bolt308"), new PlayerSetup("B", "bolt308")), 0, Cfg);
+            var map = Maps.ById("twin-bridges");
+            s = Step(s, MatchInput.PlaceAt(Side.A, map.Spots.A[0], Stance.Prone, 1)).State;
+            s = Step(s, MatchInput.ReadyUp(Side.A, 1)).State;
+            s = Step(s, MatchInput.ReadyUp(Side.B, 1)).State;
+            Assert.That(s.Phase, Is.EqualTo(PhaseKind.Shot));
+            var actor = s.Actor;
+            // A few metres along the deck, standing: allowed whoever's shot it is, and the phase goes on.
+            s = Step(s, MatchInput.ShiftTo(Side.A, new Vec3(3, 0, -1), Stance.Standing, 2)).State;
+            Assert.That(s.Players.A.Position.X, Is.EqualTo(3));
+            Assert.That(s.Players.A.Position.Y, Is.EqualTo(24));
+            Assert.That(s.Players.A.Stance, Is.EqualTo(Stance.Standing));
+            Assert.That(s.Phase, Is.EqualTo(PhaseKind.Shot));
+            Assert.That(s.Actor, Is.EqualTo(actor));
+            Assert.That(s.Acted, Is.False);
+            // Off the deck: held at the barriers and the guardrail.
+            s = Step(s, MatchInput.ShiftTo(Side.A, new Vec3(40, 0, -30), Stance.Crouch, 3)).State;
+            Assert.That(s.Players.A.Position.X, Is.EqualTo(5));
+            Assert.That(-s.Players.A.Position.Z, Is.EqualTo(4.6).Within(1e-9));
+            Assert.That(s.Players.A.Stance, Is.EqualTo(Stance.Crouch));
+        }
+
+        [Test]
         public void TwoIdlePhasesForfeitWhenEnabled()
         {
             var s = Match.CreateMatch(1, "training-lane", new PerSide<PlayerSetup>(new PlayerSetup("A", "bolt308"), new PlayerSetup("B", "bolt308")), 0, Cfg, forfeitOnIdle: true);

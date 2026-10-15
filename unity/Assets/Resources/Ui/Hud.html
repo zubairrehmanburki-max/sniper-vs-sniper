@@ -50,7 +50,17 @@
 </div>
 
 <div style="position: absolute; left: 24px; bottom: 16px; max-width: 320px">
-<div data-bind="hintBox" style="padding: 7px 14px; border-radius: 16px; background: rgba(10,12,11,0.55); font-size: 13px; text-shadow: none"><span data-bind="hint">Drag the sky to look around</span></div>
+<div data-bind="hintBox" style="padding: 7px 14px; border-radius: 16px; background: rgba(10,12,11,0.55); font-size: 13px; text-shadow: none"><span data-bind="hint">Stick to move, drag to look</span></div>
+</div>
+
+<div data-bind="stick" style="position: absolute; left: 44px; top: 190px; width: 132px; height: 132px; border-radius: 66px; border: 2px solid rgba(237,239,232,0.32); background: rgba(10,12,11,0.32); display: flex; align-items: center; justify-content: center">
+<div data-bind="stickKnob" style="width: 56px; height: 56px; border-radius: 28px; border: 2px solid rgba(237,239,232,0.75); background: rgba(237,239,232,0.42)"></div>
+</div>
+
+<div data-bind="stances" style="position: absolute; right: 24px; top: 92px; display: flex; flex-direction: column; align-items: center; gap: 8px">
+<button data-on="stand" data-bind="standBtn" aria-label="Stand" style="width: 88px; height: 36px; border-radius: 18px; border: 1px solid rgba(237,239,232,0.35); background: rgba(10,12,11,0.55); font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 14px; letter-spacing: 0.14em; color: #EDEFE8">STAND</button>
+<button data-on="crouch" data-bind="crouchBtn" aria-label="Crouch" style="width: 88px; height: 36px; border-radius: 18px; border: 1px solid rgba(237,239,232,0.35); background: rgba(10,12,11,0.55); font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 14px; letter-spacing: 0.14em; color: #EDEFE8">CROUCH</button>
+<button data-on="prone" data-bind="proneBtn" aria-label="Prone" style="width: 88px; height: 36px; border-radius: 18px; border: 1px solid rgba(237,239,232,0.35); background: rgba(10,12,11,0.55); font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 14px; letter-spacing: 0.14em; color: #EDEFE8">PRONE</button>
 </div>
 
 <div style="position: absolute; right: 24px; bottom: 38px; display: flex; flex-direction: column; align-items: center; gap: 6px">

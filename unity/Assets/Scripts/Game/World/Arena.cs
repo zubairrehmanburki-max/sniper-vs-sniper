@@ -21,6 +21,8 @@ namespace SniperDuel.Game.World
         /// <summary>The player's outfit colour and rifle finish (the in-duel kit; menus show the defaults).</summary>
         public Color PlayerTint = new Color(0.56f, 0.55f, 0.47f);
         public Color? PlayerFinish;
+        /// <summary>Props on the firing spots (ammo box, crate, barriers): the player walks round them.</summary>
+        public readonly List<Bounds> Blocks = new List<Bounds>();
 
         public static Arena Build(DuelMap map)
         {
@@ -89,7 +91,7 @@ namespace SniperDuel.Game.World
             {
                 var side = i == 0 ? Side.A : Side.B;
                 foreach (var spot in map.Spots[side])
-                    Dressing.Kit(Library.ToUnity(spot), side == Side.A ? 0 : 180, root, !OnSmallTower(map, spot));
+                    arena.Blocks.AddRange(Dressing.Kit(Library.ToUnity(spot), side == Side.A ? 0 : 180, root, !OnSmallTower(map, spot)));
             }
             // Water and steel reflect the finished scene; the probe renders once per map.
             arena.Sky.Probe.RenderProbe();
@@ -116,11 +118,14 @@ namespace SniperDuel.Game.World
             return Enemy;
         }
 
-        /// <summary>Places (or re-poses) the player's own figure, facing down-lane.</summary>
-        public Figure PlacePlayer(Vec3 position, Stance stance, Side side)
+        /// <summary>
+        /// Places (or re-poses) the player's own figure, facing down-lane. A live one (the duel's)
+        /// stays skinned so it can walk and change stance; the caller then moves it.
+        /// </summary>
+        public Figure PlacePlayer(Vec3 position, Stance stance, Side side, bool live = false)
         {
             if (Player != null) Object.Destroy(Player.gameObject);
-            Player = Figure.Create(stance, 1.8f, Root, PlayerTint);
+            Player = Figure.Create(stance, 1.8f, Root, PlayerTint, live);
             if (PlayerFinish is Color finish) Figure.PaintRifle(Player.gameObject, finish);
             Player.name = "Player";
             Player.transform.position = Library.ToUnity(position);

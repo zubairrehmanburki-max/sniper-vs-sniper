@@ -56,8 +56,6 @@ namespace SniperDuel.Game
         float hintTimer;
         Stance enemyStanceShown = (Stance)(-1);
         Vec3 enemyPosShown;
-        Stance playerStanceShown = (Stance)(-1);
-        Vec3 playerPosShown;
 
         /// <summary>Side focus (parallax) knob position, 0 to ScopeDials.FocusMax; starts near, so the far bridge is soft until it is set.</summary>
         double focus = 2;
@@ -97,6 +95,25 @@ namespace SniperDuel.Game
         float shownFov = -1;
         SwayOffset lastSway;
         Vector2 eyeShown;
+
+        /// <summary>The move stick under the left thumb: -1 to 1 each way, +y ahead.</summary>
+        Vector2 stick;
+        int? stickPointer;
+        VisualElement? stickPad, stickKnob;
+        /// <summary>Top walking pace by stance (prone, crouch, standing), m/s.</summary>
+        static readonly float[] Pace = { 0.45f, 1.15f, 2.2f };
+        /// <summary>Which way the player's body faces (degrees), turning after the look.</summary>
+        float bodyYaw;
+        /// <summary>The eye as the camera has it: the stance's height eases in as the body gets up or down.</summary>
+        Vector3 eyeAt;
+        bool eyeSet;
+        /// <summary>How fast the player is really going (what the legs show), m/s.</summary>
+        float pace;
+        double lastStepAt = -10;
+        /// <summary>Where the player was when the bot last planned its shot, and how often it has re-aimed this phase.</summary>
+        Vec3 planPos;
+        Stance planStance;
+        int botDelays;
 
         /// <summary>The rifle the bot takes into a duel: the starter .308 when easy, the 6.5 Creedmoor at medium, the .338 when hard.</summary>
         public static string BotRifle(GameConfig cfg, BotDifficulty bot, string playerRifle)
@@ -148,6 +165,10 @@ namespace SniperDuel.Game
             // Outside the scope: turn the knobs on the rifle's scope, drag elsewhere to look, scope in.
             var hud = ui.Get("Hud");
             hud.On("scope", () => SetScoped(true));
+            hud.On("stand", () => SetStance(Stance.Standing));
+            hud.On("crouch", () => SetStance(Stance.Crouch));
+            hud.On("prone", () => SetStance(Stance.Prone));
+            if (hud.Has("stick")) Stick(hud["stick"], hud.Has("stickKnob") ? hud["stickKnob"] : null);
             hud.On("pause", () => SetPaused(true));
             hud.On("resume", () => SetPaused(false));
             hud.On("forfeit", () =>
@@ -285,6 +306,137 @@ namespace SniperDuel.Game
             if (Settings.InvertLookY) d.y = -d.y;
             yaw += d.x * radPerUnit;
             pitch = Math.Max(-0.3, Math.Min(0.3, pitch - d.y * radPerUnit * Settings.VerticalSensitivity));
+        }
+
+        /// <summary>
+        /// The move stick: touch anywhere on its ring and drag; the knob follows the thumb and the
+        /// player walks that way relative to where they look. Lifting stops them. The thumb is
+        /// captured, so sliding off the ring keeps walking.
+        /// </summary>
+        void Stick(VisualElement pad, VisualElement? knob)
+        {
+            stickPad = pad;
+            stickKnob = knob;
+            pad.pickingMode = PickingMode.Position;
+            pad.AddToClassList(Layout.ActionClass);
+            if (knob != null) knob.pickingMode = PickingMode.Ignore;
+            void To(Vector2 world)
+            {
+                float reach = Mathf.Max(1, pad.layout.width * 0.36f);
+                var v = (pad.WorldToLocal(world) - pad.layout.size / 2) / reach;
+                if (v.magnitude > 1) v = v.normalized;
+                stick = new Vector2(v.x, -v.y);
+                if (knob != null) knob.style.translate = new Translate(v.x * reach, v.y * reach);
+            }
+            pad.RegisterCallback<PointerDownEvent>(e =>
+            {
+                e.StopPropagation();
+                if (!this || paused || stickPointer != null) return;
+                stickPointer = e.pointerId;
+                pad.CapturePointer(e.pointerId);
+                To(e.position);
+            });
+            pad.RegisterCallback<PointerMoveEvent>(e =>
+            {
+                if (stickPointer == e.pointerId) To(e.position);
+            });
+            pad.RegisterCallback<PointerUpEvent>(e => EndStick(e.pointerId));
+            pad.RegisterCallback<PointerCancelEvent>(e => EndStick(e.pointerId));
+            pad.RegisterCallback<PointerCaptureOutEvent>(e => EndStick(e.pointerId));
+        }
+
+        void EndStick(int id)
+        {
+            if (stickPointer != id) return;
+            DropStick();
+        }
+
+        /// <summary>Lets go of the move stick (the thumb lifted, or the screen is going away).</summary>
+        void DropStick()
+        {
+            int? id = stickPointer;
+            stickPointer = null;
+            stick = Vector2.zero;
+            if (id != null && stickPad != null && stickPad.HasPointerCapture(id.Value)) stickPad.ReleasePointer(id.Value);
+            if (stickKnob != null) stickKnob.style.translate = new Translate(0, 0);
+        }
+
+        /// <summary>Stand, crouch or lie down where you are (deep into sudden death you can't lie flat).</summary>
+        void SetStance(Stance stance)
+        {
+            if (State.Phase == PhaseKind.MatchOver) return;
+            var me = State.Players[Me];
+            var allowed = Match.ClampStance(State, stance, cfg);
+            if (allowed != stance) Call(allowed == Stance.Standing ? "Sudden death: stay on your feet." : "Sudden death: no lying flat.");
+            if (allowed == me.Stance) return;
+            var r = Match.ApplyInput(State, MatchInput.ShiftTo(Me, me.Position, allowed, time), cfg);
+            if (r.Error != null) return;
+            State = r.State;
+            Haptics.Click();
+        }
+
+        /// <summary>
+        /// Walks the player with the stick, at their stance's pace (slower when wounded), relative
+        /// to where they look, round the gear on the spot and within their own deck or platform.
+        /// The body turns to face the look and the legs show the real pace (none against a rail).
+        /// </summary>
+        void Walk(float dt)
+        {
+            var me = State.Players[Me];
+            bool free = !scoped && raising == 0 && !director && State.Phase != PhaseKind.MatchOver;
+            var s = free ? stick : Vector2.zero;
+            float mag = s.magnitude;
+            float went = 0;
+            var local = Vector3.forward;
+            if (mag > 0.12f)
+            {
+                float top = Pace[(int)me.Stance] * (me.Wounds > 0 ? (float)cfg.Player.Wound.MoveSpeedFactor : 1);
+                float step = top * Mathf.Clamp01((mag - 0.12f) / 0.65f) * dt;
+                var dir = s / mag;
+                local = new Vector3(dir.x, 0, dir.y);
+                double fx = Math.Sin(yaw), fz = -Math.Cos(yaw), rx = Math.Cos(yaw), rz = Math.Sin(yaw);
+                var to = Clear(new Vec3(me.Position.X + (rx * dir.x + fx * dir.y) * step, me.Position.Y, me.Position.Z + (rz * dir.x + fz * dir.y) * step));
+                var r = Match.ApplyInput(State, MatchInput.ShiftTo(Me, to, me.Stance, time), cfg);
+                if (r.Error == null)
+                {
+                    went = (float)Geometry.HorizontalDistance(me.Position, r.State.Players[Me].Position);
+                    State = r.State;
+                    if (went > 1e-4f) lastStepAt = time;
+                }
+            }
+            pace = Mathf.Lerp(pace, dt > 0 ? went / dt : 0, 1 - Mathf.Exp(-dt * 12));
+            // The body comes round after the look; lying down it shuffles round more slowly.
+            float lookYaw = (float)(yaw * Mathf.Rad2Deg);
+            if (!eyeSet) bodyYaw = lookYaw;
+            bodyYaw = Mathf.MoveTowardsAngle(bodyYaw, lookYaw, dt * (me.Stance == Stance.Prone ? 150 : 400));
+            SyncPlayer();
+            if (arena.Player != null)
+            {
+                // Moving relative to the look, in the body's own frame.
+                local = Quaternion.Euler(0, lookYaw - bodyYaw, 0) * local;
+                arena.Player.Drive(State.Players[Me].Stance, pace, local);
+            }
+        }
+
+        /// <summary>Keeps a step out of the gear on the firing spots (ammo box, crate, barriers), allowing for the body.</summary>
+        Vec3 Clear(Vec3 p)
+        {
+            const float Body = 0.3f;
+            var u = Library.ToUnity(p);
+            foreach (var b in arena.Blocks)
+            {
+                // Small things on the deck (binoculars, a can) are stepped over.
+                if (b.size.y < 0.35f) continue;
+                float x0 = b.min.x - Body, x1 = b.max.x + Body, z0 = b.min.z - Body, z1 = b.max.z + Body;
+                if (u.x <= x0 || u.x >= x1 || u.z <= z0 || u.z >= z1) continue;
+                float l = u.x - x0, r = x1 - u.x, n = u.z - z0, f = z1 - u.z;
+                float m = Mathf.Min(Mathf.Min(l, r), Mathf.Min(n, f));
+                if (m == l) u.x = x0;
+                else if (m == r) u.x = x1;
+                else if (m == n) u.z = z0;
+                else u.z = z1;
+            }
+            return Library.ToRules(u);
         }
 
         /// <summary>
@@ -431,6 +583,7 @@ namespace SniperDuel.Game
             // The screen changes under any finger still down: nothing carries over, and the breath goes.
             DropLook();
             DropFire();
+            DropStick();
             scoped = false;
             raising = on ? 1 : -1;
             Sound.Raise(on);
@@ -526,6 +679,8 @@ namespace SniperDuel.Game
             botQueue.Clear();
             if (s.Players.B.Bot != null) botQueue.AddRange(Bot.Plan(s, Side.B, cfg));
             botQueue.Sort((a, b) => a.Time.CompareTo(b.Time));
+            NotePlan();
+            botDelays = 0;
             if (s.Phase == PhaseKind.Setup)
             {
                 // Fixed spots: take ours, prone, and get on with it.
@@ -536,7 +691,7 @@ namespace SniperDuel.Game
             }
             else if (s.Phase == PhaseKind.Shot)
             {
-                Call(s.Actor == Me ? "Your shot. Set the dials, scope in, hold fire and let go." : "Enemy shot. Stay still.");
+                Call(s.Actor == Me ? "Your shot. Set the dials, scope in, hold fire and let go." : "Enemy shot. Get low or keep moving.");
             }
             else if (s.Phase == PhaseKind.Move && s.Actor == Me)
             {
@@ -638,6 +793,35 @@ namespace SniperDuel.Game
             k.On("skip", cam.Finish);
             k.On("pause", () => cam.Paused = !cam.Paused);
             return cam;
+        }
+
+        void NotePlan()
+        {
+            planPos = State.Players[Me].Position;
+            planStance = State.Players[Me].Stance;
+        }
+
+        /// <summary>
+        /// Before the bot fires: if the player has moved or changed stance since it planned, it
+        /// looks again (it may lose them lying flat) and re-aims at where they are now. Caught on
+        /// the move, it takes a moment longer to settle the crosshair, twice a phase at most.
+        /// </summary>
+        bool Replan(MatchInput next)
+        {
+            var me = State.Players[Me];
+            if (me.Stance == planStance && Geometry.HorizontalDistance(me.Position, planPos) < 0.3) return false;
+            NotePlan();
+            double at = next.Time;
+            if (time - lastStepAt < 0.8 && botDelays < 2 && at + 1.6 < State.PhaseEnd - 0.3)
+            {
+                at += 1.6;
+                botDelays++;
+            }
+            var fresh = Bot.Plan(State, Side.B, cfg);
+            botQueue.Clear();
+            foreach (var i in fresh) botQueue.Add(i.At(Math.Max(i.Time, at)));
+            botQueue.Sort((a, b) => a.Time.CompareTo(b.Time));
+            return true;
         }
 
         void Pause(double seconds, Action next)
@@ -774,6 +958,7 @@ namespace SniperDuel.Game
                 while (botQueue.Count > 0 && botQueue[0].Time <= time && resume == null)
                 {
                     var next = botQueue[0];
+                    if (next.Type == MatchInputType.Fire && Replan(next)) continue;
                     botQueue.RemoveAt(0);
                     Apply(next);
                 }
@@ -781,10 +966,11 @@ namespace SniperDuel.Game
             }
 
             Raise(dt);
+            Walk(dt);
             scopeOpen = Mathf.MoveTowards(scopeOpen, 1, dt / 0.22f);
             var aim = TrueAim();
             if (!director) rig.Current = CameraRig.Mode.Eye;
-            rig.Eye = Library.ToUnity(Eye());
+            rig.Eye = ShownEye(dt);
             rig.Yaw = (float)(aim.Yaw * Mathf.Rad2Deg);
             rig.Pitch = (float)(aim.Pitch * Mathf.Rad2Deg);
             rig.Fov = ShownFov(dt);
@@ -805,8 +991,20 @@ namespace SniperDuel.Game
             arena.SetWind(wind);
             Sounds(wind);
             SyncEnemy();
-            SyncPlayer();
             RenderHud(wind);
+        }
+
+        /// <summary>
+        /// The eye for the camera: it follows the player exactly across the deck, but rises and sinks
+        /// over the body's stance change; at and through the scope it is the true eye.
+        /// </summary>
+        Vector3 ShownEye(float dt)
+        {
+            var eye = Library.ToUnity(Eye());
+            if (!eyeSet || scoped || raising != 0) eyeAt = eye;
+            else eyeAt = new Vector3(eye.x, Mathf.Lerp(eyeAt.y, eye.y, 1 - Mathf.Exp(-dt * 6)), eye.z);
+            eyeSet = true;
+            return eyeAt;
         }
 
         /// <summary>
@@ -914,13 +1112,14 @@ namespace SniperDuel.Game
             arena.PlaceEnemy(e.Position, e.Stance, Side.B);
         }
 
+        /// <summary>The player's own soldier, live, where the rules have them and facing the body's way.</summary>
         void SyncPlayer()
         {
             var p = State.Players[Me];
-            if (p.Stance == playerStanceShown && p.Position.Equals(playerPosShown) && arena.Player != null) return;
-            playerStanceShown = p.Stance;
-            playerPosShown = p.Position;
-            rig.Body = arena.PlacePlayer(p.Position, p.Stance, Me).gameObject;
+            if (arena.Player == null) rig.Body = arena.PlacePlayer(p.Position, p.Stance, Me, live: true).gameObject;
+            var t = arena.Player!.transform;
+            t.position = Library.ToUnity(p.Position);
+            t.rotation = Quaternion.Euler(0, bodyYaw, 0);
         }
 
         void RenderHud(LaneWind wind)
@@ -961,7 +1160,17 @@ namespace SniperDuel.Game
             }
 
             var hud = ui.Get("Hud");
-            hud.Text("hint", hintTimer > 0 ? hint : "Drag the sky to look around");
+            hud.Text("hint", hintTimer > 0 ? hint : "Stick to move, drag to look");
+            var stance = State.Players[Me].Stance;
+            foreach (var (id, st) in new[] { ("standBtn", Stance.Standing), ("crouchBtn", Stance.Crouch), ("proneBtn", Stance.Prone) })
+            {
+                if (!hud.Has(id)) continue;
+                var b = hud[id];
+                bool on = st == stance, open = Match.ClampStance(s, st, cfg) == st;
+                b.style.backgroundColor = on ? new Color(Skin.Amber.r, Skin.Amber.g, Skin.Amber.b, 0.92f) : new Color(0.04f, 0.05f, 0.04f, 0.55f);
+                Skin.Text(b, on ? Skin.Ink : Skin.Paper);
+                b.style.opacity = open ? 1 : 0.35f;
+            }
             hud.Text("cardElev", elev);
             hud.Text("cardWind", windage);
             hud.Text("cardZoom", zoomText);

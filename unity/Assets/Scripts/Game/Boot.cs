@@ -229,6 +229,46 @@ namespace SniperDuel.Game
                     yield return new WaitForEndOfFrame();
                 }
             }
+            // The player's soldier moving on the deck: standing, walking, crouched, crouch-walking,
+            // prone and crawling, from a little ahead and to the side; then the walk from the
+            // game's over-the-shoulder camera with the HUD's stick and stance buttons.
+            if (arena != null)
+            {
+                var spot = arena.Map.Spots.A[0];
+                var fig = arena.PlacePlayer(spot, Stance.Standing, Side.A, live: true);
+                rig.Body = fig.gameObject;
+                var at = fig.transform.position;
+                foreach (var (label, stance, pace) in new[]
+                {
+                    ("Move-Stand", Stance.Standing, 0f), ("Move-Walk", Stance.Standing, 2.2f), ("Move-Crouch", Stance.Crouch, 0f),
+                    ("Move-CrouchWalk", Stance.Crouch, 1.15f), ("Move-Prone", Stance.Prone, 0f), ("Move-Crawl", Stance.Prone, 0.45f),
+                })
+                {
+                    Frame("");
+                    fig.Drive(stance, pace, Vector3.forward);
+                    rig.Current = CameraRig.Mode.Director;
+                    rig.Cam.fieldOfView = 40;
+                    rig.Cam.transform.position = at + new Vector3(2.6f, 1.5f, 3.2f);
+                    rig.Cam.transform.LookAt(at + new Vector3(0, stance == Stance.Prone ? 0.25f : 0.8f, 0.3f));
+                    yield return new WaitForSeconds(0.9f);
+                    for (int f = 0; f < 4; f++) yield return null;
+                    Debug.Log($"[Capture] {label}: figure bounds {Library.BoundsOf(fig.gameObject).size}");
+                    ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"{++n:00}-{label}.png"));
+                    yield return null;
+                    yield return new WaitForEndOfFrame();
+                }
+                Frame("Hud");
+                fig.Drive(Stance.Standing, 2.2f, Vector3.forward);
+                rig.Eye = Library.ToUnity(Combat.EyeOf(spot, Stance.Standing, Config));
+                rig.Pitch = 0;
+                ui.Show("Hud");
+                yield return new WaitForSeconds(0.9f);
+                for (int f = 0; f < 4; f++) yield return null;
+                ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"{++n:00}-Move-Hud.png"));
+                yield return null;
+                yield return new WaitForEndOfFrame();
+                ui.HideAll();
+            }
             // The other maps: the menu backdrop and the 1x eye on each, to judge them against Twin Bridges.
             foreach (var id in Maps.Ids)
             {
