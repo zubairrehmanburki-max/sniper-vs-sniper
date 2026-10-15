@@ -24,7 +24,7 @@ namespace SniperDuel.Game.World
         /// The same with the hands: out to the right and a little further off, the barrel turned in
         /// toward the middle of the screen, so the gloved hand on the fore-end is in view.
         /// </summary>
-        static readonly Vector3 ArmsReadyOffset = new Vector3(0.13f, -0.11f, 0.22f);
+        static readonly Vector3 ArmsReadyOffset = new Vector3(0.12f, -0.10f, 0.28f);
         static readonly Vector3 ArmsReadyTilt = new Vector3(0, -10f, 6f);
 
         /// <summary>The first-person asset: rifle and arms, posed holding the rifle in its rest pose.</summary>
@@ -164,7 +164,7 @@ namespace SniperDuel.Game.World
                 var s = src[i];
                 if (r.name.ToLowerInvariant().StartsWith("lens"))
                 {
-                    mats[i] = Library.Plain(new Color(0.02f, 0.035f, 0.032f), 0.96f);
+                    mats[i] = Library.Plain(new Color(0.02f, 0.035f, 0.032f), 0.86f);
                     continue;
                 }
                 var m = new Material(Library.Template("Lit")) { name = "Viewmodel " + (s != null ? s.name : r.name) };
@@ -178,7 +178,8 @@ namespace SniperDuel.Game.World
                 {
                     m.SetTexture("_MetallicGlossMap", mask);
                     m.SetTexture("_OcclusionMap", mask);
-                    m.SetFloat("_Smoothness", 1);
+                    // Under the open sky the asset's own values read as chrome: a worn, handled finish.
+                    m.SetFloat("_Smoothness", 0.62f);
                 }
                 else
                 {
@@ -216,7 +217,8 @@ namespace SniperDuel.Game.World
             for (int i = 0; i < px.Length; i++)
             {
                 var p = px[i];
-                px[i] = new Color32(p.b, p.r, 0, (byte)(255 - p.g));
+                // Metal kept to 60%: dark painted steel, not bare polished metal.
+                px[i] = new Color32((byte)(p.b * 0.6f), p.r, 0, (byte)(255 - p.g));
             }
             tex.SetPixels32(px);
             tex.Apply(true, true);
