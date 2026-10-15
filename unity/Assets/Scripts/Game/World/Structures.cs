@@ -34,11 +34,12 @@ namespace SniperDuel.Game.World
             float reach = (float)b.HalfSpan;
             while (reach < 900 && ground(reach, -b.S) < deck - 0.3) reach += 5;
 
-            // Weathered grey concrete for piers and pylons, a blue-grey painted steel box girder under
-            // a thin concrete deck, light grey sheathed stay cables: the palette of a real cable-stayed bridge.
-            var concrete = Library.Surface("concrete_wall_008", 5, new Color(0.56f, 0.6f, 0.68f));
+            // Rain-streaked grey concrete for deck, piers and pylons, a paler precast box girder under
+            // the deck, light grey sheathed stay cables: the palette of a real cable-stayed bridge. The
+            // girder is the biggest face the scope sees on the far bridge, so it stays light and matte.
+            var concrete = Library.Weathered("concrete_wall_008", 5, new Color(0.56f, 0.6f, 0.68f));
             var asphalt = Library.Surface("asphalt_02", 6);
-            var girderPaint = Library.Surface("metal_plate", 3, new Color(0.46f, 0.52f, 0.58f), 0.6f);
+            var girderPaint = Library.Weathered("concrete_wall_008", 6, new Color(0.7f, 0.72f, 0.76f));
             var cable = Library.Plain(new Color(0.6f, 0.62f, 0.62f), 0.55f, 0.2f);
             var dark = Library.Plain(new Color(0.08f, 0.09f, 0.1f), 0.35f, 0.6f);
             var paint = Library.Plain(new Color(0.85f, 0.82f, 0.72f), 0.35f);
@@ -50,7 +51,7 @@ namespace SniperDuel.Game.World
             c.Box(new Vector3(0, deck + 0.1f, -hw + 0.9f), new Vector3(2 * reach, 0.2f, 1.8f));
             c.Box(new Vector3(0, deck + 0.1f, hw - 0.9f), new Vector3(2 * reach, 0.2f, 1.8f));
 
-            // Steel box girder under the deck: sloping webs, a bottom flange and a stiffener every 4 m.
+            // Box girder under the deck: sloping webs, a bottom flange and a stiffener every 4 m.
             var g = new MeshBuilder();
             const float GirderDepth = 2.8f;
             float gTop = deck - 0.4f, gBottom = gTop - GirderDepth;

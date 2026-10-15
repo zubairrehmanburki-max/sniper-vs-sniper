@@ -29,6 +29,18 @@ namespace SniperDuel.Game.World
             [SkyKind.Clear] = new[] { "kloofendal_48d_partly_cloudy_puresky", "kloofendal_misty_morning_puresky" },
         };
 
+        static float hazeDensity;
+
+        /// <summary>
+        /// Good glass cuts through the haze: while scoped (0 bare eye, 1 through the scope) the air
+        /// thins so the far bridge and the hills behind it keep their colour and edges.
+        /// </summary>
+        public static void ScopeHaze(float scope)
+        {
+            if (hazeDensity <= 0) return;
+            RenderSettings.fogDensity = hazeDensity * Mathf.Lerp(1, 0.5f, Mathf.Clamp01(scope));
+        }
+
         public static Sky Build(DuelMap map, Transform parent)
         {
             var palette = map.Look.Palette ?? new Palette();
@@ -98,7 +110,8 @@ namespace SniperDuel.Game.World
             // Thin mountain air is clearer: far ranges stay distinct layers, each hazier than the one in
             // front, instead of melting into one pale wall.
             float thin = Mathf.Lerp(1, 0.62f, Mathf.InverseLerp(1500, 2400, (float)map.Climate.AltitudeM));
-            RenderSettings.fogDensity = (kind == SkyKind.Clear ? 0.00045f : 0.0006f) * thin;
+            hazeDensity = (kind == SkyKind.Clear ? 0.00045f : 0.0006f) * thin;
+            RenderSettings.fogDensity = hazeDensity;
             RenderSettings.fogColor = fog;
 
             // One realtime probe over the lane so water and metal reflect the bridges and the sky.

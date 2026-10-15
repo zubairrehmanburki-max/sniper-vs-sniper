@@ -62,6 +62,7 @@ namespace SniperDuel.Game.World
             amount = Mathf.Clamp01(amount);
             if (Mathf.Abs(amount - scope) < 0.005f) return;
             scope = amount;
+            Atmos.ScopeHaze(amount);
             Apply();
         }
 
@@ -101,7 +102,7 @@ namespace SniperDuel.Game.World
             float sc = Mathf.Max(0, scope);
             grade.postExposure.Override(Mathf.Lerp(0.15f, 0.05f, sc) - 0.25f * xray + 1.1f * flash * flash);
             grade.contrast.Override(Mathf.Lerp(12f, 18f, sc) + 14f * xray);
-            grade.saturation.Override(Mathf.Lerp(-6f, 0f, sc) - 35f * xray);
+            grade.saturation.Override(Mathf.Lerp(-6f, 8f, sc) - 35f * xray);
             if (vignette != null) vignette.intensity.Override(0.22f + 0.2f * xray);
             if (dof != null)
             {
