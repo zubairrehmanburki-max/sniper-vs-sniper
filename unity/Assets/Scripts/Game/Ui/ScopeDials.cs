@@ -43,18 +43,35 @@ namespace SniperDuel.Game.Ui
         static readonly Color Amber = new Color(0.95f, 0.70f, 0.24f);
 
         /// <summary>Host size in layout units; the knobs sit at fixed spots inside it.</summary>
-        public const float Width = 330, Height = 212;
+        public const float Width = 330, Height = 226;
+        /// <summary>
+        /// The scope is drawn a little smaller than its layout so it clears the crosshair while the
+        /// magnification ring stays well up from the bottom edge, where iOS keeps its home swipe.
+        /// </summary>
+        public const float BodyScale = 0.82f;
 
         public static void Attach(VisualElement host)
         {
             host.pickingMode = PickingMode.Ignore;
             host.style.width = Width;
             host.style.height = Height;
-            host.generateVisualContent += DrawBody;
-            Add(host, new Knob(Dial.Focus, new Rect(28, 96, 66, 68), horizontal: false, radius: 33, degPerUnit: 34, unit: 0.1, minorStep: 0.25, majorStep: 1));
-            Add(host, new Knob(Dial.Windage, new Rect(236, 96, 66, 68), horizontal: false, radius: 33, degPerUnit: 36, unit: 0.1, minorStep: 0.1, majorStep: 1));
-            Add(host, new Knob(Dial.Elevation, new Rect(95, 4, 140, 90), horizontal: true, radius: 68, degPerUnit: 36, unit: 0.1, minorStep: 0.1, majorStep: 1));
-            Add(host, new Knob(Dial.Zoom, new Rect(58, 174, 214, 38), horizontal: true, radius: 105, degPerUnit: 6, unit: 1, minorStep: 1, majorStep: 5));
+            // Shrinks toward the bottom middle, where the host is anchored.
+            var body = new VisualElement { name = "dials-body", pickingMode = PickingMode.Ignore };
+            body.style.position = Position.Absolute;
+            body.style.left = 0;
+            body.style.top = 0;
+            body.style.width = Width;
+            body.style.height = Height;
+            body.style.transformOrigin = new TransformOrigin(Length.Percent(50), Length.Percent(100), 0);
+            body.style.scale = new Scale(new Vector2(BodyScale, BodyScale));
+            host.Add(body);
+            body.generateVisualContent += DrawBody;
+            Add(body, new Knob(Dial.Focus, new Rect(28, 96, 66, 68), horizontal: false, radius: 33, degPerUnit: 34, unit: 0.1, minorStep: 0.25, majorStep: 1));
+            Add(body, new Knob(Dial.Windage, new Rect(236, 96, 66, 68), horizontal: false, radius: 33, degPerUnit: 36, unit: 0.1, minorStep: 0.1, majorStep: 1));
+            Add(body, new Knob(Dial.Elevation, new Rect(95, 4, 140, 90), horizontal: true, radius: 68, degPerUnit: 36, unit: 0.1, minorStep: 0.1, majorStep: 1));
+            // The ring's touch area reaches past the drawn ring below and to the sides, so a thumb
+            // doesn't have to land exactly on it.
+            Add(body, new Knob(Dial.Zoom, new Rect(48, 166, 234, 60), horizontal: true, radius: 105, degPerUnit: 6, unit: 1, minorStep: 1, majorStep: 5));
         }
 
         static void Add(VisualElement host, Knob k)
@@ -183,6 +200,7 @@ namespace SniperDuel.Game.Ui
             string shown = "";
             int? pointer;
             Vector2 last;
+            /// <summary>Thumb travel toward the next detent, in detents (under one): the drum follows it, then settles back on the detent.</summary>
             float carry;
 
             public Knob(Dial kind, Rect at, bool horizontal, float radius, float degPerUnit, double unit, double minorStep, double majorStep)
@@ -238,7 +256,7 @@ namespace SniperDuel.Game.Ui
                 Dial.Elevation => new Rect(2, 18, 136, 66),
                 Dial.Windage => new Rect(0, 0, 56, 68),
                 Dial.Focus => new Rect(10, 0, 56, 68),
-                _ => new Rect(0, 0, 214, 38),
+                _ => new Rect(10, 8, 214, 38),
             };
 
             public void Wire()
@@ -246,7 +264,9 @@ namespace SniperDuel.Game.Ui
                 El.generateVisualContent += Draw;
                 El.schedule.Execute(() =>
                 {
-                    string key = Value.ToString("0.000");
+                    // Let go between detents: the drum springs back onto the one it clicked into.
+                    if (pointer == null && carry != 0) carry = Mathf.Abs(carry) < 0.02f ? 0 : carry * 0.6f;
+                    string key = Value.ToString("0.000") + "/" + Shown.ToString("0.000");
                     if (key == shown) return;
                     shown = key;
                     Relabel();
@@ -257,22 +277,30 @@ namespace SniperDuel.Game.Ui
                     e.StopPropagation();
                     if (pointer != null) return;
                     pointer = e.pointerId;
-                    last = e.position;
+                    // Local coordinates, so the thumb's travel is measured on the knob as drawn.
+                    last = e.localPosition;
                     carry = 0;
                     El.CapturePointer(e.pointerId);
                 });
                 El.RegisterCallback<PointerMoveEvent>(e =>
                 {
                     if (pointer != e.pointerId) return;
-                    Vector2 pos = e.position;
+                    Vector2 pos = e.localPosition;
                     var d = pos - last;
                     last = pos;
                     // Pulling the scale toward lower numbers brings the higher ones under the index.
                     carry += -(horizontal ? d.x : d.y) / PxPerClick;
+                    // At an end stop the drum doesn't turn any further.
+                    if ((carry > 0 && Value >= Max - 1e-6) || (carry < 0 && Value <= Min + 1e-6)) carry = 0;
                     int n = (int)carry;
-                    if (n == 0) return;
-                    carry -= n;
-                    Turned?.Invoke(kind, n);
+                    if (n != 0)
+                    {
+                        carry -= n;
+                        // One detent at a time, so each one clicks and ticks on its own.
+                        for (int i = 0; i < Math.Abs(n); i++) Turned?.Invoke(kind, Math.Sign(n));
+                    }
+                    Relabel();
+                    El.MarkDirtyRepaint();
                 });
                 El.RegisterCallback<PointerUpEvent>(e => End(e.pointerId, true));
                 El.RegisterCallback<PointerCancelEvent>(e => End(e.pointerId, true));
@@ -286,10 +314,13 @@ namespace SniperDuel.Game.Ui
                 if (release && El.HasPointerCapture(id)) El.ReleasePointer(id);
             }
 
+            /// <summary>The value under the index as drawn: the set value plus the thumb's travel toward the next detent.</summary>
+            double Shown => Value + carry * unit;
+
             /// <summary>Where a scale value sits across the drum, and how squarely it faces us (0 at the edge, 1 head-on).</summary>
             bool Project(double v, out float offset, out float facing)
             {
-                float a = (float)(v - Value) * degPerUnit * Mathf.Deg2Rad;
+                float a = (float)(v - Shown) * degPerUnit * Mathf.Deg2Rad;
                 offset = radius * Mathf.Sin(a);
                 facing = Mathf.Cos(a);
                 return Mathf.Abs(a) < Mathf.PI * 0.5f;
@@ -343,8 +374,8 @@ namespace SniperDuel.Game.Ui
             /// <summary>Fine ridges round the drum that roll with it.</summary>
             void Knurl(Painter2D p, Rect r, double step)
             {
-                double from = Math.Floor((Value - 90 / degPerUnit) / step) * step;
-                for (double v = from; v < Value + 90 / degPerUnit; v += step)
+                double from = Math.Floor((Shown - 90 / degPerUnit) / step) * step;
+                for (double v = from; v < Shown + 90 / degPerUnit; v += step)
                 {
                     if (!Project(v, out float o, out float facing)) continue;
                     p.strokeColor = new Color(0, 0, 0, 0.5f * facing + 0.15f);
@@ -427,8 +458,9 @@ namespace SniperDuel.Game.Ui
                     l.style.position = Position.Absolute;
                     l.style.marginLeft = l.style.marginRight = l.style.marginTop = l.style.marginBottom = 0;
                     l.style.paddingLeft = l.style.paddingRight = l.style.paddingTop = l.style.paddingBottom = 0;
-                    l.style.fontSize = 12;
-                    l.style.height = 14;
+                    // Drawn at BodyScale, so a size up to read as 12.
+                    l.style.fontSize = 14;
+                    l.style.height = 16;
                     El.Add(l);
                     labels.Add(l);
                 }
@@ -449,13 +481,13 @@ namespace SniperDuel.Game.Ui
                     {
                         l.style.width = 30;
                         l.style.left = f.center.x + o - 15;
-                        l.style.top = kind == Dial.Zoom ? f.yMin + 24 : f.yMin + 39;
+                        l.style.top = kind == Dial.Zoom ? f.yMin + 23 : f.yMin + 38;
                         l.style.unityTextAlign = TextAnchor.MiddleCenter;
                     }
                     else
                     {
                         l.style.width = 34;
-                        l.style.top = f.center.y + o - 7;
+                        l.style.top = f.center.y + o - 8;
                         bool right = kind == Dial.Windage;
                         l.style.left = right ? f.xMin + 15 : f.xMax - 15 - 34;
                         l.style.unityTextAlign = right ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight;

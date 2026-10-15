@@ -19,6 +19,8 @@ namespace SniperDuel.Game
         }
 
         public static void Click() => Play(0);
+        /// <summary>One detent of a scope knob: a short, crisp tick.</summary>
+        public static void Detent() => Play(5);
         public static void Recoil() => Play(1);
         public static void Snap() => Play(2);
         public static void Struck(bool lethal) => Play(lethal ? 3 : 4);

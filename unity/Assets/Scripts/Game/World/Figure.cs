@@ -250,7 +250,7 @@ namespace SniperDuel.Game.World
         /// Turns a model's skinned meshes into static ones (they draw nothing in the capture build),
         /// keeping the imported materials for Finish to read.
         /// </summary>
-        static void Freeze(GameObject go)
+        internal static void Freeze(GameObject go)
         {
             foreach (var skin in go.GetComponentsInChildren<SkinnedMeshRenderer>())
             {
@@ -634,7 +634,7 @@ namespace SniperDuel.Game.World
 
         static Texture2D? nonMetal;
         /// <summary>Metallic 0, smoothness 1 (scaled by _Smoothness).</summary>
-        static Texture2D NonMetal
+        internal static Texture2D NonMetal
         {
             get
             {

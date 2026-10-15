@@ -201,7 +201,7 @@ namespace SniperDuel.Game
                     zoom = (int)Math.Max(cfg.Scope.MinZoom, Math.Min(cfg.Scope.MaxZoom, zoom + clicks));
                     if (zoom == was) break;
                     Sound.Zoom();
-                    Haptics.Click();
+                    Haptics.Detent();
                     break;
                 }
                 case ScopeDials.Dial.Focus:
@@ -210,10 +210,16 @@ namespace SniperDuel.Game
                     focus = Math.Max(0, Math.Min(ScopeDials.FocusMax, Math.Round(focus * 10 + clicks) / 10));
                     if (focus == was) break;
                     Sound.Zoom();
-                    Haptics.Click();
+                    Haptics.Detent();
                     break;
                 }
             }
+            // The knob redraws before the next frame's update: show the new value at once, so the
+            // drum doesn't jump back a detent under the thumb.
+            ScopeDials.Elevation = elevMrad;
+            ScopeDials.Windage = windMrad;
+            ScopeDials.Zoom = zoom;
+            ScopeDials.Focus = focus;
         }
 
         /// <summary>
@@ -459,7 +465,7 @@ namespace SniperDuel.Game
             double was = value;
             value = Math.Min(max, Math.Max(min, Math.Round(v, 4)));
             Sound.Turret(elevation, value != was);
-            Haptics.Click();
+            if (value != was) Haptics.Detent();
         }
 
         void SetBreath(bool hold)
