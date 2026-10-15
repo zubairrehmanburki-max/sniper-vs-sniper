@@ -183,13 +183,14 @@ namespace SniperDuel.Game.World
         {
             float R() => (float)rng.NextDouble();
             var kinds = new List<Impostor.Field>();
+            // Broadleaf trees about 11 m tall (at scale 1), shrubs about 1.4 m.
             foreach (var id in new[] { "island_tree_02", "island_tree_03", "island_tree_01", "tree_small_02" })
             {
                 var card = Impostor.Of(id);
-                if (card != null) kinds.Add(new Impostor.Field(card));
+                if (card != null) kinds.Add(new Impostor.Field(card, 11));
             }
-            var shrubCard = Impostor.Of("shrub_01") ?? Impostor.Of("shrub_02");
-            var shrubs = shrubCard != null ? new Impostor.Field(shrubCard) : null;
+            var shrubCard = Impostor.Of("shrub_02") ?? Impostor.Of("shrub_01");
+            var shrubs = shrubCard != null ? new Impostor.Field(shrubCard, 1.4f) : null;
             if (kinds.Count == 0)
             {
                 Debug.LogWarning("[Estuary] no tree pictures; the banks stay bare");

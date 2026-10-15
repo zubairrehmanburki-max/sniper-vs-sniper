@@ -27,6 +27,8 @@ namespace SniperDuel.Game.World
             public float Side;
             /// <summary>The quad's bottom edge relative to the model's lowest point (≤ 0).</summary>
             public float Foot;
+            /// <summary>The model's own height in metres.</summary>
+            public float Height;
         }
 
         static readonly Dictionary<string, Card?> Cards = new Dictionary<string, Card?>();
@@ -68,7 +70,7 @@ namespace SniperDuel.Game.World
             mat.EnableKeyword("_ALPHATEST_ON");
             mat.renderQueue = (int)RenderQueue.AlphaTest;
             // The picture is framed from the model's foot up, so the quad's bottom edge is the foot.
-            var card = new Card { Mat = mat, Side = 2 * half, Foot = 0 };
+            var card = new Card { Mat = mat, Side = 2 * half, Foot = 0, Height = b.size.y };
             Pending.Add((modelId, card, tex, 0));
             Runner.Ensure();
             return card;
@@ -76,10 +78,15 @@ namespace SniperDuel.Game.World
 
         static float Half(Bounds b) => 0.52f * Mathf.Max(b.size.y, Mathf.Max(b.size.x, b.size.z));
 
-        /// <summary>Shoots the pending pictures once frames are being drawn, retrying a few frames if a shot comes out empty.</summary>
+        /// <summary>
+        /// Shoots the pending pictures one at a time through the normal frame loop, as the Operators
+        /// studio does: the camera draws the black shot one frame and the white shot the next, and
+        /// each is read back the frame after it was drawn.
+        /// </summary>
         sealed class Runner : MonoBehaviour
         {
             static Runner? instance;
+            Shot? shot;
             int frames;
 
             public static void Ensure()
@@ -90,71 +97,158 @@ namespace SniperDuel.Game.World
 
             void Update()
             {
-                if (++frames < 2 || Pending.Count == 0) return;
-                for (int i = Pending.Count - 1; i >= 0; i--)
+                if (++frames < 2) return;
+                if (shot == null)
                 {
-                    var (id, card, tex, tries) = Pending[i];
-                    bool ok = false;
-                    try { ok = Shoot(id, tex, tries); }
+                    if (Pending.Count == 0) return;
+                    var (id, card, tex, tries) = Pending[0];
+                    Pending.RemoveAt(0);
+                    try { shot = new Shot(id, tex, tries); }
                     catch (System.Exception e) { Debug.LogWarning($"[Impostor] {id}: {e}"); }
-                    if (ok || tries >= 4) Pending.RemoveAt(i);
-                    else Pending[i] = (id, card, tex, tries + 1);
+                    return;
                 }
+                bool done = true, ok = false;
+                try { done = shot.Step(out ok); }
+                catch (System.Exception e) { Debug.LogWarning($"[Impostor] {shot.Id}: {e}"); }
+                if (!done) return;
+                if (!ok && shot.Attempt < 2) Pending.Add((shot.Id, null!, shot.Into, shot.Attempt + 1));
+                shot.Dispose();
+                shot = null;
             }
         }
 
-        static bool Shoot(string modelId, Texture2D into, int attempt)
+        /// <summary>One picture in the making: the model on a stage far below the map, a camera on it.</summary>
+        sealed class Shot
         {
-            var stage = new GameObject("Impostor stage " + modelId);
-            stage.transform.position = new Vector3(0, -3000, 0);
-            var model = Library.Place(modelId, Vector3.zero, 0, 1, stage.transform);
-            // Its own layer, or (if that comes out empty) the default one: far below the map nothing
-            // else is in shot either way.
-            int layer = attempt < 2 ? Layer : 0;
-            Library.SetLayer(model, layer);
-            var b = Library.BoundsOf(model);
+            public readonly string Id;
+            public readonly Texture2D Into;
+            public readonly int Attempt;
+            readonly GameObject stage;
+            readonly Camera cam;
+            readonly RenderTexture rt;
+            readonly Bounds bounds;
+            Color[]? black;
+            int phase;
 
-            // Shot from the sun's side so the picture is the plant in full light.
-            var sun = RenderSettings.sun;
-            var fromSun = sun != null ? -sun.transform.forward : new Vector3(0.5f, 0.6f, -0.6f);
-            var look = Vector3.ProjectOnPlane(-fromSun, Vector3.up);
-            if (look.sqrMagnitude < 1e-4f) look = Vector3.forward;
-            look.Normalize();
-            float half = Half(b);
-            var centre = new Vector3(b.center.x, b.min.y + half, b.center.z);
-
-            var camGo = new GameObject("Impostor camera");
-            camGo.transform.SetParent(stage.transform, false);
-            camGo.transform.position = centre - look * (half * 4 + 10);
-            camGo.transform.rotation = Quaternion.LookRotation(look, Vector3.up);
-            var cam = camGo.AddComponent<Camera>();
-            cam.orthographic = true;
-            cam.orthographicSize = half;
-            cam.nearClipPlane = 0.1f;
-            cam.farClipPlane = half * 8 + 20;
-            cam.cullingMask = 1 << layer;
-            cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.allowHDR = false;
-            cam.allowMSAA = false;
-            var data = cam.GetUniversalAdditionalCameraData();
-            if (data != null)
+            public Shot(string id, Texture2D into, int attempt)
             {
-                data.renderPostProcessing = false;
-                data.renderShadows = false;
+                Id = id;
+                Into = into;
+                Attempt = attempt;
+                stage = new GameObject("Impostor stage " + id);
+                stage.transform.position = new Vector3(0, -3000, 0);
+                var model = Library.Place(id, Vector3.zero, 0, 1, stage.transform);
+                Library.SetLayer(model, Layer);
+                Relight(model);
+                bounds = Library.BoundsOf(model);
+
+                // Shot from the sun's side so the picture is the plant in full light.
+                var sun = RenderSettings.sun;
+                var fromSun = sun != null ? -sun.transform.forward : new Vector3(0.5f, 0.6f, -0.6f);
+                var look = Vector3.ProjectOnPlane(-fromSun, Vector3.up);
+                if (look.sqrMagnitude < 1e-4f) look = Vector3.forward;
+                look.Normalize();
+                float half = Half(bounds);
+                var centre = new Vector3(bounds.center.x, bounds.min.y + half, bounds.center.z);
+
+                var camGo = new GameObject("Impostor camera");
+                camGo.transform.SetParent(stage.transform, false);
+                camGo.transform.position = centre - look * (half * 4 + 10);
+                camGo.transform.rotation = Quaternion.LookRotation(look, Vector3.up);
+                cam = camGo.AddComponent<Camera>();
+                cam.orthographic = true;
+                cam.orthographicSize = half;
+                cam.nearClipPlane = 0.1f;
+                cam.farClipPlane = half * 8 + 20;
+                cam.cullingMask = 1 << Layer;
+                cam.clearFlags = CameraClearFlags.SolidColor;
+                cam.backgroundColor = Color.black;
+                cam.allowHDR = false;
+                cam.allowMSAA = false;
+                cam.depth = -50;
+                var data = cam.GetUniversalAdditionalCameraData();
+                if (data != null)
+                {
+                    data.renderPostProcessing = false;
+                    data.renderShadows = false;
+                }
+                rt = new RenderTexture(Size, Size, 24, RenderTextureFormat.ARGB32) { name = "Impostor " + id };
+                cam.targetTexture = rt;
+                if (Camera.main != null) Camera.main.cullingMask &= ~(1 << Layer);
             }
-            var rt = new RenderTexture(Size, Size, 24, RenderTextureFormat.ARGB32) { name = "Impostor " + modelId };
-            cam.targetTexture = rt;
-            cam.enabled = false;
 
-            var black = Grab(cam, rt, Color.black);
-            var white = Grab(cam, rt, Color.white);
-            cam.targetTexture = null;
-            rt.Release();
-            Object.Destroy(rt);
-            Object.Destroy(stage);
+            /// <summary>Advances a frame; true when finished, with `ok` if the picture was made.</summary>
+            public bool Step(out bool ok)
+            {
+                ok = false;
+                if (phase == 0)
+                {
+                    black = Read();
+                    cam.backgroundColor = Color.white;
+                    phase = 1;
+                    return false;
+                }
+                cam.enabled = false;
+                ok = Develop(Id, black!, Read(), Into, Attempt, bounds);
+                return true;
+            }
 
-            // Alpha from the difference; colour un-premultiplied from the black shot. Clear pixels
-            // take the plant's mean colour so mipmaps don't fringe it with black or white.
+            Color[] Read()
+            {
+                var prev = RenderTexture.active;
+                RenderTexture.active = rt;
+                var tex = new Texture2D(Size, Size, TextureFormat.RGBA32, false);
+                tex.ReadPixels(new Rect(0, 0, Size, Size), 0, 0);
+                tex.Apply(false);
+                RenderTexture.active = prev;
+                var px = tex.GetPixels();
+                Object.Destroy(tex);
+                return px;
+            }
+
+            public void Dispose()
+            {
+                if (cam != null) cam.targetTexture = null;
+                rt.Release();
+                Object.Destroy(rt);
+                Object.Destroy(stage);
+            }
+        }
+
+        /// <summary>
+        /// Puts every part of the model on the cut-out Lit template with its own colour map (the
+        /// imported glTF materials draw nothing on some renderers, leaves included).
+        /// </summary>
+        static void Relight(GameObject model)
+        {
+            foreach (var r in model.GetComponentsInChildren<Renderer>())
+            {
+                var mats = r.sharedMaterials;
+                for (int i = 0; i < mats.Length; i++)
+                {
+                    var src = mats[i];
+                    var tex = src == null ? null : src.HasProperty("baseColorTexture") ? src.GetTexture("baseColorTexture") : src.HasProperty("_BaseMap") ? src.GetTexture("_BaseMap") : src.mainTexture;
+                    var m = new Material(Library.Template("LitCutout")) { name = "Impostor model " + (src != null ? src.name : "") };
+                    m.SetTexture("_BaseMap", tex != null ? tex : Texture2D.whiteTexture);
+                    m.SetColor("_BaseColor", Color.white);
+                    m.SetFloat("_Smoothness", 0.1f);
+                    m.SetFloat("_Metallic", 0);
+                    m.SetFloat("_Cutoff", 0.5f);
+                    m.SetFloat("_AlphaClip", 1);
+                    m.SetFloat("_Cull", 0);
+                    m.EnableKeyword("_ALPHATEST_ON");
+                    mats[i] = m;
+                }
+                r.sharedMaterials = mats;
+            }
+        }
+
+        /// <summary>
+        /// Alpha from the difference of the shots; colour un-premultiplied from the black one. Clear
+        /// pixels take the plant's mean colour so mipmaps don't fringe it with black or white.
+        /// </summary>
+        static bool Develop(string modelId, Color[] black, Color[] white, Texture2D into, int attempt, Bounds b)
+        {
             var px = new Color32[Size * Size];
             var mean = Color.black;
             int solid = 0, lit = 0;
@@ -162,8 +256,7 @@ namespace SniperDuel.Game.World
             {
                 Color k = black[i], w = white[i];
                 if (k.r + k.g + k.b > 0.02f) lit++;
-                float a = 1 - ((w.r - k.r) + (w.g - k.g) + (w.b - k.b)) / 3;
-                a = Mathf.Clamp01(a);
+                float a = Mathf.Clamp01(1 - ((w.r - k.r) + (w.g - k.g) + (w.b - k.b)) / 3);
                 var c = a > 0.02f ? new Color(k.r / a, k.g / a, k.b / a) : Color.black;
                 px[i] = new Color(Mathf.Clamp01(c.r), Mathf.Clamp01(c.g), Mathf.Clamp01(c.b), a);
                 if (a > 0.5f)
@@ -172,8 +265,8 @@ namespace SniperDuel.Game.World
                     solid++;
                 }
             }
-            Debug.Log($"[Impostor] {modelId} try {attempt}: {b.size} m, {model.GetComponentsInChildren<Renderer>().Length} renderers, {solid} solid px, {lit} lit px on black, white {white[0]}");
-            if (solid < Size * Size / 200 || solid > Size * Size * 0.98f) return false;
+            Debug.Log($"[Impostor] {modelId} try {attempt}: {b.size} m, {solid} solid px, {lit} lit px on black, white {white[0]}");
+            if (solid < Size * Size / 400 || solid > Size * Size * 0.98f) return false;
             mean /= solid;
             var fill = (Color32)new Color(mean.r, mean.g, mean.b, 0);
             for (int i = 0; i < px.Length; i++) if (px[i].a < 8) px[i] = fill;
@@ -182,42 +275,28 @@ namespace SniperDuel.Game.World
             return true;
         }
 
-        static Color[] Grab(Camera cam, RenderTexture rt, Color background)
-        {
-            cam.backgroundColor = background;
-#if UNITY_2023_1_OR_NEWER
-            var request = new RenderPipeline.StandardRequest { destination = rt };
-            if (RenderPipeline.SupportsRenderRequest(cam, request)) RenderPipeline.SubmitRenderRequest(cam, request);
-            else cam.Render();
-#else
-            cam.Render();
-#endif
-            var prev = RenderTexture.active;
-            RenderTexture.active = rt;
-            var tex = new Texture2D(Size, Size, TextureFormat.RGBA32, false);
-            tex.ReadPixels(new Rect(0, 0, Size, Size), 0, 0);
-            tex.Apply(false);
-            RenderTexture.active = prev;
-            var px = tex.GetPixels();
-            Object.Destroy(tex);
-            return px;
-        }
-
         /// <summary>A field of one kind of plant: three crossed quads per plant, all in one mesh.</summary>
         public sealed class Field
         {
             readonly Card card;
+            readonly float size;
             readonly List<Vector3> v = new List<Vector3>();
             readonly List<Vector3> n = new List<Vector3>();
             readonly List<Vector2> uv = new List<Vector2>();
             readonly List<int> t = new List<int>();
 
-            public Field(Card card) => this.card = card;
+            /// <summary>A field whose plants stand `height` metres tall at scale 1, whatever the model's size.</summary>
+            public Field(Card card, float height)
+            {
+                this.card = card;
+                size = height / Mathf.Max(0.1f, card.Height);
+            }
             public int Count { get; private set; }
 
             /// <summary>Plants one at `foot` (its lowest point on the ground), turned and scaled.</summary>
             public void Add(Vector3 foot, float yawDeg, float scale, bool mirror)
             {
+                scale *= size;
                 float side = card.Side * scale;
                 float y0 = foot.y + card.Foot * scale;
                 for (int k = 0; k < 3; k++)
