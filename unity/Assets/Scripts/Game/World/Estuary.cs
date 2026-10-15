@@ -8,7 +8,8 @@ namespace SniperDuel.Game.World
     /// Twin Bridges' river front, between the water and the city (Skyline): rip-rap boulders along
     /// the waterline, a paved riverside walk with railings and lamps at the top of each bank, a line
     /// of trees behind it and a riverside road with parked cars, approach roads running inland from
-    /// each bridge, wooded hills beyond the city, and a sandbag nest behind each shooter.
+    /// each bridge, and wooded hills beyond the city. Nothing goes near the firing spots: anything
+    /// behind a shooter is what the other side sees him against.
     /// Plants are cut-out pictures (Impostor) so hundreds cost little.
     /// </summary>
     public static class Estuary
@@ -162,9 +163,6 @@ namespace SniperDuel.Game.World
 
             Trees(map, root, rng, Y, FromBridge, lane, water);
             Cars(bridges, root, rng, Y);
-            foreach (var side in new[] { Side.A, Side.B })
-                foreach (var spot in map.Spots[side])
-                    Sandbags(Library.ToUnity(spot), side == Side.A ? 0 : 180, root);
         }
 
         /// <summary>The first id whose texture was downloaded.</summary>
@@ -288,31 +286,6 @@ namespace SniperDuel.Game.World
                         }
                     }
             }
-        }
-
-        /// <summary>A low horseshoe of sandbags behind a firing spot, open toward the enemy.</summary>
-        static void Sandbags(Vector3 spot, float facingDeg, Transform root)
-        {
-            var mb = new MeshBuilder();
-            var turn = Quaternion.Euler(0, facingDeg, 0);
-            var rng = new System.Random(77);
-            const float Radius = 3.3f;
-            for (int course = 0; course < 3; course++)
-            {
-                float y = 0.11f + course * 0.19f;
-                float from = 112 + course * 6, to = 248 - course * 6;
-                float step = 0.6f / Radius * Mathf.Rad2Deg;
-                for (float a = from + (course % 2) * step / 2; a <= to; a += step)
-                {
-                    float rad = a * Mathf.Deg2Rad;
-                    var local = new Vector3(Mathf.Sin(rad) * Radius, y, Mathf.Cos(rad) * Radius);
-                    // Each bag lies along the wall (its long axis on the arc's tangent).
-                    var rot = turn * Quaternion.Euler((float)rng.NextDouble() * 4 - 2, a + (float)rng.NextDouble() * 8 - 4, (float)rng.NextDouble() * 4 - 2);
-                    Shapes.Ellipsoid(mb, spot + turn * local, rot, new Vector3(0.34f, 0.11f, 0.21f),
-                        p => new Vector3(p.x, p.y * (1 - 0.35f * p.x * p.x), p.z * (0.8f + 0.2f * Mathf.Abs(p.y))), 6, 10);
-                }
-            }
-            mb.Object("Sandbags", Library.Plain(new Color(0.4f, 0.37f, 0.27f), 0.06f), root);
         }
     }
 }
