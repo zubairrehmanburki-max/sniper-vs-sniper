@@ -38,7 +38,7 @@ namespace SniperDuel.Game.World
         public static void ScopeHaze(float scope)
         {
             if (hazeDensity <= 0) return;
-            RenderSettings.fogDensity = hazeDensity * Mathf.Lerp(1, 0.5f, Mathf.Clamp01(scope));
+            RenderSettings.fogDensity = hazeDensity * Mathf.Lerp(1, 0.8f, Mathf.Clamp01(scope));
         }
 
         public static Sky Build(DuelMap map, Transform parent)

@@ -41,14 +41,15 @@ namespace SniperDuel.Game.World
             {
                 Skyline.Build(map, root, 260);
                 Estuary.Build(map, root);
-                // Wooded hills where the valley closes, 2.5–3.5 km out: through the scope they stand in
+                // Wooded hills where the valley closes, 3 km out: through the scope they stand in
                 // the haze behind the enemy's bridge instead of a bare horizon.
                 var terrain = map.Terrain ?? map.Ground;
                 Biomes.Horizon(root, (float)map.LaneLength / 2, new Biomes.Hills
                 {
-                    MinHeight = 70,
-                    MaxHeight = 210,
-                    Rock = Library.Surface("sparse_grass", 60, new Color(0.46f, 0.56f, 0.42f)),
+                    // Low enough that the scope at 12x shows the ridge line with sky above it.
+                    MinHeight = 35,
+                    MaxHeight = 90,
+                    Rock = Library.Surface("sparse_grass", 60, new Color(0.62f, 0.7f, 0.58f)),
                     Seed = 23,
                     Ground = (x, s) => (float)terrain(x, -s),
                 });

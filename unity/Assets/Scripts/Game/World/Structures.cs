@@ -37,9 +37,9 @@ namespace SniperDuel.Game.World
             // Rain-streaked grey concrete for deck, piers and pylons, a paler precast box girder under
             // the deck, light grey sheathed stay cables: the palette of a real cable-stayed bridge. The
             // girder is the biggest face the scope sees on the far bridge, so it stays light and matte.
-            var concrete = Library.Weathered("concrete_wall_008", 5, new Color(0.56f, 0.6f, 0.68f));
+            var concrete = Library.Weathered("concrete_wall_008", 5, new Color(0.64f, 0.67f, 0.72f), 0.6f);
             var asphalt = Library.Surface("asphalt_02", 6);
-            var girderPaint = Library.Weathered("concrete_wall_008", 6, new Color(0.7f, 0.72f, 0.76f));
+            var girderPaint = Library.Weathered("concrete_wall_008", 6, new Color(0.8f, 0.81f, 0.84f), 0.6f);
             var cable = Library.Plain(new Color(0.6f, 0.62f, 0.62f), 0.55f, 0.2f);
             var dark = Library.Plain(new Color(0.08f, 0.09f, 0.1f), 0.35f, 0.6f);
             var paint = Library.Plain(new Color(0.85f, 0.82f, 0.72f), 0.35f);
