@@ -85,9 +85,16 @@ namespace SniperDuel.Game.World
         /// <summary>The soldier model's root (the rifle sits outside it).</summary>
         public Transform Body = null!;
         readonly List<SkinnedMeshRenderer> skins = new List<SkinnedMeshRenderer>();
-        readonly List<GameObject> riders = new List<GameObject>();
-        Transform? head, headModel;
-        Matrix4x4 headRest;
+        /// <summary>The headset's skin, if the model has one (see HeadsetSeat).</summary>
+        SkinnedMeshRenderer? headset;
+
+        /// <summary>
+        /// Where the headset should sit, relative to where the model has it, in the head bone's frame.
+        /// The CC-BY soldier ships its headphones skinned to the head but modelled some 20 cm too high
+        /// (the band floats over the cap, the cups over the temples); measured from the model's own
+        /// geometry: this brings the cups over the ears and the band down onto the cap.
+        /// </summary>
+        static readonly Vector3 HeadsetSeat = new Vector3(-0.0048f, -0.236f, -0.0047f);
 
         public static Figure Create(Stance stance, float heightM, Transform parent, Color tint)
         {
@@ -152,6 +159,7 @@ namespace SniperDuel.Game.World
                 for (int i = 0; i < mats.Length; i++)
                 {
                     var src = r.sharedMaterials[i];
+                    if (hd && src != null && src.name.IndexOf("Headphone", System.StringComparison.OrdinalIgnoreCase) >= 0) headset = r;
                     var tex = src == null ? null : src.HasProperty("baseColorTexture") ? src.GetTexture("baseColorTexture") : src.mainTexture;
                     var mat = new Material(Library.Template("Lit")) { name = "Soldier " + r.name };
                     mat.SetTexture("_BaseMap", tex);
@@ -208,21 +216,6 @@ namespace SniperDuel.Game.World
             var pivot = hips.position;
             model.rotation = turn * model.rotation;
             model.position = pivot + turn * (model.position - pivot);
-
-            // Rigid gear (the headset) comes as a skinned mesh with no bones, so it would stay put
-            // while the neck swings: note what sits by the head and carry it with the head on Bake.
-            // In the model's frame, so the final shift over the origin doesn't count as head motion.
-            headRest = model.worldToLocalMatrix * head.localToWorldMatrix;
-            this.head = head;
-            headModel = model;
-            foreach (var r in skins)
-            {
-                if (r.bones.Length > 0 || r.sharedMesh == null) continue;
-                var c = r.transform.TransformPoint(r.sharedMesh.bounds.center);
-                float d = Vector3.Distance(c, head.position);
-                Debug.Log($"[Figure] boneless {r.name}: {d:0.00} m from the head");
-                if (d < 0.6f * height / 1.8f) riders.Add(r.gameObject);
-            }
 
             foreach (var (bone, next, dir) in pose.Limbs)
             {
@@ -678,23 +671,16 @@ namespace SniperDuel.Game.World
                 mesh.RecalculateBounds();
                 var go = r.gameObject;
                 var mats = r.sharedMaterials;
+                // The headset is rigid on the head: slide it down onto the cap, along the head's axes.
+                if (r == headset && bones.TryGetValue("Head", out var head))
+                    go.transform.position += head.TransformVector(HeadsetSeat);
                 // A GameObject holds one renderer, so the skin goes before the mesh renderer arrives.
                 DestroyImmediate(r);
                 go.AddComponent<MeshFilter>().sharedMesh = mesh;
                 go.AddComponent<MeshRenderer>().sharedMaterials = mats;
             }
             skins.Clear();
-            // Riders follow the head from its rest place to its posed one.
-            if (head != null && headModel != null)
-            {
-                var delta = headModel.localToWorldMatrix * (headModel.worldToLocalMatrix * head.localToWorldMatrix) * headRest.inverse * headModel.worldToLocalMatrix;
-                foreach (var go in riders)
-                {
-                    var t = go.transform;
-                    t.SetPositionAndRotation(delta.MultiplyPoint3x4(t.position), delta.rotation * t.rotation);
-                }
-            }
-            riders.Clear();
+            if (headset == null) Debug.Log("[Figure] no headset found");
         }
     }
 }

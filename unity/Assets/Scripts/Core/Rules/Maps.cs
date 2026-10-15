@@ -660,7 +660,7 @@ namespace SniperDuel.Rules
                     Structures = structures,
                     Palette = new Palette
                     {
-                        Sky = SkyKind.Sunrise,
+                        Sky = SkyKind.Clear,
                         SunAzimuthDeg = 125,
                         Lane = V(0.3, 0.3, 0.42),
                         Outside = V(0.27, 0.32, 0.38),
