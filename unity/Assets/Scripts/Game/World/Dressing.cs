@@ -24,7 +24,8 @@ namespace SniperDuel.Game.World
 
             // Rock along the waterline wherever the bank rises out of the water.
             string[] rocks = { "coastal_cliff_01", "coastal_cliff_02", "coastal_cliff_04", "coast_rocks_01", "coast_rocks_03", "rock_face_01" };
-            if (open)
+            // Twin Bridges has its own rip-rap and river front (Estuary) instead of the scanned cliffs.
+            if (open && map.Id != "twin-bridges")
             {
                 for (float s = -400; s < lane + 700; s += 85)
                 {
@@ -49,7 +50,7 @@ namespace SniperDuel.Game.World
 
             // Trees on the land beyond the banks, thinning with distance. Maps with their own biome plant their own.
             string[] trees = { "island_tree_01", "island_tree_01", "shrub_02" };
-            int planted = 0, toPlant = Biomes.Handles(map.Id) ? 0 : 70;
+            int planted = 0, toPlant = Biomes.Handles(map.Id) || map.Id == "twin-bridges" ? 0 : 70;
             for (int i = 0; i < 2000 && planted < toPlant; i++)
             {
                 float x = ((float)rng.NextDouble() * 2 - 1) * 1400;
@@ -87,11 +88,11 @@ namespace SniperDuel.Game.World
             }
             foreach (float dir in new[] { -1f, 1f })
             {
-                // Chicane of barriers across both lanes.
+                // Chicane of barriers across each carriageway, up to the median.
                 float bx = dir * (26 + (float)rng.NextDouble() * 10);
-                for (int i = 0; i < 4; i++) Put("concrete_road_barrier", bx + i * 0.4f * dir, -hw + 2.6f + i * 1.7f, 90 + (float)rng.Next(-6, 6));
+                for (int i = 0; i < 3; i++) Put("concrete_road_barrier", bx + i * 0.4f * dir, -hw + 2.6f + i * 1.7f, 90 + (float)rng.Next(-6, 6));
                 float bx2 = bx + dir * 9;
-                for (int i = 0; i < 4; i++) Put("concrete_road_barrier", bx2 - i * 0.4f * dir, hw - 2.6f - i * 1.7f, 90 + (float)rng.Next(-6, 6));
+                for (int i = 0; i < 3; i++) Put("concrete_road_barrier", bx2 - i * 0.4f * dir, hw - 2.6f - i * 1.7f, 90 + (float)rng.Next(-6, 6));
                 // A supply dump and a searchlight further along.
                 float dx = dir * (55 + (float)rng.NextDouble() * 30);
                 float dz = (rng.Next(2) == 0 ? -1 : 1) * (hw - 3.4f);
@@ -102,7 +103,6 @@ namespace SniperDuel.Game.World
                 for (int i = 0; i < 3; i++) Put("barrel_03", dx + 3 + i * 0.7f, dz + (float)rng.NextDouble() * 0.6f, (float)rng.Next(0, 360));
                 for (int i = 0; i < 2; i++) Put("metal_jerrycan_green", dx - 1.6f - i * 0.45f, dz + 0.3f, (float)rng.Next(0, 360));
                 Put("portable_searchlight", dir * (18 + (float)rng.NextDouble() * 4), -dz * 0.8f, dir > 0 ? -90 : 90);
-                if (span > 120) Put("concrete_road_barrier", dir * (span - 20), 0, 90);
             }
         }
 

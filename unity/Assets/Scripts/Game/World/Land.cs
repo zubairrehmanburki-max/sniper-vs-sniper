@@ -222,6 +222,30 @@ namespace SniperDuel.Game.World
                     w[3] = dirt * (1 - bed);
                 },
             },
+            // An estuary in a city: rip-rap and wet silt at the waterline, mown grass up the banks and
+            // over the land, a little bare earth where it's worn, rock only on the steepest ground.
+            "twin-bridges" => new Soil
+            {
+                Resolution = 1024,
+                PixelError = 2,
+                Layers = new[]
+                {
+                    ("coast_sand_rocks_02", "coast_sand_rocks_02", 6f, new Color(0.72f, 0.7f, 0.66f)),
+                    ("leafy_grass", "sparse_grass", 7f, new Color(0.86f, 1f, 0.78f)),
+                    ("brown_mud_leaves_01", "brown_mud_leaves_01", 9f, new Color(0.85f, 0.85f, 0.8f)),
+                    ("rocky_terrain_02", "rocky_terrain_02", 12f, White),
+                },
+                Mix = (x, s, y, slope, n1, n2, water, w) =>
+                {
+                    float shore = Mathf.Clamp01(1 - (y - water - 2.2f) / 1.5f);
+                    float rock = Mathf.Clamp01((slope - 32) / 8f) * (1 - shore);
+                    float worn = Mathf.Clamp01((n2 - 0.7f) * 3) * (1 - shore) * (1 - rock);
+                    w[0] = shore * 2;
+                    w[1] = Mathf.Max(0, 1 - shore - rock - worn);
+                    w[2] = worn;
+                    w[3] = rock;
+                },
+            },
             // Elsewhere: wet sand at the waterline, grass on gentle slopes, rock on steep ones, leaf litter in hollows.
             _ => new Soil
             {
@@ -257,6 +281,15 @@ namespace SniperDuel.Game.World
             var mat = new Material(Library.Template("Water"));
             mat.SetTextureScale("_BaseMap", Vector2.one / 24f);
             mat.SetTextureScale("_DetailAlbedoMap", Vector2.one / 9f);
+            if (map.Id == "twin-bridges")
+            {
+                // A wide, slow estuary: long low swell with fine chop on it, silty green-grey.
+                mat.SetTextureScale("_BaseMap", Vector2.one / 46f);
+                mat.SetTextureScale("_DetailAlbedoMap", Vector2.one / 13f);
+                mat.SetFloat("_BumpScale", 0.75f);
+                mat.SetFloat("_DetailNormalMapScale", 0.45f);
+                mat.SetColor("_BaseColor", new Color(0.07f, 0.11f, 0.1f));
+            }
             var go = mb.Object("Water", mat, parent, shadows: false);
             go.GetComponent<MeshRenderer>().receiveShadows = true;
             go.AddComponent<Waves>().Material = mat;

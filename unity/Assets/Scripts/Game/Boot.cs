@@ -203,6 +203,31 @@ namespace SniperDuel.Game
             }
             ui.HideAll();
             Frame("");
+            // Twin Bridges in detail for review: the whole estuary from the air, the river front from
+            // the deck, along the deck to a pylon, a pylon from the water, and the soldier's head.
+            if (arena != null && arena.Map.Id == "twin-bridges")
+            {
+                var head = arena.Enemy != null && arena.Enemy.Bones.TryGetValue("Head", out var hb) ? hb.position : new Vector3(0, 24.3f, 638);
+                foreach (var (label, from, to, fov) in new[]
+                {
+                    ("TB-Wide", new Vector3(-520, 170, -420), new Vector3(0, 0, 420), 52f),
+                    ("TB-Bank", new Vector3(-40, 33, -14), new Vector3(300, 26, 170), 50f),
+                    ("TB-Deck", new Vector3(-38, 25.7f, 3.5f), new Vector3(-200, 30, -1), 58f),
+                    ("TB-Pylon", new Vector3(-150, 4, -70), new Vector3(-90, 32, 0), 55f),
+                    ("TB-Head", head + new Vector3(0.75f, 0.35f, -0.9f), head, 30f),
+                })
+                {
+                    Frame("");
+                    rig.Current = CameraRig.Mode.Director;
+                    rig.Cam.fieldOfView = fov;
+                    rig.Cam.transform.position = from;
+                    rig.Cam.transform.LookAt(to);
+                    for (int f = 0; f < 6; f++) yield return null;
+                    ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"{++n:00}-{label}.png"));
+                    yield return null;
+                    yield return new WaitForEndOfFrame();
+                }
+            }
             // The other maps: the menu backdrop and the 1x eye on each, to judge them against Twin Bridges.
             foreach (var id in Maps.Ids)
             {

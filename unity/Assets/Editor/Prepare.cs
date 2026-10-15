@@ -64,6 +64,16 @@ namespace SniperDuel.EditorTools
             }
             Template("Terrain", "Universal Render Pipeline/Terrain/Lit", "_NORMALMAP", "_MASKMAP");
             Template("Unlit", "Universal Render Pipeline/Unlit");
+            // Cut-out pictures of far plants (Impostor): alpha tested, both faces drawn.
+            var cutout = Template("UnlitCutout", "Universal Render Pipeline/Unlit", "_ALPHATEST_ON");
+            if (cutout != null)
+            {
+                cutout.SetFloat("_AlphaClip", 1);
+                cutout.SetFloat("_Cutoff", 0.4f);
+                cutout.SetFloat("_Cull", 0);
+                cutout.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
+                EditorUtility.SetDirty(cutout);
+            }
             var add = Template("Additive", "Universal Render Pipeline/Particles/Unlit", "_SURFACE_TYPE_TRANSPARENT", "_BLENDMODE_ADD");
             if (add != null)
             {

@@ -184,6 +184,24 @@
         "nor_gl",
         "arm"
       ]
+    },
+    {
+      "id": "leafy_grass",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "concrete_pavers_02",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
     }
   ],
   "models": [
@@ -289,6 +307,26 @@
     },
     {
       "id": "fir_tree_01",
+      "res": "1k"
+    },
+    {
+      "id": "covered_car",
+      "res": "1k"
+    },
+    {
+      "id": "island_tree_02",
+      "res": "1k"
+    },
+    {
+      "id": "island_tree_03",
+      "res": "1k"
+    },
+    {
+      "id": "tree_small_02",
+      "res": "1k"
+    },
+    {
+      "id": "shrub_01",
       "res": "1k"
     }
   ],
