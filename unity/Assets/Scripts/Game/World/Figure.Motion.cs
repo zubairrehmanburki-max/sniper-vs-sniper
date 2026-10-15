@@ -116,34 +116,53 @@ namespace SniperDuel.Game.World
         }
 
         /// <summary>
-        /// Gear skinned to no bones (the headset) renders where the model's bind pose left it, about
-        /// 20 cm over the head, and never follows the head. Freeze it as a plain mesh, sit it on
-        /// the head (its middle about two thirds of the way from the head joint to the crown, cups at the ears) and let the head
-        /// carry it. Done at rest, before sizing and posing.
+        /// The model's headset is skinned to the head with a bind pose about 20 cm too high, so it
+        /// floats over the cap in every pose. Find skins that hang wholly from the head with their
+        /// middle up near the crown, and move their vertices down (in the head's bind space) until
+        /// the middle sits about three fifths of the way from the head joint to the crown, cups at
+        /// the ears. Done at rest, before sizing and posing, on a copy of the mesh.
         /// </summary>
         void Headgear()
         {
-            if (!bones.TryGetValue("Head", out var head)) return;
-            var up = bones.TryGetValue("HeadTop_End", out var crown) ? (crown.position - head.position).normalized : Vector3.up;
-            float headSize = crown != null ? Vector3.Distance(crown.position, head.position) : 0.2f;
-            foreach (var r in skins.ToArray())
+            if (!bones.TryGetValue("Head", out var head) || !bones.TryGetValue("HeadTop_End", out var crown)) return;
+            var up = (crown.position - head.position).normalized;
+            float size = Vector3.Distance(crown.position, head.position);
+            foreach (var r in skins)
             {
-                Debug.Log($"[Figure] skin {r.name}: {r.bones?.Length ?? 0} bones");
-                if (r.bones != null && r.bones.Length > 0) continue;
-                var mesh = new Mesh { name = r.name + " (worn)" };
-                r.BakeMesh(mesh, true);
-                mesh.RecalculateBounds();
-                var go = r.gameObject;
-                var mats = r.sharedMaterials;
-                skins.Remove(r);
-                DestroyImmediate(r);
-                go.AddComponent<MeshFilter>().sharedMesh = mesh;
-                go.AddComponent<MeshRenderer>().sharedMaterials = mats;
-                go.transform.SetParent(head, true);
-                var at = Library.BoundsOf(go).center;
-                var want = head.position + up * headSize * 0.62f;
-                go.transform.position += want - at;
-                Debug.Log($"[Figure] {go.name} seated on the head: moved {(want - at).magnitude:0.000} (head {headSize:0.000})");
+                try { Seat(r, head, up, size); }
+                catch (System.Exception e) { Debug.LogWarning($"[Figure] can't check {r.name}: {e.Message}"); }
+            }
+        }
+
+        static void Seat(SkinnedMeshRenderer r, Transform head, Vector3 up, float size)
+        {
+            {
+                var mesh = r.sharedMesh;
+                if (mesh == null || r.bones == null) return;
+                int hi = System.Array.IndexOf(r.bones, head);
+                var baked = new Mesh();
+                r.BakeMesh(baked, true);
+                var b = new Bounds(r.transform.TransformPoint(baked.vertices.Length > 0 ? baked.vertices[0] : Vector3.zero), Vector3.zero);
+                foreach (var v in baked.vertices) b.Encapsulate(r.transform.TransformPoint(v));
+                Destroy(baked);
+                float mid = Vector3.Dot(b.center - head.position, up) / size;
+                Debug.Log($"[Figure] skin {r.name}: {r.bones.Length} bones, head #{hi}, middle at {mid:0.00} of the head, size {b.size}");
+                if (hi < 0 || mid < 0.8f || b.size.magnitude > size * 3) return;
+                bool onHead = true;
+                foreach (var w in mesh.boneWeights)
+                    if (w.boneIndex0 != hi || w.weight0 < 0.9f) { onHead = false; break; }
+                if (!onHead || hi >= mesh.bindposes.Length) return;
+                var drop = -up * (mid - 0.6f) * size;
+                var toWorld = head.localToWorldMatrix * mesh.bindposes[hi];
+                var d = toWorld.inverse.MultiplyVector(drop);
+                var copy = Instantiate(mesh);
+                copy.name = mesh.name + " (seated)";
+                var verts = copy.vertices;
+                for (int i = 0; i < verts.Length; i++) verts[i] += d;
+                copy.vertices = verts;
+                copy.RecalculateBounds();
+                r.sharedMesh = copy;
+                Debug.Log($"[Figure] {r.name} seated on the head: down {drop.magnitude:0.000}");
             }
         }
 
