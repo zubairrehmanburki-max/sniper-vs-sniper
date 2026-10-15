@@ -8,7 +8,7 @@ name: Unity
 # (guide: /mnt/project-files/guides/unity-license.md); without them they are skipped.
 on:
   push:
-    branches: [main, claude/project-thread-ux5zt1, claude/project-thread-c3cszi, claude/twin-bridges-final-sf70ds]
+    branches: [main, claude/project-thread-ux5zt1, claude/project-thread-c3cszi, claude/twin-bridges-final-sf70ds, claude/project-thread-oxea50]
     paths: [unity/**, config/**, packages/**, .github/workflows/unity.yml]
   pull_request:
     paths: [unity/**, config/**, packages/**, .github/workflows/unity.yml]

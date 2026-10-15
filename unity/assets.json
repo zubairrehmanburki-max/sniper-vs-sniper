@@ -406,6 +406,11 @@
       "id": "rifle_l115a3",
       "uid": "a795adf5f8dd4a2294210d427cbb0e58",
       "name": "Low-Poly L115A3"
+    },
+    {
+      "id": "fps_sniper_arms",
+      "uid": "eae1ba5b43ae4bc89b0647fb5d8a2d27",
+      "name": "sniper animated"
     }
   ]
 }
