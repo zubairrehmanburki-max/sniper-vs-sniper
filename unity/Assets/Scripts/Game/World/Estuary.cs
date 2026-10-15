@@ -127,7 +127,7 @@ namespace SniperDuel.Game.World
             road.Object("Riverside road", Library.Surface("asphalt_02", 7, new Color(0.9f, 0.9f, 0.9f)), root);
             kerb.Object("Kerbs", Library.Surface("concrete_wall_008", 2, new Color(0.8f, 0.8f, 0.78f)), root);
             marks.Object("Road markings", Library.Plain(new Color(0.85f, 0.83f, 0.75f), 0.3f), root, shadows: false);
-            steel.Object("Railings and lamps", Library.Plain(new Color(0.16f, 0.2f, 0.19f), 0.45f, 0.6f), root);
+            steel.Object("Railings and lamps", Library.Surface("rusty_painted_metal", 2, new Color(0.36f, 0.43f, 0.41f), 0.8f), root);
             rocks.Object("Rip-rap", Library.Rock(3, new Color(0.62f, 0.6f, 0.57f)), root);
 
             // Each bridge's road runs on inland up the hill on an embankment, kerbed both sides.

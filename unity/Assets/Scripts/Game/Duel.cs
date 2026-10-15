@@ -793,6 +793,7 @@ namespace SniperDuel.Game
             rig.Kick = (float)recoil;
             ScopeEye(dt);
             PostFx.Scope(scoped ? scopeOpen : 0);
+            Settings.ScopeShadows(scoped ? 1100 : 0);
             PostFx.Defocus(scoped && !director ? Defocus() * scopeOpen : 0);
             ScopeDials.Elevation = elevMrad;
             ScopeDials.Windage = windMrad;

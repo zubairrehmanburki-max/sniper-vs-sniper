@@ -173,6 +173,7 @@ namespace SniperDuel.EditorTools
                 if (getDefault != null && ppField != null) ppField.SetValue(renderer, getDefault.Invoke(null, null));
                 AssetDatabase.CreateAsset(renderer, rendererPath);
             }
+            AddAmbientOcclusion(renderer);
 
             var pipeline = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(pipelinePath);
             if (pipeline == null)
@@ -196,6 +197,49 @@ namespace SniperDuel.EditorTools
                 QualitySettings.renderPipeline = pipeline;
             }
             QualitySettings.SetQualityLevel(QualitySettings.names.Length - 1, false);
+            AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>
+        /// Screen-space ambient occlusion: the soft contact shading in corners, under the girders,
+        /// round barrier feet and between buildings that makes the concrete and steel read as solid.
+        /// URP keeps the feature class internal, so it is created and set up by reflection; the
+        /// falloff reaches past the far bridge so the scope view keeps it too.
+        /// </summary>
+        static void AddAmbientOcclusion(UniversalRendererData renderer)
+        {
+            var type = typeof(UniversalRendererData).Assembly.GetType("UnityEngine.Rendering.Universal.ScreenSpaceAmbientOcclusion");
+            if (type == null) { Debug.LogWarning("[Build] no SSAO feature in this URP"); return; }
+            foreach (var f in renderer.rendererFeatures) if (f != null && f.GetType() == type) return;
+            var feature = (ScriptableRendererFeature)ScriptableObject.CreateInstance(type);
+            feature.name = "SSAO";
+            const BindingFlags Any = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            var settingsField = type.GetField("m_Settings", Any);
+            var settings = settingsField?.GetValue(feature);
+            if (settings != null)
+            {
+                void Set(string name, object value)
+                {
+                    var f = settings.GetType().GetField(name, Any);
+                    if (f == null) { Debug.LogWarning($"[Build] SSAO setting {name} not found"); return; }
+                    f.SetValue(settings, f.FieldType.IsEnum ? Enum.ToObject(f.FieldType, value) : Convert.ChangeType(value, f.FieldType));
+                }
+                Set("Intensity", 1.6f);
+                Set("Radius", 0.45f);
+                Set("Falloff", 900f);
+                Set("Downsample", true);
+                settingsField!.SetValue(feature, settings);
+                var names = new System.Collections.Generic.List<string>();
+                foreach (var f in settings.GetType().GetFields(Any)) names.Add($"{f.Name}={f.GetValue(settings)}");
+                Debug.Log("[Build] SSAO " + string.Join(", ", names));
+            }
+            AssetDatabase.AddObjectToAsset(feature, renderer);
+            renderer.rendererFeatures.Add(feature);
+            // The renderer keeps a parallel list of the features' local file ids; keep it in step.
+            var map = typeof(ScriptableRendererData).GetField("m_RendererFeatureMap", Any)?.GetValue(renderer) as System.Collections.Generic.List<long>;
+            if (map != null && AssetDatabase.TryGetGUIDAndLocalFileIdentifier(feature, out _, out long id)) map.Add(id);
+            renderer.SetDirty();
+            EditorUtility.SetDirty(renderer);
             AssetDatabase.SaveAssets();
         }
 

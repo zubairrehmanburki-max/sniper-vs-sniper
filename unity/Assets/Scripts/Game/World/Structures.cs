@@ -201,8 +201,8 @@ namespace SniperDuel.Game.World
             }
             median.Object("Median", Library.Surface("concrete_wall_008", 3, new Color(0.84f, 0.84f, 0.82f)), root);
             upstand.Object("Upstands", concrete, root);
-            guard.Object("Guardrail", Library.Plain(new Color(0.62f, 0.64f, 0.65f), 0.55f, 0.8f), root);
-            lamps.Object("Lamps", Library.Plain(new Color(0.34f, 0.36f, 0.37f), 0.5f, 0.7f), root);
+            guard.Object("Guardrail", Library.Surface("metal_plate", 2, new Color(0.78f, 0.8f, 0.8f), 0.75f), root);
+            lamps.Object("Lamps", Library.Surface("metal_plate", 2, new Color(0.46f, 0.48f, 0.49f), 0.7f), root);
 
             // Overhead sign gantries well out from mid-span: a box truss on two legs with a green
             // direction sign facing each way.
@@ -233,7 +233,7 @@ namespace SniperDuel.Game.World
                         signEdge.Box(cpos + new Vector3(dir * 0.07f, 0.45f - l * 0.62f, 0.45f), new Vector3(0.02f, 0.24f, 2.6f - l * 0.9f));
                 }
             }
-            gantry.Object("Sign gantries", Library.Plain(new Color(0.55f, 0.57f, 0.58f), 0.5f, 0.8f), root);
+            gantry.Object("Sign gantries", Library.Surface("metal_plate", 2, new Color(0.7f, 0.72f, 0.73f), 0.7f), root);
             sign.Object("Signs", Library.Plain(new Color(0.05f, 0.27f, 0.15f), 0.35f), root);
             signEdge.Object("Sign lettering", Library.Plain(new Color(0.9f, 0.9f, 0.88f), 0.3f), root, shadows: false);
 
@@ -246,7 +246,7 @@ namespace SniperDuel.Game.World
                 foreach (float side in new[] { -1f, 1f })
                     if (Mathf.Abs(x) > 3) joints.Box(new Vector3(x, deck + 0.04f, side * (hw - 2.15f)), new Vector3(0.9f, 0.02f, 0.35f));
             joints.Object("Joints and drains", dark, root, shadows: false);
-            rail.Object("Railings", Library.Plain(new Color(0.2f, 0.25f, 0.24f), 0.45f, 0.5f), root);
+            rail.Object("Railings", Library.Surface("rusty_painted_metal", 2, new Color(0.42f, 0.5f, 0.48f), 0.8f), root);
 
             // Stay cables fanning from the anchorage to the deck edge, each with a steel guide pipe and
             // anchor plate where it meets the deck.

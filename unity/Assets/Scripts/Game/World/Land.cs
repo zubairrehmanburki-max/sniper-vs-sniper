@@ -232,8 +232,8 @@ namespace SniperDuel.Game.World
                 {
                     ("coast_sand_rocks_02", "coast_sand_rocks_02", 6f, new Color(0.72f, 0.7f, 0.66f)),
                     // Leafy_grass is tan with fallen leaves; tinted, it reads as a mown lawn from the bridges.
-                    ("leafy_grass", "sparse_grass", 7f, new Color(0.34f, 0.56f, 0.22f)),
-                    ("sparse_grass", "sparse_grass", 9f, new Color(0.62f, 0.78f, 0.45f)),
+                    ("leafy_grass", "sparse_grass", 7f, new Color(0.31f, 0.48f, 0.21f)),
+                    ("sparse_grass", "sparse_grass", 9f, new Color(0.58f, 0.68f, 0.42f)),
                     ("rocky_terrain_02", "rocky_terrain_02", 12f, White),
                 },
                 Mix = (x, s, y, slope, n1, n2, water, w) =>

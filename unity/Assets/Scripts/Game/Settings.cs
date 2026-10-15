@@ -167,6 +167,7 @@ namespace SniperDuel.Game
                 int s = Shadows;
                 urp.shadowDistance = s switch { 0 => 0f, 1 => 80f, 2 => 150f, _ => q == 3 ? 300f : 220f };
                 urp.shadowCascadeCount = s switch { 0 => 1, 1 => 1, 2 => 2, _ => 4 };
+                shadowReach = -1;
             }
             else
             {
@@ -187,6 +188,22 @@ namespace SniperDuel.Game
             Sound.AmbienceVolume = AmbienceVolume;
             Sound.Clicks = MenuClicks;
             Haptics.Enabled = HapticsOn;
+        }
+
+        static float shadowReach = -1;
+
+        /// <summary>
+        /// Through the scope the picture is the far bridge, well past the normal shadow distance:
+        /// stretch the shadows out to `metres` while scoped (0 puts the setting back), so the target's
+        /// deck, girder and railings keep their shadows. The scope's narrow view keeps them sharp.
+        /// </summary>
+        public static void ScopeShadows(float metres)
+        {
+            if (Mathf.Abs(metres - shadowReach) < 1) return;
+            shadowReach = metres;
+            if (!(GraphicsSettings.currentRenderPipeline is UniversalRenderPipelineAsset urp) || Shadows == 0) return;
+            float normal = Shadows switch { 1 => 80f, 2 => 150f, _ => Quality == 3 ? 300f : 220f };
+            urp.shadowDistance = Mathf.Max(normal, metres);
         }
 
         static void ApplyFrameRate()

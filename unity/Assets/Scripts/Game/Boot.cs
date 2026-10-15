@@ -117,6 +117,7 @@ namespace SniperDuel.Game
             rig.Fov = scope ? (float)(Config.Scope.FovAt1xDeg / (screen == "Scope25" ? Config.Scope.MaxZoom : 12))
                 : screen == "Raise" ? Mathf.Lerp(eye, eye * 0.8f, Mathf.SmoothStep(0, 1, 0.8f)) : eye;
             PostFx.Scope(scope ? 1 : 0);
+            Settings.ScopeShadows(scope ? 1100 : 0);
             ScopeMask.Open = 1;
             // The scope shadow a little off centre, as with the eye a touch low and left.
             ScopeMask.EyeOffset = scope ? new Vector2(-9, 6) : Vector2.zero;
