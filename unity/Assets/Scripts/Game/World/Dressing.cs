@@ -103,15 +103,6 @@ namespace SniperDuel.Game.World
                 for (int i = 0; i < 3; i++) Put("barrel_03", dx + 3 + i * 0.7f, dz + (float)rng.NextDouble() * 0.6f, (float)rng.Next(0, 360));
                 for (int i = 0; i < 2; i++) Put("metal_jerrycan_green", dx - 1.6f - i * 0.45f, dz + 0.3f, (float)rng.Next(0, 360));
                 Put("portable_searchlight", dir * (18 + (float)rng.NextDouble() * 4), -dz * 0.8f, dir > 0 ? -90 : 90);
-                // Cars left behind when the bridge was closed, under dust sheets, skewed across the
-                // lanes beyond the barriers; well out from mid-span so none stands in the firing line.
-                for (int i = 0; i < 2; i++)
-                {
-                    float cx = dir * (100 + i * 38 + (float)rng.NextDouble() * 14);
-                    if (Mathf.Abs(cx) > span - 12) break;
-                    float cz = (i % 2 == 0 ? -1 : 1) * (hw * 0.5f - 1 + (float)rng.NextDouble() * 1.5f);
-                    Put("covered_car", cx, cz, 90 + (float)rng.Next(-25, 25));
-                }
             }
         }
 
