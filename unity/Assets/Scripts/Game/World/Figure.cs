@@ -85,17 +85,6 @@ namespace SniperDuel.Game.World
         /// <summary>The soldier model's root (the rifle sits outside it).</summary>
         public Transform Body = null!;
         readonly List<SkinnedMeshRenderer> skins = new List<SkinnedMeshRenderer>();
-        /// <summary>The headset's skin, if the model has one (see HeadsetSeat).</summary>
-        SkinnedMeshRenderer? headset;
-
-        /// <summary>
-        /// Where the headset should sit, relative to where the model has it, in the head bone's frame.
-        /// The CC-BY soldier ships its headphones skinned to the head but modelled some 20 cm too high
-        /// (the band floats over the cap, the cups over the temples); measured from the model's own
-        /// geometry: this brings the cups over the ears and the band down onto the cap.
-        /// </summary>
-        static readonly Vector3 HeadsetSeat = new Vector3(-0.0048f, -0.236f, -0.0047f);
-
         public static Figure Create(Stance stance, float heightM, Transform parent, Color tint)
         {
             var root = new GameObject("Figure " + stance);
@@ -159,7 +148,6 @@ namespace SniperDuel.Game.World
                 for (int i = 0; i < mats.Length; i++)
                 {
                     var src = r.sharedMaterials[i];
-                    if (hd && src != null && src.name.IndexOf("Headphone", System.StringComparison.OrdinalIgnoreCase) >= 0) headset = r;
                     var tex = src == null ? null : src.HasProperty("baseColorTexture") ? src.GetTexture("baseColorTexture") : src.mainTexture;
                     var mat = new Material(Library.Template("Lit")) { name = "Soldier " + r.name };
                     mat.SetTexture("_BaseMap", tex);
@@ -671,16 +659,12 @@ namespace SniperDuel.Game.World
                 mesh.RecalculateBounds();
                 var go = r.gameObject;
                 var mats = r.sharedMaterials;
-                // The headset is rigid on the head: slide it down onto the cap, along the head's axes.
-                if (r == headset && bones.TryGetValue("Head", out var head))
-                    go.transform.position += head.TransformVector(HeadsetSeat);
                 // A GameObject holds one renderer, so the skin goes before the mesh renderer arrives.
                 DestroyImmediate(r);
                 go.AddComponent<MeshFilter>().sharedMesh = mesh;
                 go.AddComponent<MeshRenderer>().sharedMaterials = mats;
             }
             skins.Clear();
-            if (headset == null) Debug.Log("[Figure] no headset found");
         }
     }
 }

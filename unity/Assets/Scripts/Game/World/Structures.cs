@@ -38,7 +38,6 @@ namespace SniperDuel.Game.World
             // a thin concrete deck, light grey sheathed stay cables: the palette of a real cable-stayed bridge.
             var concrete = Library.Surface("concrete_wall_008", 5, new Color(0.56f, 0.6f, 0.68f));
             var asphalt = Library.Surface("asphalt_02", 6);
-            var steel = Library.Surface("rusty_painted_metal", 2, new Color(0.55f, 0.6f, 0.62f));
             var girderPaint = Library.Surface("metal_plate", 3, new Color(0.30f, 0.36f, 0.42f), 0.6f);
             var cable = Library.Plain(new Color(0.6f, 0.62f, 0.62f), 0.55f, 0.2f);
             var dark = Library.Plain(new Color(0.08f, 0.09f, 0.1f), 0.35f, 0.6f);
@@ -247,7 +246,7 @@ namespace SniperDuel.Game.World
                 foreach (float side in new[] { -1f, 1f })
                     if (Mathf.Abs(x) > 3) joints.Box(new Vector3(x, deck + 0.04f, side * (hw - 2.15f)), new Vector3(0.9f, 0.02f, 0.35f));
             joints.Object("Joints and drains", dark, root, shadows: false);
-            rail.Object("Railings", steel, root);
+            rail.Object("Railings", Library.Plain(new Color(0.2f, 0.25f, 0.24f), 0.45f, 0.5f), root);
 
             // Stay cables fanning from the anchorage to the deck edge, each with a steel guide pipe and
             // anchor plate where it meets the deck.

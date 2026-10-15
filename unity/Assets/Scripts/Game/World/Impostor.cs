@@ -30,31 +30,89 @@ namespace SniperDuel.Game.World
         }
 
         static readonly Dictionary<string, Card?> Cards = new Dictionary<string, Card?>();
+        static readonly List<(string id, Card card, Texture2D tex, int tries)> Pending = new List<(string, Card, Texture2D, int)>();
 
-        /// <summary>The picture of a model, made on first use; null when the model or the shot is missing.</summary>
+        /// <summary>
+        /// The card for a model, its size known at once; the picture itself is shot a frame or two
+        /// later (Runner), once the render pipeline is up, and the cards show nothing until then.
+        /// Null when the model is missing.
+        /// </summary>
         public static Card? Of(string modelId)
         {
             if (Cards.TryGetValue(modelId, out var done)) return done;
             Card? card = null;
-            try { card = Shoot(modelId); }
+            try { card = Prepare(modelId); }
             catch (System.Exception e) { Debug.LogWarning($"[Impostor] {modelId}: {e.Message}"); }
             Cards[modelId] = card;
             return card;
         }
 
-        static Card? Shoot(string modelId)
+        static Card? Prepare(string modelId)
         {
             if (Library.Model(modelId) == null) return null;
+            var probe = Library.Place(modelId, new Vector3(0, -3000, 0));
+            var b = Library.BoundsOf(probe);
+            Object.Destroy(probe);
+            if (b.size.y < 0.05f) return null;
+            float half = Half(b);
+            var tex = new Texture2D(Size, Size, TextureFormat.RGBA32, true) { name = "Impostor " + modelId, wrapMode = TextureWrapMode.Clamp };
+            var clear = new Color32[Size * Size];
+            tex.SetPixels32(clear);
+            tex.Apply(true);
+            var mat = new Material(Library.Template("UnlitCutout")) { name = "Impostor " + modelId };
+            mat.SetTexture("_BaseMap", tex);
+            mat.SetColor("_BaseColor", Color.white);
+            mat.SetFloat("_Cutoff", 0.4f);
+            mat.SetFloat("_AlphaClip", 1);
+            mat.SetFloat("_Cull", 0);
+            mat.EnableKeyword("_ALPHATEST_ON");
+            mat.renderQueue = (int)RenderQueue.AlphaTest;
+            // The picture is framed from the model's foot up, so the quad's bottom edge is the foot.
+            var card = new Card { Mat = mat, Side = 2 * half, Foot = 0 };
+            Pending.Add((modelId, card, tex, 0));
+            Runner.Ensure();
+            return card;
+        }
+
+        static float Half(Bounds b) => 0.52f * Mathf.Max(b.size.y, Mathf.Max(b.size.x, b.size.z));
+
+        /// <summary>Shoots the pending pictures once frames are being drawn, retrying a few frames if a shot comes out empty.</summary>
+        sealed class Runner : MonoBehaviour
+        {
+            static Runner? instance;
+            int frames;
+
+            public static void Ensure()
+            {
+                if (instance != null) return;
+                instance = new GameObject("Impostor runner").AddComponent<Runner>();
+            }
+
+            void Update()
+            {
+                if (++frames < 2 || Pending.Count == 0) return;
+                for (int i = Pending.Count - 1; i >= 0; i--)
+                {
+                    var (id, card, tex, tries) = Pending[i];
+                    bool ok = false;
+                    try { ok = Shoot(id, tex, tries); }
+                    catch (System.Exception e) { Debug.LogWarning($"[Impostor] {id}: {e}"); }
+                    if (ok || tries >= 4) Pending.RemoveAt(i);
+                    else Pending[i] = (id, card, tex, tries + 1);
+                }
+            }
+        }
+
+        static bool Shoot(string modelId, Texture2D into, int attempt)
+        {
             var stage = new GameObject("Impostor stage " + modelId);
             stage.transform.position = new Vector3(0, -3000, 0);
             var model = Library.Place(modelId, Vector3.zero, 0, 1, stage.transform);
-            Library.SetLayer(model, Layer);
+            // Its own layer, or (if that comes out empty) the default one: far below the map nothing
+            // else is in shot either way.
+            int layer = attempt < 2 ? Layer : 0;
+            Library.SetLayer(model, layer);
             var b = Library.BoundsOf(model);
-            if (b.size.y < 0.05f)
-            {
-                Object.Destroy(stage);
-                return null;
-            }
 
             // Shot from the sun's side so the picture is the plant in full light.
             var sun = RenderSettings.sun;
@@ -62,7 +120,7 @@ namespace SniperDuel.Game.World
             var look = Vector3.ProjectOnPlane(-fromSun, Vector3.up);
             if (look.sqrMagnitude < 1e-4f) look = Vector3.forward;
             look.Normalize();
-            float half = 0.52f * Mathf.Max(b.size.y, Mathf.Max(b.size.x, b.size.z));
+            float half = Half(b);
             var centre = new Vector3(b.center.x, b.min.y + half, b.center.z);
 
             var camGo = new GameObject("Impostor camera");
@@ -74,11 +132,10 @@ namespace SniperDuel.Game.World
             cam.orthographicSize = half;
             cam.nearClipPlane = 0.1f;
             cam.farClipPlane = half * 8 + 20;
-            cam.cullingMask = 1 << Layer;
+            cam.cullingMask = 1 << layer;
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.allowHDR = false;
             cam.allowMSAA = false;
-            cam.enabled = false;
             var data = cam.GetUniversalAdditionalCameraData();
             if (data != null)
             {
@@ -87,6 +144,7 @@ namespace SniperDuel.Game.World
             }
             var rt = new RenderTexture(Size, Size, 24, RenderTextureFormat.ARGB32) { name = "Impostor " + modelId };
             cam.targetTexture = rt;
+            cam.enabled = false;
 
             var black = Grab(cam, rt, Color.black);
             var white = Grab(cam, rt, Color.white);
@@ -99,10 +157,11 @@ namespace SniperDuel.Game.World
             // take the plant's mean colour so mipmaps don't fringe it with black or white.
             var px = new Color32[Size * Size];
             var mean = Color.black;
-            int solid = 0;
+            int solid = 0, lit = 0;
             for (int i = 0; i < px.Length; i++)
             {
                 Color k = black[i], w = white[i];
+                if (k.r + k.g + k.b > 0.02f) lit++;
                 float a = 1 - ((w.r - k.r) + (w.g - k.g) + (w.b - k.b)) / 3;
                 a = Mathf.Clamp01(a);
                 var c = a > 0.02f ? new Color(k.r / a, k.g / a, k.b / a) : Color.black;
@@ -113,34 +172,26 @@ namespace SniperDuel.Game.World
                     solid++;
                 }
             }
-            if (solid < Size * Size / 200)
-            {
-                Debug.LogWarning($"[Impostor] {modelId}: the shot came out empty ({solid} px)");
-                return null;
-            }
+            Debug.Log($"[Impostor] {modelId} try {attempt}: {b.size} m, {model.GetComponentsInChildren<Renderer>().Length} renderers, {solid} solid px, {lit} lit px on black, white {white[0]}");
+            if (solid < Size * Size / 200 || solid > Size * Size * 0.98f) return false;
             mean /= solid;
             var fill = (Color32)new Color(mean.r, mean.g, mean.b, 0);
             for (int i = 0; i < px.Length; i++) if (px[i].a < 8) px[i] = fill;
-
-            var tex = new Texture2D(Size, Size, TextureFormat.RGBA32, true) { name = "Impostor " + modelId, wrapMode = TextureWrapMode.Clamp };
-            tex.SetPixels32(px);
-            tex.Apply(true);
-            var mat = new Material(Library.Template("UnlitCutout")) { name = "Impostor " + modelId };
-            mat.SetTexture("_BaseMap", tex);
-            mat.SetColor("_BaseColor", Color.white);
-            mat.SetFloat("_Cutoff", 0.4f);
-            mat.SetFloat("_AlphaClip", 1);
-            mat.SetFloat("_Cull", 0);
-            mat.EnableKeyword("_ALPHATEST_ON");
-            mat.renderQueue = (int)RenderQueue.AlphaTest;
-            Debug.Log($"[Impostor] {modelId}: {b.size.y:0.0} m tall, {solid} solid px");
-            return new Card { Mat = mat, Side = 2 * half, Foot = centre.y - half - b.min.y };
+            into.SetPixels32(px);
+            into.Apply(true);
+            return true;
         }
 
         static Color[] Grab(Camera cam, RenderTexture rt, Color background)
         {
             cam.backgroundColor = background;
+#if UNITY_2023_1_OR_NEWER
+            var request = new RenderPipeline.StandardRequest { destination = rt };
+            if (RenderPipeline.SupportsRenderRequest(cam, request)) RenderPipeline.SubmitRenderRequest(cam, request);
+            else cam.Render();
+#else
             cam.Render();
+#endif
             var prev = RenderTexture.active;
             RenderTexture.active = rt;
             var tex = new Texture2D(Size, Size, TextureFormat.RGBA32, false);

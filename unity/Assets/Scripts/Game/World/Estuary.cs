@@ -301,17 +301,18 @@ namespace SniperDuel.Game.World
             {
                 float y = 0.11f + course * 0.19f;
                 float from = 112 + course * 6, to = 248 - course * 6;
-                float step = 0.62f / Radius * Mathf.Rad2Deg;
+                float step = 0.6f / Radius * Mathf.Rad2Deg;
                 for (float a = from + (course % 2) * step / 2; a <= to; a += step)
                 {
                     float rad = a * Mathf.Deg2Rad;
                     var local = new Vector3(Mathf.Sin(rad) * Radius, y, Mathf.Cos(rad) * Radius);
-                    var rot = turn * Quaternion.Euler((float)rng.NextDouble() * 4 - 2, a + 90 + (float)rng.NextDouble() * 8 - 4, (float)rng.NextDouble() * 4 - 2);
-                    Shapes.Ellipsoid(mb, spot + turn * local, rot, new Vector3(0.32f, 0.11f, 0.19f),
+                    // Each bag lies along the wall (its long axis on the arc's tangent).
+                    var rot = turn * Quaternion.Euler((float)rng.NextDouble() * 4 - 2, a + (float)rng.NextDouble() * 8 - 4, (float)rng.NextDouble() * 4 - 2);
+                    Shapes.Ellipsoid(mb, spot + turn * local, rot, new Vector3(0.34f, 0.11f, 0.21f),
                         p => new Vector3(p.x, p.y * (1 - 0.35f * p.x * p.x), p.z * (0.8f + 0.2f * Mathf.Abs(p.y))), 6, 10);
                 }
             }
-            mb.Object("Sandbags", Library.Plain(new Color(0.46f, 0.41f, 0.3f), 0.08f), root);
+            mb.Object("Sandbags", Library.Plain(new Color(0.4f, 0.37f, 0.27f), 0.06f), root);
         }
     }
 }

@@ -231,15 +231,17 @@ namespace SniperDuel.Game.World
                 Layers = new[]
                 {
                     ("coast_sand_rocks_02", "coast_sand_rocks_02", 6f, new Color(0.72f, 0.7f, 0.66f)),
-                    ("leafy_grass", "sparse_grass", 7f, new Color(0.86f, 1f, 0.78f)),
-                    ("brown_mud_leaves_01", "brown_mud_leaves_01", 9f, new Color(0.85f, 0.85f, 0.8f)),
+                    // Leafy_grass is tan with fallen leaves; tinted, it reads as a mown lawn from the bridges.
+                    ("leafy_grass", "sparse_grass", 7f, new Color(0.34f, 0.56f, 0.22f)),
+                    ("sparse_grass", "sparse_grass", 9f, new Color(0.62f, 0.78f, 0.45f)),
                     ("rocky_terrain_02", "rocky_terrain_02", 12f, White),
                 },
                 Mix = (x, s, y, slope, n1, n2, water, w) =>
                 {
                     float shore = Mathf.Clamp01(1 - (y - water - 2.2f) / 1.5f);
                     float rock = Mathf.Clamp01((slope - 32) / 8f) * (1 - shore);
-                    float worn = Mathf.Clamp01((n2 - 0.7f) * 3) * (1 - shore) * (1 - rock);
+                    // Patches of coarser, drier grass so the lawns aren't one flat colour.
+                    float worn = Mathf.Clamp01((n1 - 0.45f) * 2.5f) * 0.6f * (1 - shore) * (1 - rock);
                     w[0] = shore * 2;
                     w[1] = Mathf.Max(0, 1 - shore - rock - worn);
                     w[2] = worn;
