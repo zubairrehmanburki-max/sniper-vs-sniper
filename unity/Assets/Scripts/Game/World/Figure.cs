@@ -115,6 +115,7 @@ namespace SniperDuel.Game.World
                     if (!fig.bones.ContainsKey(n)) fig.bones[n] = t;
                 }
                 fig.Dress(model, hd != null, tint);
+                fig.Headgear();
             }
             else Debug.LogWarning("[Figure] no soldier model loaded");
             Debug.Log($"[Figure] {stance}: {fig.bones.Count} bones, {root.GetComponentsInChildren<Renderer>().Length} renderers");

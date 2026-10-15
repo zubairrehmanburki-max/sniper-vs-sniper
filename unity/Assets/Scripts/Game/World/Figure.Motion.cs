@@ -107,35 +107,44 @@ namespace SniperDuel.Game.World
             model = m;
             modelPos = m.localPosition;
             modelRot = m.localRotation;
-            // Gear skinned to no bones of its own (the headset) is frozen as it sits now and carried
-            // by the head, else it hangs where the bind pose put it, above the head.
-            if (bones.TryGetValue("Head", out var headBone))
-                foreach (var r in skins.ToArray())
-                {
-                    Debug.Log($"[Figure] live skin {r.name}: {r.bones?.Length ?? 0} bones, root {(r.rootBone != null ? r.rootBone.name : "-")}");
-                    if (r.bones != null && r.bones.Length > 1) continue;
-                    var mesh = new Mesh { name = r.name + " (on the head)" };
-                    r.BakeMesh(mesh, true);
-                    mesh.RecalculateBounds();
-                    var go = r.gameObject;
-                    var mats = r.sharedMaterials;
-                    var only = r.bones != null && r.bones.Length == 1 ? r.bones[0] : null;
-                    skins.Remove(r);
-                    DestroyImmediate(r);
-                    go.AddComponent<MeshFilter>().sharedMesh = mesh;
-                    go.AddComponent<MeshRenderer>().sharedMaterials = mats;
-                    // Worn on the head by its name, else on whatever it was rooted to.
-                    string n = go.name.ToLowerInvariant();
-                    bool head = n.Contains("head") || n.Contains("phone") || n.Contains("helmet") || n.Contains("hat") || n.Contains("cap");
-                    var carrier = head ? headBone : only != null ? only : null;
-                    if (carrier != null) go.transform.SetParent(carrier, true);
-                }
             rest.Clear();
             foreach (var t in bones.Values) rest.Add((t, t.localRotation));
             contacts.Clear();
             foreach (var (bone, under) in Flesh)
                 if (bones.TryGetValue(bone, out var t)) contacts.Add((t, under));
             foreach (var r in skins) r.updateWhenOffscreen = true;
+        }
+
+        /// <summary>
+        /// Gear skinned to no bones (the headset) renders where the model's bind pose left it, about
+        /// 20 cm over the head, and never follows the head. Freeze it as a plain mesh, sit it on
+        /// the head (its middle about two thirds of the way from the head joint to the crown, cups at the ears) and let the head
+        /// carry it. Done at rest, before sizing and posing.
+        /// </summary>
+        void Headgear()
+        {
+            if (!bones.TryGetValue("Head", out var head)) return;
+            var up = bones.TryGetValue("HeadTop_End", out var crown) ? (crown.position - head.position).normalized : Vector3.up;
+            float headSize = crown != null ? Vector3.Distance(crown.position, head.position) : 0.2f;
+            foreach (var r in skins.ToArray())
+            {
+                Debug.Log($"[Figure] skin {r.name}: {r.bones?.Length ?? 0} bones");
+                if (r.bones != null && r.bones.Length > 0) continue;
+                var mesh = new Mesh { name = r.name + " (worn)" };
+                r.BakeMesh(mesh, true);
+                mesh.RecalculateBounds();
+                var go = r.gameObject;
+                var mats = r.sharedMaterials;
+                skins.Remove(r);
+                DestroyImmediate(r);
+                go.AddComponent<MeshFilter>().sharedMesh = mesh;
+                go.AddComponent<MeshRenderer>().sharedMaterials = mats;
+                go.transform.SetParent(head, true);
+                var at = Library.BoundsOf(go).center;
+                var want = head.position + up * headSize * 0.62f;
+                go.transform.position += want - at;
+                Debug.Log($"[Figure] {go.name} seated on the head: moved {(want - at).magnitude:0.000} (head {headSize:0.000})");
+            }
         }
 
         void Unpose()
