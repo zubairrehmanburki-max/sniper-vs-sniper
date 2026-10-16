@@ -25,8 +25,17 @@ namespace SniperDuel.Game.World
         static readonly Dictionary<SkyKind, string[]> Photos = new Dictionary<SkyKind, string[]>
         {
             [SkyKind.Sunrise] = new[] { "belfast_sunset_puresky", "qwantani_sunrise_puresky" },
-            [SkyKind.Sunset] = new[] { "belfast_sunset_puresky", "qwantani_sunrise_puresky" },
-            [SkyKind.Clear] = new[] { "kloofendal_48d_partly_cloudy_puresky", "kloofendal_misty_morning_puresky" },
+            [SkyKind.Sunset] = new[] { "qwantani_dusk_1_puresky", "belfast_sunset_puresky", "qwantani_sunrise_puresky" },
+            [SkyKind.Clear] = new[] { "kloofendal_48d_partly_cloudy_puresky", "qwantani_noon_puresky", "kloofendal_misty_morning_puresky" },
+        };
+
+        /// <summary>A clear-day photo that suits a map better than the default: snow light, dust, high summer cloud.</summary>
+        static readonly Dictionary<string, string> MapSkies = new Dictionary<string, string>
+        {
+            ["alpine-ridge"] = "snow_field_puresky",
+            ["dry-valley"] = "quarry_01_puresky",
+            ["training-lane"] = "sunflowers_puresky",
+            ["watchtowers"] = "qwantani_noon_puresky",
         };
 
         static float hazeDensity;
@@ -47,7 +56,9 @@ namespace SniperDuel.Game.World
             var kind = palette.Sky ?? SkyKind.Clear;
             Material? sky = null;
             string id = "";
-            foreach (var candidate in Photos[kind])
+            var candidates = new List<string>(Photos[kind]);
+            if (kind == SkyKind.Clear && MapSkies.TryGetValue(map.Id, out var own)) candidates.Insert(0, own);
+            foreach (var candidate in candidates)
             {
                 sky = Resources.Load<Material>("Materials/Sky-" + candidate);
                 if (sky == null) continue;

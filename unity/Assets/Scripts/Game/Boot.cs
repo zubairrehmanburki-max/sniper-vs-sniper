@@ -219,6 +219,8 @@ namespace SniperDuel.Game
                     ("TB-Deck", new Vector3(-38, 25.7f, 3.5f), new Vector3(-200, 30, -1), 58f),
                     ("TB-Pylon", new Vector3(-150, 4, -70), new Vector3(-90, 32, 0), 55f),
                     ("TB-Head", head + new Vector3(0.75f, 0.35f, -0.9f), head, 30f),
+                    ("TB-Viaduct", new Vector3(-30, 32, 560), new Vector3(0, 40, 1240), 50f),
+                    ("TB-Jetty", new Vector3(-200, 14, 130), new Vector3(-268, 0, 180), 50f),
                 })
                 {
                     Frame("");
@@ -231,6 +233,43 @@ namespace SniperDuel.Game
                     yield return null;
                     yield return new WaitForEndOfFrame();
                 }
+            }
+            // The downloaded soldiers and rifles side by side, high over the river: every outfit's
+            // soldier as posed in a duel, then every rifle model in the armoury.
+            if (arena != null)
+            {
+                var stage = new GameObject("Lineup").transform;
+                stage.position = new Vector3(0, 300, 0);
+                for (int i = 0; i < Catalog.OutfitSoldiers.Length; i++)
+                {
+                    var f = Figure.Create(Stance.Standing, 1.8f, stage, Catalog.OutfitTints[i], false, Catalog.OutfitSoldiers[i], Figure.RifleModel("bolt308"));
+                    f.transform.localPosition = new Vector3(i * 1.4f - 2.1f, 0, 0);
+                    f.transform.localRotation = Quaternion.Euler(0, 200, 0);
+                }
+                int k = 0;
+                foreach (var id in Figure.RifleModels)
+                {
+                    var g = Figure.Rifle(stage, id);
+                    g.transform.localPosition = new Vector3(7.5f, 0.3f + k++ * 0.42f, 0);
+                    g.transform.localRotation = Quaternion.Euler(0, 90, 0);
+                }
+                foreach (var (label, from, to, fov) in new[]
+                {
+                    ("Lineup-Soldiers", new Vector3(0, 301.2f, -6.5f), new Vector3(0, 300.95f, 0), 34f),
+                    ("Lineup-Rifles", new Vector3(7.5f, 301.9f, -3.2f), new Vector3(7.5f, 301.75f, 0), 40f),
+                })
+                {
+                    Frame("");
+                    rig.Current = CameraRig.Mode.Director;
+                    rig.Cam.fieldOfView = fov;
+                    rig.Cam.transform.position = from;
+                    rig.Cam.transform.LookAt(to);
+                    for (int f = 0; f < 6; f++) yield return null;
+                    ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"{++n:00}-{label}.png"));
+                    yield return null;
+                    yield return new WaitForEndOfFrame();
+                }
+                Destroy(stage.gameObject);
             }
             // The player's soldier moving on the deck: standing, walking, crouched, crouch-walking,
             // prone and crawling, from a little ahead and to the side; then the walk from the
@@ -284,6 +323,20 @@ namespace SniperDuel.Game
                     Frame(screen);
                     for (int f = 0; f < 8; f++) yield return null;
                     ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"{++n:00}-Map-{id}-{label}.png"));
+                    yield return null;
+                    yield return new WaitForEndOfFrame();
+                }
+                // From the air, to see the set pieces round the lane.
+                if (arena != null)
+                {
+                    float lane = (float)arena.Map.LaneLength;
+                    Frame("");
+                    rig.Current = CameraRig.Mode.Director;
+                    rig.Cam.fieldOfView = 55;
+                    rig.Cam.transform.position = new Vector3(-320, 150, -260);
+                    rig.Cam.transform.LookAt(new Vector3(0, 0, lane * 0.55f));
+                    for (int f = 0; f < 6; f++) yield return null;
+                    ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"{++n:00}-Map-{id}-Air.png"));
                     yield return null;
                     yield return new WaitForEndOfFrame();
                 }

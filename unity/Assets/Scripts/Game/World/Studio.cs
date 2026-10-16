@@ -18,6 +18,7 @@ namespace SniperDuel.Game.World
         Camera cam = null!;
         Figure? figure;
         Color shown = Color.clear;
+        string? shownSoldier;
         float yaw;
 
         public RenderTexture Texture { get; private set; } = null!;
@@ -82,11 +83,12 @@ namespace SniperDuel.Game.World
         }
 
         /// <summary>Dresses the soldier in an outfit colour (rebuilding him only when it changes).</summary>
-        public void Dress(Color tint)
+        public void Dress(Color tint, string? soldier = null)
         {
-            if (figure != null && tint == shown) return;
+            if (figure != null && tint == shown && soldier == shownSoldier) return;
             if (figure != null) Destroy(figure.gameObject);
-            figure = Figure.Create(Stance.Standing, 1.8f, transform, tint);
+            figure = Figure.Create(Stance.Standing, 1.8f, transform, tint, false, soldier);
+            shownSoldier = soldier;
             foreach (var t in figure.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = Layer;
             shown = tint;
             Debug.Log($"[Studio] dressed: {figure.GetComponentsInChildren<Renderer>().Length} renderers, bounds {Library.BoundsOf(figure.gameObject)}");

@@ -37,13 +37,23 @@ namespace SniperDuel.Game.World
         Vector3 eyepiece;
         bool arms;
 
-        public static Viewmodel Create(Transform cam)
+        public static Viewmodel Create(Transform cam, string? rifleModel = null)
         {
             // Built at the origin, unrotated, so the rifle's frame is the world's while it is measured.
             var go = new GameObject("Viewmodel");
             var vm = go.AddComponent<Viewmodel>();
-            var held = Arms(go.transform, out var lens);
-            if (held != null)
+            var gloved = Gloved(go.transform, rifleModel, out var eye, out var loadout);
+            Transform? held = null;
+            var lens = Vector3.zero;
+            if (gloved == null) held = Arms(go.transform, out lens);
+            if (gloved != null)
+            {
+                vm.rifle = gloved;
+                vm.arms = true;
+                // The scope on the loadout rifle, found from its shape like a bare one.
+                vm.eyepiece = eye ?? FindEyepiece(loadout!, gloved);
+            }
+            else if (held != null)
             {
                 vm.rifle = held;
                 vm.eyepiece = lens;
@@ -51,8 +61,8 @@ namespace SniperDuel.Game.World
             }
             else
             {
-                vm.rifle = Figure.Rifle(go.transform).transform;
-                vm.eyepiece = vm.FindEyepiece();
+                vm.rifle = Figure.Rifle(go.transform, rifleModel).transform;
+                vm.eyepiece = FindEyepiece(vm.rifle, vm.rifle);
             }
             foreach (var r in go.GetComponentsInChildren<Renderer>())
             {
@@ -87,6 +97,105 @@ namespace SniperDuel.Game.World
             tilt = Quaternion.Euler(-6 * k, 0, 0) * tilt;
             rifle.localRotation = tilt;
             rifle.localPosition = at - tilt * eyepiece;
+        }
+
+        /// <summary>The gloved arms asset, holding its own carbine in its idle clip.</summary>
+        const string GlovedModel = "arms_sniper";
+        /// <summary>The asset's carbine is drawn this long (metres), which makes its hands life-size.</summary>
+        const float GlovedCarbineLength = 1.08f;
+
+        /// <summary>
+        /// The gloved arms holding the loadout rifle: the asset frozen at the hold in its idle clip,
+        /// turned so its carbine's muzzle runs along +z, sized life-size; then its carbine is hidden
+        /// and the loadout rifle laid in the same hands, butt to butt and bore on bore. Null when
+        /// the asset set doesn't have the arms. `eyepiece` stays null (the caller finds the scope on
+        /// `loadout`).
+        /// </summary>
+        static Transform? Gloved(Transform parent, string? rifleModel, out Vector3? eyepiece, out Transform? loadout)
+        {
+            eyepiece = null;
+            loadout = null;
+            if (Library.Model(GlovedModel) == null) return null;
+            var inner = new GameObject("Gloved hands and rifle").transform;
+            inner.SetParent(parent, false);
+            var model = Library.Place(GlovedModel, Vector3.zero, 0, 1, inner);
+            // The hold is the idle clip's; the rest pose may be a T.
+            foreach (var a in model.GetComponentsInChildren<Animation>(true))
+            {
+                AnimationClip? idle = null;
+                foreach (AnimationState st in a)
+                    if (st.clip != null && (idle == null || st.clip.name.Contains("Idle"))) idle = st.clip;
+                if (idle != null) idle.SampleAnimation(model, idle.length * 0.25f);
+                DestroyImmediate(a);
+            }
+            foreach (var a in model.GetComponentsInChildren<Animator>(true)) DestroyImmediate(a);
+            Figure.Freeze(model);
+
+            var carbine = new List<Renderer>();
+            Renderer? arms = null;
+            foreach (var r in model.GetComponentsInChildren<Renderer>(true))
+            {
+                var m = r.sharedMaterials.Length > 0 ? r.sharedMaterials[0] : null;
+                string n = m != null ? m.name : "";
+                if (n.StartsWith("Rifle") || n.StartsWith("Other")) carbine.Add(r);
+                else arms = r;
+            }
+            if (arms == null || carbine.Count == 0)
+            {
+                DestroyImmediate(inner.gameObject);
+                return null;
+            }
+            Library.PbrAll(model, 0.7f);
+
+            Bounds Carbine()
+            {
+                var b = carbine[0].bounds;
+                foreach (var r in carbine) b.Encapsulate(r.bounds);
+                return b;
+            }
+            // Muzzle forward: the end of the carbine's long axis away from the arms.
+            var cb = Carbine();
+            var ac = arms.bounds.center;
+            float yaw;
+            if (cb.size.x > cb.size.z) yaw = Mathf.Abs(cb.max.x - ac.x) > Mathf.Abs(cb.min.x - ac.x) ? -90 : 90;
+            else yaw = Mathf.Abs(cb.max.z - ac.z) > Mathf.Abs(cb.min.z - ac.z) ? 0 : 180;
+            model.transform.localRotation = Quaternion.Euler(0, yaw, 0) * model.transform.localRotation;
+            cb = Carbine();
+            if (cb.size.z > 1e-4f) model.transform.localScale *= GlovedCarbineLength / cb.size.z;
+            cb = Carbine();
+            float bore = Bore(carbine, cb);
+            foreach (var r in carbine) r.enabled = false;
+
+            // The loadout rifle in the same hands: butt at the carbine's butt, bore on its bore.
+            var gun = Figure.Rifle(inner, rifleModel ?? "rifle_l115a3_hd").transform;
+            var gb = Library.BoundsOf(gun.gameObject);
+            var rs = new List<Renderer>(gun.GetComponentsInChildren<Renderer>());
+            float gunBore = Bore(rs, gb);
+            gun.position += new Vector3(cb.center.x - gb.center.x, bore - gunBore, cb.min.z - gb.min.z);
+            loadout = gun;
+            return inner;
+        }
+
+        /// <summary>
+        /// Height of a rifle's bore: the middle of its muzzle end (the front 6% of its length), from
+        /// the vertices where the meshes are readable, else a third of the way up its bounds.
+        /// </summary>
+        static float Bore(List<Renderer> rs, Bounds b)
+        {
+            float cut = b.max.z - b.size.z * 0.06f, lo = float.MaxValue, hi = float.MinValue;
+            foreach (var r in rs)
+            {
+                var mf = r.GetComponent<MeshFilter>();
+                if (mf == null || mf.sharedMesh == null || !mf.sharedMesh.isReadable) continue;
+                foreach (var v in mf.sharedMesh.vertices)
+                {
+                    var p = mf.transform.TransformPoint(v);
+                    if (p.z < cut) continue;
+                    lo = Mathf.Min(lo, p.y);
+                    hi = Mathf.Max(hi, p.y);
+                }
+            }
+            return lo <= hi ? (lo + hi) / 2 : b.min.y + b.size.y * 0.66f;
         }
 
         /// <summary>
@@ -231,7 +340,7 @@ namespace SniperDuel.Game.World
         /// above the barrel; its rear end is the eyepiece and the tube axis sits an eyepiece radius
         /// below its top. Mounts a scope when the model has none.
         /// </summary>
-        Vector3 FindEyepiece()
+        static Vector3 FindEyepiece(Transform rifle, Transform mount)
         {
             var b = Library.BoundsOf(rifle.gameObject);
             float len = Mathf.Max(0.2f, b.size.z);
@@ -279,12 +388,12 @@ namespace SniperDuel.Game.World
             for (int i = N * 3 / 10; i < N / 2; i++) action = Mathf.Max(action, top[i]);
             if (float.IsInfinity(action)) action = b.max.y;
             var eye = new Vector3(b.center.x, action + 0.045f, b.min.z + len * 0.3f);
-            MountScope(eye, action);
+            MountScope(eye, action, mount);
             return eye;
         }
 
         /// <summary>A 30 mm tube scope with a 56 mm objective, turrets and rings, eyepiece at `eye`.</summary>
-        void MountScope(Vector3 eye, float rail)
+        static void MountScope(Vector3 eye, float rail, Transform rifle)
         {
             var body = new MeshBuilder();
             var f = Vector3.forward;

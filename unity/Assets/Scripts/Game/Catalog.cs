@@ -201,6 +201,9 @@ namespace SniperDuel.Game
             new Color(0.5f, 0.38f, 0.26f),
         };
 
+        /// <summary>The soldier model each outfit is (multicam, night-ops tactical, ghillie, boonie hat).</summary>
+        public static readonly string[] OutfitSoldiers = { "soldier_multicam", "soldier_tactical", "soldier_ghillie", "soldier_boonie" };
+
         /// <summary>The last outfit is a Battle Pass reward.</summary>
         public const int LockedOutfit = 3;
 

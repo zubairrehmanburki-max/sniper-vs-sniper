@@ -21,6 +21,8 @@ namespace SniperDuel.Game.World
         /// <summary>The player's outfit colour and rifle finish (the in-duel kit; menus show the defaults).</summary>
         public Color PlayerTint = new Color(0.56f, 0.55f, 0.47f);
         public Color? PlayerFinish;
+        /// <summary>The models each side is drawn with: soldier and rifle (null: the defaults).</summary>
+        public string? PlayerSoldier, PlayerRifle, EnemySoldier = "soldier_boonie", EnemyRifle;
         /// <summary>Props on the firing spots (ammo box, crate, barriers): the player walks round them.</summary>
         public readonly List<Bounds> Blocks = new List<Bounds>();
 
@@ -59,6 +61,8 @@ namespace SniperDuel.Game.World
             // The towers stand in a drowned marsh; the rigs in open sea with a field round them.
             if (map.Id == "watchtowers") Marsh.Build(map, root);
             if (map.Id == "oil-rigs") Offshore.Build(map, root);
+            // The downloaded set pieces: viaduct, towers, rigs, containers, cover, cliffs, trees, rocks.
+            Scenery.Build(map, root);
 
             var ground = map.Terrain ?? map.Ground;
             float water = (float)(map.Water ?? -1000);
@@ -112,7 +116,7 @@ namespace SniperDuel.Game.World
         public Figure PlaceEnemy(Vec3 position, Stance stance, Side enemySide)
         {
             if (Enemy != null) Object.Destroy(Enemy.gameObject);
-            Enemy = Figure.Create(stance, 1.8f, Root, new Color(0.62f, 0.64f, 0.52f));
+            Enemy = Figure.Create(stance, 1.8f, Root, new Color(0.62f, 0.64f, 0.52f), false, EnemySoldier, EnemyRifle);
             Enemy.transform.position = Library.ToUnity(position);
             Enemy.transform.rotation = Quaternion.Euler(0, enemySide == Side.A ? 0 : 180, 0);
             return Enemy;
@@ -125,7 +129,7 @@ namespace SniperDuel.Game.World
         public Figure PlacePlayer(Vec3 position, Stance stance, Side side, bool live = false)
         {
             if (Player != null) Object.Destroy(Player.gameObject);
-            Player = Figure.Create(stance, 1.8f, Root, PlayerTint, live);
+            Player = Figure.Create(stance, 1.8f, Root, PlayerTint, live, PlayerSoldier, PlayerRifle);
             if (PlayerFinish is Color finish) Figure.PaintRifle(Player.gameObject, finish);
             Player.name = "Player";
             Player.transform.position = Library.ToUnity(position);

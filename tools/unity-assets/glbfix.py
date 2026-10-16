@@ -70,6 +70,20 @@ def fix(path, ops):
             if "mesh" in nd and not doc["meshes"][nd["mesh"]]["primitives"]:
                 del nd["mesh"]
                 nd.pop("skin", None)
+        # A mesh with no primitives is invalid glTF: drop the empty ones and renumber the rest.
+        keep = [i for i, m in enumerate(doc.get("meshes", [])) if m["primitives"]]
+        renum = {old: new for new, old in enumerate(keep)}
+        doc["meshes"] = [doc["meshes"][i] for i in keep]
+        for nd in doc.get("nodes", []):
+            if "mesh" in nd:
+                nd["mesh"] = renum[nd["mesh"]]
+        # Morph-weight tracks on nodes that lost their mesh point at nothing.
+        nodes = doc.get("nodes", [])
+        for an in doc.get("animations", []):
+            an["channels"] = [c for c in an["channels"] if not (c["target"].get("path") == "weights" and "mesh" not in nodes[c["target"].get("node", 0)])]
+        doc["animations"] = [an for an in doc.get("animations", []) if an["channels"]]
+        if not doc["animations"]:
+            del doc["animations"]
 
     for m in mats:
         sg = (m.get("extensions") or {}).pop("KHR_materials_pbrSpecularGlossiness", None)

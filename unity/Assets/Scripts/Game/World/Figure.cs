@@ -90,7 +90,9 @@ namespace SniperDuel.Game.World
         /// crouch-walk, crawl and change stance with a blend; otherwise the pose is frozen into
         /// static meshes, which is all the enemy and the menus need.
         /// </summary>
-        public static Figure Create(Stance stance, float heightM, Transform parent, Color tint, bool live = false)
+        /// <param name="soldier">The soldier model (one of the asset set's soldier_* ids); the tactical one by default.</param>
+        /// <param name="rifle">The rifle model (see <see cref="RifleModel"/>); the L115A3 by default.</param>
+        public static Figure Create(Stance stance, float heightM, Transform parent, Color tint, bool live = false, string? soldier = null, string? rifle = null)
         {
             var root = new GameObject("Figure " + stance);
             root.transform.SetParent(parent, false);
@@ -100,7 +102,9 @@ namespace SniperDuel.Game.World
             body.SetParent(root.transform, false);
             fig.Body = body;
             // The detailed CC-BY soldier when the asset set has it, else the bundled low-detail one.
-            var hd = Library.Model("soldier_tactical");
+            string id = soldier ?? DefaultSoldier;
+            var hd = Library.Model(id);
+            if (hd == null && id != DefaultSoldier) hd = Library.Model(id = DefaultSoldier);
             var prefab = hd != null ? hd : Resources.Load<GameObject>("Characters/Soldier");
             Transform? model = null;
             if (prefab != null)
@@ -112,10 +116,12 @@ namespace SniperDuel.Game.World
                 foreach (var t in model.GetComponentsInChildren<Transform>())
                 {
                     string n = BoneName(t.name);
+                    if (CcBones.TryGetValue(n, out var mixamo)) n = mixamo;
                     if (!fig.bones.ContainsKey(n)) fig.bones[n] = t;
                 }
                 fig.Dress(model, hd != null, tint);
-                fig.Headgear();
+                // Only the tactical soldier's helmet floats off his head as imported.
+                if (hd == null || id == DefaultSoldier) fig.Headgear();
             }
             else Debug.LogWarning("[Figure] no soldier model loaded");
             Debug.Log($"[Figure] {stance}: {fig.bones.Count} bones, {root.GetComponentsInChildren<Renderer>().Length} renderers");
@@ -124,7 +130,7 @@ namespace SniperDuel.Game.World
             {
                 fig.Fit(model, heightM);
                 fig.Remember(model);
-                fig.rifle = Rifle(root.transform).transform;
+                fig.rifle = Rifle(root.transform, rifle).transform;
                 fig.Calibrate();
                 fig.want = stance;
                 fig.weight[(int)stance] = 1;
@@ -144,16 +150,16 @@ namespace SniperDuel.Game.World
             body.position += new Vector3(0, ground - b.min.y, 0);
 
             // The rifle in his hands: grip at the right hand, aimed straight down-range.
-            var rifle = Rifle(root.transform);
+            var gun = Rifle(root.transform, rifle);
             if (fig.bones.TryGetValue("RightHand", out var rh))
             {
                 var dir = root.transform.forward;
-                rifle.transform.rotation = Quaternion.LookRotation(dir, root.transform.up);
-                rifle.transform.position = rh.position + dir * 0.28f + root.transform.up * 0.03f;
-                if (stance == Stance.Prone && Library.BoundsOf(rifle).min.y < ground)
-                    rifle.transform.position += new Vector3(0, ground - Library.BoundsOf(rifle).min.y, 0);
+                gun.transform.rotation = Quaternion.LookRotation(dir, root.transform.up);
+                gun.transform.position = rh.position + dir * 0.28f + root.transform.up * 0.03f;
+                if (stance == Stance.Prone && Library.BoundsOf(gun).min.y < ground)
+                    gun.transform.position += new Vector3(0, ground - Library.BoundsOf(gun).min.y, 0);
             }
-            else rifle.transform.localPosition = new Vector3(0.1f, stance == Stance.Prone ? 0.15f : 1.3f, 0.5f);
+            else gun.transform.localPosition = new Vector3(0.1f, stance == Stance.Prone ? 0.15f : 1.3f, 0.5f);
             return fig;
         }
 
@@ -178,12 +184,12 @@ namespace SniperDuel.Game.World
                     mat.SetTexture("_MetallicGlossMap", NonMetal);
                     if (hd)
                     {
-                        var nor = src != null && src.HasProperty("normalTexture") ? src.GetTexture("normalTexture") : null;
-                        if (nor != null) mat.SetTexture("_BumpMap", nor);
-                        var factor = src != null && src.HasProperty("baseColorFactor") ? src.GetColor("baseColorFactor") : Color.white;
-                        mat.SetColor("_BaseColor", factor * Color.Lerp(Color.white, tint * 1.5f, 0.25f));
-                        // Matte fabric: the sheen of a wet road is wrong on cloth.
-                        mat.SetFloat("_Smoothness", 0.08f);
+                        // The model's own maps (ghillie fringes stay cut out), as matte fabric: the
+                        // sheen of a wet road is wrong on cloth. The outfit colour tints it a little.
+                        Destroy(mat);
+                        mat = Library.Pbr(src, 0, 0.18f);
+                        mat.name = "Soldier " + r.name;
+                        mat.SetColor("_BaseColor", mat.GetColor("_BaseColor") * Color.Lerp(Color.white, tint * 1.5f, 0.25f));
                     }
                     else
                     {
@@ -250,12 +256,82 @@ namespace SniperDuel.Game.World
             model.position += new Vector3(shift.x, 0, shift.z);
         }
 
-        /// <summary>
-        /// The sniper rifle, 1.3 m long with its barrel along +z: the detailed L115A3 when the asset
-        /// set has it, else the scanned bolt-action rifle. Used by the figures and the first-person view.
-        /// </summary>
-        public static GameObject Rifle(Transform parent)
+        public const string DefaultSoldier = "soldier_tactical";
+
+        /// <summary>Character Creator joints by the Mixamo names the poses use.</summary>
+        static readonly Dictionary<string, string> CcBones = CcMap();
+
+        static Dictionary<string, string> CcMap()
         {
+            var m = new Dictionary<string, string>
+            {
+                ["CC_Base_Hip"] = "Hips", ["CC_Base_Waist"] = "Spine", ["CC_Base_Spine01"] = "Spine1",
+                ["CC_Base_Spine02"] = "Spine2", ["CC_Base_NeckTwist01"] = "Neck", ["CC_Base_Head"] = "Head",
+            };
+            foreach (var (cc, side) in new[] { ("L", "Left"), ("R", "Right") })
+            {
+                m[$"CC_Base_{cc}_Clavicle"] = side + "Shoulder";
+                m[$"CC_Base_{cc}_Upperarm"] = side + "Arm";
+                m[$"CC_Base_{cc}_Forearm"] = side + "ForeArm";
+                m[$"CC_Base_{cc}_Hand"] = side + "Hand";
+                m[$"CC_Base_{cc}_Thigh"] = side + "UpLeg";
+                m[$"CC_Base_{cc}_Calf"] = side + "Leg";
+                m[$"CC_Base_{cc}_Foot"] = side + "Foot";
+                m[$"CC_Base_{cc}_ToeBase"] = side + "ToeBase";
+            }
+            return m;
+        }
+
+        /// <summary>
+        /// A rifle model as the asset set has it: its real length in metres, which way its muzzle
+        /// points as imported, and parts to leave off (spare magazines, night sights).
+        /// </summary>
+        sealed class RifleSpec
+        {
+            public float Length;
+            public Vector3 Muzzle;
+            public string[] Hide = System.Array.Empty<string>();
+        }
+
+        static readonly Dictionary<string, RifleSpec> Armory = new Dictionary<string, RifleSpec>
+        {
+            ["rifle_m40a5"] = new RifleSpec { Length = 1.12f, Muzzle = Vector3.forward },
+            ["rifle_fn_spr"] = new RifleSpec { Length = 1.06f, Muzzle = Vector3.back },
+            ["rifle_l115a3_hd"] = new RifleSpec { Length = 1.3f, Muzzle = Vector3.forward, Hide = new[] { "night_" } },
+            ["rifle_hecate"] = new RifleSpec { Length = 1.38f, Muzzle = Vector3.left },
+            ["rifle_sv98m"] = new RifleSpec { Length = 1.2f, Muzzle = Vector3.forward },
+            ["rifle_mosin"] = new RifleSpec { Length = 1.23f, Muzzle = Vector3.back },
+            ["rifle_timberwolf"] = new RifleSpec { Length = 1.2f, Muzzle = Vector3.zero },
+            ["rifle_l118a1"] = new RifleSpec { Length = 1.18f, Muzzle = Vector3.left },
+        };
+
+        /// <summary>Every rifle model the asset set offers, for the range's display benches.</summary>
+        public static IEnumerable<string> RifleModels => Armory.Keys;
+
+        /// <summary>The model a rifle (config id, fitted or not) is drawn with.</summary>
+        public static string RifleModel(string rifleId)
+        {
+            int plus = rifleId.IndexOf('+');
+            if (plus >= 0) rifleId = rifleId.Substring(0, plus);
+            return rifleId switch
+            {
+                "bolt308" => "rifle_m40a5",
+                "bolt65cm" => "rifle_fn_spr",
+                "am50" => "rifle_hecate",
+                _ => "rifle_l115a3_hd",
+            };
+        }
+
+        /// <summary>
+        /// A sniper rifle with its barrel along +z, centred on `parent`: the model named (see
+        /// <see cref="RifleModel"/>) in its own textures at its real length, else the older L115A3
+        /// repainted in a service finish, else the scanned bolt-action rifle. Used by the figures,
+        /// the first-person view and the range's benches.
+        /// </summary>
+        public static GameObject Rifle(Transform parent, string? model = null)
+        {
+            model ??= "rifle_l115a3_hd";
+            if (Armory.TryGetValue(model, out var spec) && Library.Model(model) != null) return Textured(parent, model, spec);
             bool hd = Library.Model("rifle_l115a3") != null;
             var rifle = Library.Place(hd ? "rifle_l115a3" : "bolt_action_rifle_7_62", Vector3.zero, 0, 1, parent);
             var inner = new GameObject("Rifle").transform;
@@ -275,6 +351,85 @@ namespace SniperDuel.Game.World
             // Centre it on its parent.
             rifle.transform.position -= rb.center - inner.position;
             return inner.gameObject;
+        }
+
+        /// <summary>
+        /// One of the textured rifles: loose parts set beside it in the scene dropped, turned
+        /// muzzle-forward, sized to its real length, its own maps on URP Lit, and the stock's
+        /// materials marked so <see cref="PaintRifle"/> can tint them.
+        /// </summary>
+        static GameObject Textured(Transform parent, string id, RifleSpec spec)
+        {
+            var inner = new GameObject("Rifle").transform;
+            inner.SetParent(parent, false);
+            // Built at the parent's origin, unrotated, so the rifle's own frame is measured.
+            var rifle = Library.Prop(id, inner, metal: 0.75f);
+            rifle.transform.localPosition = Vector3.zero;
+            var rs = rifle.GetComponentsInChildren<Renderer>(true);
+            foreach (var r in rs)
+                foreach (var h in spec.Hide)
+                    if (r.name.StartsWith(h, System.StringComparison.OrdinalIgnoreCase)) r.enabled = false;
+            // Loose parts (spare rounds, a magazine laid alongside): anything clear of the main body.
+            Renderer? main = null;
+            float most = 0;
+            foreach (var r in rs)
+            {
+                if (!r.enabled) continue;
+                var sz = r.bounds.size;
+                float v = sz.x + sz.y + sz.z;
+                if (v > most) { most = v; main = r; }
+            }
+            if (main != null)
+            {
+                var body = main.bounds;
+                body.Expand(body.size * 0.08f);
+                foreach (var r in rs)
+                    if (r.enabled && r != main && !body.Intersects(r.bounds)) r.enabled = false;
+            }
+            var b = Enabled(rifle);
+            // Muzzle forward: from the model's known layout, else the slimmer end of its long axis.
+            var muzzle = spec.Muzzle;
+            if (muzzle == Vector3.zero)
+            {
+                if (b.size.x > b.size.z) rifle.transform.localRotation = Quaternion.Euler(0, 90, 0);
+                if (StockAhead(rifle, inner)) rifle.transform.localRotation = Quaternion.Euler(0, 180, 0) * rifle.transform.localRotation;
+            }
+            else rifle.transform.localRotation = Quaternion.Inverse(Quaternion.LookRotation(muzzle, Vector3.up));
+            b = Enabled(rifle);
+            if (b.size.z > 1e-4f) rifle.transform.localScale *= spec.Length / b.size.z;
+            b = Enabled(rifle);
+            rifle.transform.position -= b.center - inner.position;
+            foreach (var r in rs) if (!r.enabled) DestroyImmediate(r);
+
+            // Mark the stock: by name where the model names its parts, else by colour, unless it is
+            // one material (a single atlas tells nothing apart).
+            int materials = 0;
+            foreach (var r in rifle.GetComponentsInChildren<Renderer>()) materials += r.sharedMaterials.Length;
+            foreach (var r in rifle.GetComponentsInChildren<Renderer>())
+            {
+                var mats = r.sharedMaterials;
+                for (int i = 0; i < mats.Length; i++)
+                {
+                    var m = mats[i];
+                    if (m == null) continue;
+                    var part = ByName(m.name + " " + r.name) ?? (materials > 1 ? ByColour(MeanColour(m)) : Part.Metal);
+                    m.name = $"Rifle {part} (textured) {m.name}";
+                }
+            }
+            return inner.gameObject;
+        }
+
+        /// <summary>Bounds of the renderers still shown under an object.</summary>
+        static Bounds Enabled(GameObject go)
+        {
+            Bounds? b = null;
+            foreach (var r in go.GetComponentsInChildren<Renderer>())
+            {
+                if (!r.enabled) continue;
+                if (b is Bounds have) { have.Encapsulate(r.bounds); b = have; }
+                else b = r.bounds;
+            }
+            return b ?? new Bounds(go.transform.position, Vector3.zero);
         }
 
         /// <summary>
@@ -536,7 +691,9 @@ namespace SniperDuel.Game.World
                     if (!Painted.TryGetValue((m, finish), out var p) || p == null)
                     {
                         p = new Material(m) { name = m.name + " (finish)" };
-                        p.SetColor("_BaseColor", finish);
+                        // A textured stock keeps its grain and wear, toned toward the finish.
+                        bool textured = m.name.Contains("(textured)");
+                        p.SetColor("_BaseColor", textured ? m.GetColor("_BaseColor") * Color.Lerp(Color.white, finish * 2.2f, 0.7f) : finish);
                         Painted[(m, finish)] = p;
                     }
                     mats[i] = p;

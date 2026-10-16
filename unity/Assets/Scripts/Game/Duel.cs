@@ -146,6 +146,10 @@ namespace SniperDuel.Game
             arena.PlayerTint = kit.Outfit;
             arena.PlayerFinish = kit.Finish;
             rig.RifleFinish = kit.Finish;
+            arena.PlayerSoldier = kit.Soldier;
+            arena.PlayerRifle = rig.RifleModel = Figure.RifleModel(baseRifle);
+            // The bot's rifle by how good it is: the old Mosin, the SV-98, the Timberwolf.
+            arena.EnemyRifle = bot switch { BotDifficulty.Easy => "rifle_mosin", BotDifficulty.Hard => "rifle_timberwolf", _ => "rifle_sv98m" };
             // The figure is re-made in this duel's outfit and finish on the first frame.
             if (arena.Player != null)
             {

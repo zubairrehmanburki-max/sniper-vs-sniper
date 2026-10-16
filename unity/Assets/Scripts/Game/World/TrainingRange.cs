@@ -72,6 +72,8 @@ namespace SniperDuel.Game.World
             var wood = new MeshBuilder();
             var steel = new MeshBuilder();
             var roof = new MeshBuilder();
+            var models = new List<string>(Figure.RifleModels);
+            int shown = 0;
             foreach (var side in new[] { Side.A, Side.B })
             {
                 // The shooter lies behind the spot, toward his own rear.
@@ -92,6 +94,11 @@ namespace SniperDuel.Game.World
                     foreach (var (dx, dz) in new[] { (-0.4f, -0.6f), (0.4f, -0.6f), (-0.4f, 0.6f), (0.4f, 0.6f) })
                         steel.Box(new Vector3(x + dx, y + 0.38f, benchS + dz), new Vector3(0.06f, 0.8f, 0.06f));
                     wood.Box(new Vector3(x, y + 0.48f, benchS + back * 1.2f), new Vector3(0.5f, 0.05f, 0.4f));
+                    // A rifle laid on each bench, muzzle down-range: every model the armoury has.
+                    var gun = Figure.Rifle(root, models[shown++ % models.Count]);
+                    gun.transform.rotation = Quaternion.Euler(0, side == Side.A ? 0 : 180, 0);
+                    gun.transform.position = new Vector3(x + 0.1f, y + 0.83f, benchS);
+                    Library.Ground(gun, y + 0.83f);
                     steel.Box(new Vector3(x, y + 0.23f, benchS + back * 1.2f), new Vector3(0.06f, 0.46f, 0.06f));
                 }
                 // Canopy over the benches: steel posts, a shallow tin roof.

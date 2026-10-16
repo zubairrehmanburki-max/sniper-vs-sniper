@@ -113,7 +113,7 @@ namespace SniperDuel.Game
             s.Text("longest", longest > 0 ? $"{longest:#,0} m" : "—");
 
             int outfit = Profile.Outfit(cur);
-            Studio.Get().Dress(Catalog.OutfitTints[outfit]);
+            Studio.Get().Dress(Catalog.OutfitTints[outfit], Catalog.OutfitSoldiers[outfit]);
             for (int i = 0; i < Catalog.Outfits.Length; i++)
             {
                 if (!s.Has("outfit" + i)) continue;

@@ -739,15 +739,5 @@
         "maxTexture": 1024
       }
     }
-  ],
-  "zips": [
-    {
-      "url": "https://opengameart.org/sites/default/files/rc_art_-_muzzle_effects.zip",
-      "dest": "Effects/muzzle",
-      "source": "OpenGameArt (Reactorcore)",
-      "author": "Reactorcore",
-      "license": "CC0",
-      "page": "https://opengameart.org/content/gun-muzzle-flash-effects-fire-and-ion-and-melee"
-    }
   ]
 }

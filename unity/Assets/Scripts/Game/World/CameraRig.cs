@@ -39,6 +39,8 @@ namespace SniperDuel.Game.World
         Viewmodel? viewmodel;
         /// <summary>The first-person rifle's furniture colour (the loadout's finish), or the default.</summary>
         public Color? RifleFinish;
+        /// <summary>The first-person rifle's model (the loadout's rifle), or the default.</summary>
+        public string? RifleModel;
 
         /// <summary>Drops the first-person rifle so the next shoulder builds it in the current finish.</summary>
         public void DropViewmodel()
@@ -89,7 +91,7 @@ namespace SniperDuel.Game.World
             bool rifle = Current == Mode.Eye && !ThirdPerson && Raise < 0.999f;
             if (rifle && viewmodel == null)
             {
-                viewmodel = Viewmodel.Create(Cam.transform);
+                viewmodel = Viewmodel.Create(Cam.transform, RifleModel);
                 if (RifleFinish is Color finish) Figure.PaintRifle(viewmodel.gameObject, finish);
             }
             if (viewmodel != null)

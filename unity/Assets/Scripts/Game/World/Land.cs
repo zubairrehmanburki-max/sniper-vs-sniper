@@ -126,7 +126,7 @@ namespace SniperDuel.Game.World
                 {
                     ("gravelly_sand", "coast_sand_01", 7f, new Color(1.02f, 0.93f, 0.8f)),
                     ("coast_sand_01", "coast_sand_01", 9f, new Color(1.08f, 0.94f, 0.76f)),
-                    ("red_laterite_soil_stones", "brown_mud_leaves_01", 8f, new Color(1f, 0.88f, 0.76f)),
+                    ("rocky_trail", "red_laterite_soil_stones", 8f, new Color(1.04f, 0.9f, 0.76f)),
                     ("rock_boulder_dry", "red_laterite_soil_stones", 16f, new Color(1.05f, 0.9f, 0.76f)),
                 },
                 Mix = (x, s, y, slope, n1, n2, water, w) =>
@@ -150,10 +150,10 @@ namespace SniperDuel.Game.World
                 Resolution = 1024,
                 Layers = new[]
                 {
-                    ("sparse_grass", "sparse_grass", 10f, new Color(0.86f, 0.9f, 0.74f)),
+                    ("aerial_grass_rock", "sparse_grass", 16f, new Color(0.9f, 0.94f, 0.8f)),
                     ("rocky_terrain_02", "rocky_terrain_02", 12f, new Color(0.9f, 0.9f, 0.92f)),
                     ("cliff_side", "aerial_rocks_02", 20f, new Color(0.85f, 0.86f, 0.9f)),
-                    ("snow_02", "coast_sand_01", 9f, new Color(0.95f, 0.96f, 0.99f)),
+                    ("snow_field_aerial", "snow_02", 14f, new Color(0.95f, 0.96f, 0.99f)),
                 },
                 Mix = (x, s, y, slope, n1, n2, water, w) =>
                 {
@@ -184,7 +184,7 @@ namespace SniperDuel.Game.World
                 {
                     ("sparse_grass", "sparse_grass", 8f, new Color(0.95f, 1.04f, 0.86f)),
                     ("gravelly_sand", "coast_sand_rocks_02", 5f, new Color(0.92f, 0.9f, 0.86f)),
-                    ("brown_mud_leaves_01", "brown_mud_leaves_01", 9f, White),
+                    ("forest_ground_04", "brown_mud_leaves_01", 9f, White),
                     ("rocky_terrain_02", "rocky_terrain_02", 14f, White),
                 },
                 Mix = (x, s, y, slope, n1, n2, water, w) =>
@@ -253,7 +253,7 @@ namespace SniperDuel.Game.World
             {
                 Layers = new[]
                 {
-                    ("coast_sand_rocks_02", "coast_sand_rocks_02", 8f, White),
+                    ("aerial_beach_01", "coast_sand_rocks_02", 12f, new Color(0.86f, 0.84f, 0.8f)),
                     ("sparse_grass", "sparse_grass", 10f, White),
                     ("rocky_terrain_02", "rocky_terrain_02", 14f, White),
                     ("brown_mud_leaves_01", "brown_mud_leaves_01", 9f, White),

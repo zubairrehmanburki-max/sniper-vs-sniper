@@ -87,8 +87,12 @@ def sketchfab(item, out, credits, problems):
         path = os.path.join(out, "Models", mid, f"{mid}_1k.glb")
         save(dl["glb"]["url"], path)
         if item.get("fix"):
-            glbfix.fix(path, item["fix"])
-            print(f"  fixed: {os.path.getsize(path) / 1e6:.1f} MB")
+            try:
+                glbfix.fix(path, item["fix"])
+                print(f"  fixed: {os.path.getsize(path) / 1e6:.1f} MB")
+            except Exception as e:
+                # The model is still there as downloaded, so it is still credited.
+                problems.append(f"{mid}: fix failed, kept as downloaded: {e}")
     except Exception as e:
         problems.append(f"{mid}: {e}")
         return

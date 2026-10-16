@@ -16,6 +16,8 @@ namespace SniperDuel.Game
         public bool Suppressed;
         public Color Finish;
         public Color Outfit;
+        /// <summary>The soldier model the outfit dresses the operator in.</summary>
+        public string Soldier = "";
     }
 
     /// <summary>
@@ -93,6 +95,7 @@ namespace SniperDuel.Game
                 Suppressed = Profile.Part(rifleId, MuzzleSlot) == SuppressorOption,
                 Finish = FinishColors[Mathf.Clamp(Profile.Finish(rifleId), 0, FinishColors.Length - 1)],
                 Outfit = Catalog.OutfitTints[Profile.Outfit(Profile.Operator)],
+                Soldier = Catalog.OutfitSoldiers[Profile.Outfit(Profile.Operator)],
             };
         }
     }
