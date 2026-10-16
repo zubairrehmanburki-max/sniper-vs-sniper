@@ -24,8 +24,8 @@ namespace SniperDuel.Game.World
         /// The same with the hands: out to the right and a little further off, the barrel turned in
         /// toward the middle of the screen, so the gloved hand on the fore-end is in view.
         /// </summary>
-        static readonly Vector3 ArmsReadyOffset = new Vector3(0.12f, -0.10f, 0.28f);
-        static readonly Vector3 ArmsReadyTilt = new Vector3(0, -10f, 6f);
+        static readonly Vector3 ArmsReadyOffset = new Vector3(0.11f, -0.12f, 0.34f);
+        static readonly Vector3 ArmsReadyTilt = new Vector3(6f, -9f, 6f);
 
         /// <summary>The first-person asset: rifle and arms, posed holding the rifle in its rest pose.</summary>
         const string ArmsModel = "fps_sniper_arms";

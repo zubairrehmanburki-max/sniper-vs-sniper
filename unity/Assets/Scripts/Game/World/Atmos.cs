@@ -33,7 +33,6 @@ namespace SniperDuel.Game.World
         static readonly Dictionary<string, string> MapSkies = new Dictionary<string, string>
         {
             ["alpine-ridge"] = "snow_field_puresky",
-            ["dry-valley"] = "quarry_01_puresky",
             ["training-lane"] = "sunflowers_puresky",
             ["watchtowers"] = "qwantani_noon_puresky",
         };

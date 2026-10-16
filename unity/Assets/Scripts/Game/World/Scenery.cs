@@ -51,7 +51,7 @@ namespace SniperDuel.Game.World
                 case "dry-valley":
                     Put("battlefield_pack", root, new Vector3(-150, Y(-150, lane * 0.5f) - 0.3f, lane * 0.5f), 20, 60);
                     Put("trench_set", root, new Vector3(140, Y(140, lane * 0.3f) - 1.2f, lane * 0.3f), -35, 22);
-                    foreach (var (x, s, yaw) in new[] { (-240f, 200f, 0f), (250f, 620f, 180f), (-260f, 760f, 10f) })
+                    foreach (var (x, s, yaw) in new[] { (250f, 620f, 180f), (-260f, 760f, 10f) })
                         Put("cliffs_set", root, new Vector3(x, Y(x, s) - 6, s), yaw, 240, false, Sandstone, "cliff_04", "cliff_lp");
                     Put("desert_cliff", root, new Vector3(-500, Y(-500, lane + 900) - 30, lane + 900), 30, 700);
                     Rocks(root, rng, Y, lane, 34, 1.5f, 7, 30, 260, Sandstone, "rock_kit");
