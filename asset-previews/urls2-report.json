@@ -1,0 +1,217 @@
+{
+ "status": {
+  "ual_quaternius": "ok",
+  "lowpoly_rocks": "ok",
+  "forest_rock_kit": "ok",
+  "pine_pack": "ok",
+  "girder_bridge": "ok",
+  "truss_bridge": "ok",
+  "metal_bridge_lowpoly": "ok",
+  "watch_tower_sef": "ok",
+  "watchtower_lofvu": "ok",
+  "oil_rig_benkos": "ok",
+  "oil_rig_poseidon": "ok",
+  "oil_troll_a": "ok",
+  "battlefield_pack": "ok",
+  "sandbag_2048": "ok",
+  "warehouse_free": "ok",
+  "container_lowpoly": "ok",
+  "container_classic": "ok",
+  "m24_custom": "ok",
+  "remington_lowpoly": "ok",
+  "fps_arm_ik": "ok",
+  "ph_forest_ground_04": "ok",
+  "ph_aerial_grass_rock": "ok",
+  "ph_qwantani_noon_puresky": "ok",
+  "ph_snow_field_puresky": "ok",
+  "ph_mpumalanga_veld_puresky": "ok",
+  "ph_qwantani_dusk_1_puresky": "ok",
+  "ph_quarry_01_puresky": "ok",
+  "ph_sunflowers_puresky": "ok",
+  "ph_autumn_field_puresky": "ok",
+  "ph_modular_wooden_pier": "ok",
+  "ph_container_side": "ok",
+  "ph_rocky_trail": "ok",
+  "ph_snow_field_aerial": "ok",
+  "ph_aerial_beach_01": "ok",
+  "boat_attack": "ok",
+  "urp_ocean": "ok",
+  "urp_water_chili": "ok",
+  "waternormals": "ok",
+  "us_terrain_sample": "ok",
+  "us_terrain_urp_demo": "ok",
+  "us_terrain_textures": "ok",
+  "us_conifers_botd": "ok",
+  "us_european_forests": "ok",
+  "us_grass_flowers": "ok",
+  "us_waterworks": "ok",
+  "us_water_polyone": "ok",
+  "us_harbor_props": "ok",
+  "us_war_fx": "ok",
+  "us_particle_pack": "ok",
+  "us_fps_microgame": "ok",
+  "fab_lanzarote": "error: HTTP Error 403: Forbidden",
+  "fab_namaqualand": "error: HTTP Error 403: Forbidden",
+  "fab_decals": "error: HTTP Error 403: Forbidden",
+  "fab_quixel": "error: HTTP Error 403: Forbidden",
+  "oga_muzzle": "ok",
+  "oga_smoke": "ok",
+  "unity_labs_flipbooks": "ok",
+  "ambientcg_daysky020a": "ok",
+  "allsky_free": "error: HTTP Error 429: Too Many Requests"
+ },
+ "sketchfab": {
+  "lowpoly_rocks": {
+   "name": "Lowpoly Rocks - Free Download",
+   "licence": "CC Attribution",
+   "faces": 12599,
+   "downloadable": true,
+   "animations": 0,
+   "author": "Lo\u00efc Norgeot"
+  },
+  "forest_rock_kit": {
+   "name": "Forest Rock Kit PBR Game Ready",
+   "licence": "CC Attribution",
+   "faces": 5750,
+   "downloadable": true,
+   "animations": 0,
+   "author": "D3D"
+  },
+  "pine_pack": {
+   "name": "Low Poly Pine Tree - Pack",
+   "licence": "Standard",
+   "faces": 8983,
+   "downloadable": false,
+   "animations": 0,
+   "author": "\u0160imon Ustal"
+  },
+  "girder_bridge": {
+   "name": "Concrete Girder Beam Bridges/Tunnels [Free]",
+   "licence": "CC Attribution",
+   "faces": 890,
+   "downloadable": true,
+   "animations": 0,
+   "author": "JoTrain The Aussie \ud83c\udde6\ud83c\uddfa"
+  },
+  "truss_bridge": {
+   "name": "Bridge Truss structure",
+   "licence": "CC Attribution",
+   "faces": 749280,
+   "downloadable": true,
+   "animations": 0,
+   "author": "dchant design"
+  },
+  "metal_bridge_lowpoly": {
+   "name": "Stylised Low Poly - City Metal Bridge",
+   "licence": "CC Attribution",
+   "faces": 7384,
+   "downloadable": true,
+   "animations": 0,
+   "author": "remidoes3d"
+  },
+  "watch_tower_sef": {
+   "name": "Watch tower",
+   "licence": "CC Attribution",
+   "faces": 6122,
+   "downloadable": true,
+   "animations": 0,
+   "author": "_SeF_"
+  },
+  "watchtower_lofvu": {
+   "name": "Abandoned Watchtower",
+   "licence": "CC Attribution",
+   "faces": 4024,
+   "downloadable": true,
+   "animations": 0,
+   "author": "Lofvu"
+  },
+  "oil_rig_benkos": {
+   "name": "Oil Rig - Low Poly",
+   "licence": "CC Attribution",
+   "faces": 58620,
+   "downloadable": true,
+   "animations": 0,
+   "author": "Benkos"
+  },
+  "oil_rig_poseidon": {
+   "name": "Poseidon/Enclave Oil Rig  (low poly)",
+   "licence": "CC Attribution",
+   "faces": 52719,
+   "downloadable": true,
+   "animations": 0,
+   "author": "G\u00f6tz von Berlichingen"
+  },
+  "oil_troll_a": {
+   "name": "Oil Platform Troll A",
+   "licence": "CC Attribution",
+   "faces": 133809,
+   "downloadable": true,
+   "animations": 0,
+   "author": "Arkikon"
+  },
+  "battlefield_pack": {
+   "name": "Battlefield Pack",
+   "licence": "CC Attribution",
+   "faces": 27965,
+   "downloadable": true,
+   "animations": 0,
+   "author": "Blenderust"
+  },
+  "sandbag_2048": {
+   "name": "Weathered Sandbag - 2048px\u00b2",
+   "licence": "CC Attribution",
+   "faces": 21568,
+   "downloadable": true,
+   "animations": 0,
+   "author": "Mark Peters"
+  },
+  "warehouse_free": {
+   "name": "Warehouse FBX Model Free",
+   "licence": "CC Attribution",
+   "faces": 11106,
+   "downloadable": true,
+   "animations": 0,
+   "author": "Nicholas-3D"
+  },
+  "container_lowpoly": {
+   "name": "Container (Low Poly)",
+   "licence": "CC Attribution",
+   "faces": 732,
+   "downloadable": true,
+   "animations": 0,
+   "author": "youssefjoukeh"
+  },
+  "container_classic": {
+   "name": "Classic Shipping Container (Free/Gameready)",
+   "licence": "CC Attribution",
+   "faces": 17110,
+   "downloadable": true,
+   "animations": 0,
+   "author": "Sebastian Webster"
+  },
+  "m24_custom": {
+   "name": "Custom M24 Sniper Rifle",
+   "licence": "CC Attribution",
+   "faces": 3800334,
+   "downloadable": true,
+   "animations": 0,
+   "author": "Naudaff3D"
+  },
+  "remington_lowpoly": {
+   "name": "low-poly Remington 700",
+   "licence": "CC Attribution",
+   "faces": 3072,
+   "downloadable": true,
+   "animations": 0,
+   "author": "D_U"
+  },
+  "fps_arm_ik": {
+   "name": "FPS ARM IK RIGGED",
+   "licence": "CC Attribution",
+   "faces": 13470,
+   "downloadable": true,
+   "animations": 0,
+   "author": "socklessnight"
+  }
+ }
+}
