@@ -17,15 +17,16 @@ namespace SniperDuel.Game.World
     {
         /// <summary>Eyepiece to eye at the cheek weld, metres.</summary>
         const float EyeRelief = 0.075f;
-        /// <summary>Shouldered, head up off the stock: where the eyepiece sits in the camera's frame.</summary>
-        static readonly Vector3 ReadyOffset = new Vector3(0.075f, -0.062f, 0.2f);
-        static readonly Vector3 ReadyTilt = new Vector3(-1.2f, -2.4f, 5f);
         /// <summary>
-        /// The same with the hands: out to the right and a little further off, the barrel turned in
-        /// toward the middle of the screen, so the gloved hand on the fore-end is in view.
+        /// Shouldered, head up off the stock: where the eyepiece sits in the camera's frame. Straight
+        /// below the eye with the bore parallel to the view, so the rifle points where the crosshair
+        /// is and raising it to the eye looks exactly there.
         /// </summary>
-        static readonly Vector3 ArmsReadyOffset = new Vector3(0.11f, -0.12f, 0.34f);
-        static readonly Vector3 ArmsReadyTilt = new Vector3(6f, -9f, 6f);
+        static readonly Vector3 ReadyOffset = new Vector3(0, -0.06f, 0.16f);
+        static readonly Vector3 ReadyTilt = Vector3.zero;
+        /// <summary>The same with the hands, a little lower so the gloved hand on the fore-end shows.</summary>
+        static readonly Vector3 ArmsReadyOffset = new Vector3(0, -0.075f, 0.17f);
+        static readonly Vector3 ArmsReadyTilt = Vector3.zero;
 
         /// <summary>The first-person asset: rifle and arms, posed holding the rifle in its rest pose.</summary>
         const string ArmsModel = "fps_sniper_arms";
@@ -84,10 +85,9 @@ namespace SniperDuel.Game.World
             float t = Mathf.SmoothStep(0, 1, Mathf.Clamp01(raise));
             var tilt = Quaternion.Euler(Vector3.Lerp(arms ? ArmsReadyTilt : ReadyTilt, Vector3.zero, t));
             var at = Vector3.Lerp(arms ? ArmsReadyOffset : ReadyOffset, new Vector3(0, 0, EyeRelief), t);
-            // The rifle comes up in a slight arc: lifted, then drawn back to the cheek.
+            // The rifle comes straight up the line of sight, drawn back to the cheek; it never swings off the crosshair.
             float arc = Mathf.Sin(t * Mathf.PI);
-            at += new Vector3(-0.01f * arc, 0.008f * arc, 0.02f * arc);
-            tilt = Quaternion.Euler(0, 0, -3f * arc) * tilt;
+            at += new Vector3(0, 0.004f * arc, 0.01f * arc);
             // Breathing drift while the eye is off the scope.
             float calm = 1 - t;
             at += new Vector3(Mathf.Sin(clock * 0.9f) * 0.0012f, Mathf.Sin(clock * 1.7f) * 0.0018f, 0) * calm;
