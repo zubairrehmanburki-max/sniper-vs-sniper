@@ -66,7 +66,7 @@ jobs:
     needs: [core, assets, licence]
     if: needs.licence.outputs.ok == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 170
     steps:
       - uses: actions/checkout@v4
       # The Unity editor image is ~15 GB unpacked; the runner's preinstalled SDKs leave too little room.
@@ -132,7 +132,7 @@ jobs:
     needs: [core, assets, licence]
     if: needs.licence.outputs.ok == 'true' && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
       # The Unity editor image is ~15 GB unpacked; the runner's preinstalled SDKs leave too little room.
@@ -179,7 +179,7 @@ jobs:
     needs: ios
     if: github.event_name == 'workflow_dispatch' && inputs.testflight
     runs-on: macos-26 # Apple requires the iOS 26 SDK (Xcode 26) for uploads
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
