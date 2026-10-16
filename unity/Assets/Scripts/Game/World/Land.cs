@@ -150,7 +150,7 @@ namespace SniperDuel.Game.World
                 Resolution = 1024,
                 Layers = new[]
                 {
-                    ("aerial_grass_rock", "sparse_grass", 16f, new Color(0.9f, 0.94f, 0.8f)),
+                    ("sparse_grass", "sparse_grass", 10f, new Color(0.86f, 0.9f, 0.74f)),
                     ("rocky_terrain_02", "rocky_terrain_02", 12f, new Color(0.9f, 0.9f, 0.92f)),
                     ("cliff_side", "aerial_rocks_02", 20f, new Color(0.85f, 0.86f, 0.9f)),
                     ("snow_field_aerial", "snow_02", 14f, new Color(0.95f, 0.96f, 0.99f)),

@@ -283,26 +283,25 @@ namespace SniperDuel.Game.World
         }
 
         /// <summary>
-        /// A rifle model as the asset set has it: its real length in metres, which way its muzzle
-        /// points as imported, and parts to leave off (spare magazines, night sights).
+        /// A rifle model as the asset set has it: its real length in metres and parts to leave off
+        /// (night sights).
         /// </summary>
         sealed class RifleSpec
         {
             public float Length;
-            public Vector3 Muzzle;
             public string[] Hide = System.Array.Empty<string>();
         }
 
         static readonly Dictionary<string, RifleSpec> Armory = new Dictionary<string, RifleSpec>
         {
-            ["rifle_m40a5"] = new RifleSpec { Length = 1.12f, Muzzle = Vector3.forward },
-            ["rifle_fn_spr"] = new RifleSpec { Length = 1.06f, Muzzle = Vector3.back },
-            ["rifle_l115a3_hd"] = new RifleSpec { Length = 1.3f, Muzzle = Vector3.forward, Hide = new[] { "night_" } },
-            ["rifle_hecate"] = new RifleSpec { Length = 1.38f, Muzzle = Vector3.left },
-            ["rifle_sv98m"] = new RifleSpec { Length = 1.2f, Muzzle = Vector3.forward },
-            ["rifle_mosin"] = new RifleSpec { Length = 1.23f, Muzzle = Vector3.back },
-            ["rifle_timberwolf"] = new RifleSpec { Length = 1.2f, Muzzle = Vector3.zero },
-            ["rifle_l118a1"] = new RifleSpec { Length = 1.18f, Muzzle = Vector3.left },
+            ["rifle_m40a5"] = new RifleSpec { Length = 1.12f },
+            ["rifle_fn_spr"] = new RifleSpec { Length = 1.06f },
+            ["rifle_l115a3_hd"] = new RifleSpec { Length = 1.3f, Hide = new[] { "night_" } },
+            ["rifle_hecate"] = new RifleSpec { Length = 1.38f },
+            ["rifle_sv98m"] = new RifleSpec { Length = 1.2f },
+            ["rifle_mosin"] = new RifleSpec { Length = 1.23f },
+            ["rifle_timberwolf"] = new RifleSpec { Length = 1.2f },
+            ["rifle_l118a1"] = new RifleSpec { Length = 1.18f },
         };
 
         /// <summary>Every rifle model the asset set offers, for the range's display benches.</summary>
@@ -386,20 +385,18 @@ namespace SniperDuel.Game.World
                 foreach (var r in rs)
                     if (r.enabled && r != main && !body.Intersects(r.bounds)) r.enabled = false;
             }
-            var b = Enabled(rifle);
-            // Muzzle forward: from the model's known layout, else the slimmer end of its long axis.
-            var muzzle = spec.Muzzle;
-            if (muzzle == Vector3.zero)
+            foreach (var r in rs)
             {
-                if (b.size.x > b.size.z) rifle.transform.localRotation = Quaternion.Euler(0, 90, 0);
-                if (StockAhead(rifle, inner)) rifle.transform.localRotation = Quaternion.Euler(0, 180, 0) * rifle.transform.localRotation;
+                if (r.enabled) continue;
+                var mf = r.GetComponent<MeshFilter>();
+                DestroyImmediate(r);
+                if (mf != null) DestroyImmediate(mf);
             }
-            else rifle.transform.localRotation = Quaternion.Inverse(Quaternion.LookRotation(muzzle, Vector3.up));
-            b = Enabled(rifle);
+            Orient(rifle, inner);
+            var b = Enabled(rifle);
             if (b.size.z > 1e-4f) rifle.transform.localScale *= spec.Length / b.size.z;
             b = Enabled(rifle);
             rifle.transform.position -= b.center - inner.position;
-            foreach (var r in rs) if (!r.enabled) DestroyImmediate(r);
 
             // Mark the stock: by name where the model names its parts, else by colour, unless it is
             // one material (a single atlas tells nothing apart).
@@ -417,6 +414,46 @@ namespace SniperDuel.Game.World
                 }
             }
             return inner.gameObject;
+        }
+
+        /// <summary>
+        /// Lays a rifle model level along +z of `frame` whatever axes it was exported with: its
+        /// long axis onto z, its thin side across x, the bulky stock end to the rear, and the
+        /// stock hanging below the bore (the butt drops below the barrel's line on every rifle).
+        /// </summary>
+        static void Orient(GameObject rifle, Transform frame)
+        {
+            var t = rifle.transform;
+            var b = Enabled(rifle);
+            if (b.size.y > b.size.x && b.size.y > b.size.z) t.localRotation = Quaternion.Euler(90, 0, 0) * t.localRotation;
+            else if (b.size.x > b.size.z) t.localRotation = Quaternion.Euler(0, 90, 0) * t.localRotation;
+            b = Enabled(rifle);
+            if (b.size.x > b.size.y) t.localRotation = Quaternion.Euler(0, 0, 90) * t.localRotation;
+            if (StockAhead(rifle, frame)) t.localRotation = Quaternion.Euler(0, 180, 0) * t.localRotation;
+            // Upright: the rear of the rifle (the stock) sits lower than its muzzle.
+            float zMin = float.MaxValue, zMax = float.MinValue;
+            var pts = new List<Vector3>();
+            foreach (var mf in rifle.GetComponentsInChildren<MeshFilter>())
+            {
+                if (mf.sharedMesh == null || !mf.sharedMesh.isReadable || mf.GetComponent<Renderer>() == null) continue;
+                var v = mf.sharedMesh.vertices;
+                for (int i = 0; i < v.Length; i += 3)
+                {
+                    var p = frame.InverseTransformPoint(mf.transform.TransformPoint(v[i]));
+                    pts.Add(p);
+                    zMin = Mathf.Min(zMin, p.z);
+                    zMax = Mathf.Max(zMax, p.z);
+                }
+            }
+            if (pts.Count == 0) return;
+            float len = zMax - zMin, rear = 0, front = 0;
+            int nr = 0, nf = 0;
+            foreach (var p in pts)
+            {
+                if (p.z < zMin + len * 0.15f) { rear += p.y; nr++; }
+                else if (p.z > zMax - len * 0.08f) { front += p.y; nf++; }
+            }
+            if (nr > 0 && nf > 0 && rear / nr > front / nf) t.localRotation = Quaternion.Euler(0, 0, 180) * t.localRotation;
         }
 
         /// <summary>Bounds of the renderers still shown under an object.</summary>

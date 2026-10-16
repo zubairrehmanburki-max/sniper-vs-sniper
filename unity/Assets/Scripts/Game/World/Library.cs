@@ -205,8 +205,9 @@ namespace SniperDuel.Game.World
             var nor = Tex(src, "normalTexture") ?? Tex(src, "_BumpMap");
             if (nor != null) m.SetTexture("_BumpMap", nor);
             float rough = src != null && src.HasProperty("roughnessFactor") ? src.GetFloat("roughnessFactor") : 0.7f;
-            float metalFactor = src != null && src.HasProperty("metallicFactor") ? src.GetFloat("metallicFactor") : 0;
-            var mask = Repack(Tex(src, "metallicRoughnessTexture"), Tex(src, "occlusionTexture"), metal);
+            float metalFactor = src != null && src.HasProperty("metallicFactor") ? src.GetFloat("metallicFactor") : Tex(src, "metallicRoughnessTexture") != null ? 1 : 0;
+            // glTF scales the map's metal by metallicFactor (often 0 on scanned rock and cloth).
+            var mask = Repack(Tex(src, "metallicRoughnessTexture"), Tex(src, "occlusionTexture"), metal * metalFactor);
             if (mask != null)
             {
                 m.SetTexture("_MetallicGlossMap", mask);
