@@ -1,7 +1,8 @@
 name: Asset previews
 
-# Downloads preview images for candidate free assets (tools/asset-previews/urls.json: {"key": "url"})
-# and publishes them, resized, to the `screens` branch under asset-previews/ for review.
+# Candidate free assets for review: preview images (tools/asset-previews/urls*.json) go to the
+# `screens` branch under asset-previews/; the models and packs themselves (glbs.json, pages.json)
+# go to the `asset-candidates` prerelease so they can be inspected offline.
 on:
   workflow_dispatch:
   push:
@@ -16,22 +17,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  fetch:
+  download:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download previews
+      - name: Download candidates
         env:
           SKETCHFAB_API_TOKEN: ${{ secrets.SKETCHFAB_API_TOKEN }}
+        run: python3 tools/asset-previews/download.py "$RUNNER_TEMP/dl"
+      - name: Publish to the asset-candidates prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          pip install -q pillow
-          python3 tools/asset-previews/fetch.py tools/asset-previews/urls2.json "$RUNNER_TEMP/previews"
-      - name: Publish to the screens branch
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git fetch origin screens
-          git worktree add -B screens ../screens origin/screens
-          mkdir -p ../screens/asset-previews
-          cp -r "$RUNNER_TEMP/previews/." ../screens/asset-previews/
-          cd ../screens && git add -A && git commit -qm "Asset previews for $GITHUB_SHA" && git push -q origin screens
+          cat "$RUNNER_TEMP/dl/download-report.json"
+          gh release view asset-candidates >/dev/null 2>&1 || gh release create asset-candidates --prerelease --title "Asset candidates" --notes "Free assets downloaded for inspection (not shipped)." --target "$GITHUB_SHA"
+          gh release upload asset-candidates "$RUNNER_TEMP"/dl/* --clobber
