@@ -1,0 +1,154 @@
+{
+ "status": {
+  "m24": "ok",
+  "sv98m": "ok",
+  "kar98k": "ok",
+  "mosin": "ok",
+  "awm": "ok",
+  "m700": "ok",
+  "sniper_fps_anim": "ok",
+  "fp_arms_djmaesen": "ok",
+  "hand_gloves": "ok",
+  "ghillie_sniper": "ok",
+  "ghillie_suits": "ok",
+  "soldier_bamen": "ok",
+  "soldier_asshair": "ok",
+  "soldier_propshop": "ok",
+  "current_soldier": "ok",
+  "current_rifle": "ok",
+  "svd_unity": "ok",
+  "lowpoly_shooter_unity": "ok",
+  "fps_arms_oga": "ok",
+  "ual_quaternius": "error: unknown url type: '/assets/images/fullres/universalanimationlibrary.jpg'"
+ },
+ "sketchfab": {
+  "m24": {
+   "name": "M24 Sniper Rifle",
+   "licence": "CC Attribution",
+   "faces": 1152920,
+   "downloadable": true,
+   "animations": 0,
+   "author": "Naudaff3D"
+  },
+  "sv98m": {
+   "name": "SV-98M Sniper rifle",
+   "licence": "CC Attribution",
+   "faces": 21032,
+   "downloadable": true,
+   "animations": 0,
+   "author": "AlexFinsher"
+  },
+  "kar98k": {
+   "name": "Kar98k Free Model",
+   "licence": "CC Attribution",
+   "faces": 10699,
+   "downloadable": true,
+   "animations": 0,
+   "author": "Danya"
+  },
+  "mosin": {
+   "name": "Mosin Nagant",
+   "licence": "CC Attribution",
+   "faces": 11780,
+   "downloadable": true,
+   "animations": 0,
+   "author": "Kelisei Ventura"
+  },
+  "awm": {
+   "name": "AWM Sniper Rifle",
+   "licence": "CC Attribution",
+   "faces": 22446,
+   "downloadable": true,
+   "animations": 0,
+   "author": "UnSkillZ"
+  },
+  "m700": {
+   "name": "Remington M700-Light Sniper",
+   "licence": "CC Attribution",
+   "faces": 5497,
+   "downloadable": true,
+   "animations": 0,
+   "author": "CastleBravo"
+  },
+  "sniper_fps_anim": {
+   "name": "SNIPER FPS ANIMATION",
+   "licence": "CC Attribution",
+   "faces": 21840,
+   "downloadable": true,
+   "animations": 1,
+   "author": "BURNER"
+  },
+  "fp_arms_djmaesen": {
+   "name": "First Person arms",
+   "licence": "CC Attribution",
+   "faces": 7240,
+   "downloadable": true,
+   "animations": 0,
+   "author": "DJMaesen"
+  },
+  "hand_gloves": {
+   "name": "Hand With Gloves",
+   "licence": "CC Attribution",
+   "faces": 20538,
+   "downloadable": true,
+   "animations": 0,
+   "author": "JUST"
+  },
+  "ghillie_sniper": {
+   "name": "Ghillie Suit Sniper",
+   "licence": "CC Attribution",
+   "faces": 713551,
+   "downloadable": true,
+   "animations": 1,
+   "author": "SpatialNeglect"
+  },
+  "ghillie_suits": {
+   "name": "Full Ghillie Suits",
+   "licence": "CC Attribution",
+   "faces": 42748,
+   "downloadable": true,
+   "animations": 1,
+   "author": "darlak97"
+  },
+  "soldier_bamen": {
+   "name": "FREE [Military Soldier] RIGGED",
+   "licence": "CC Attribution",
+   "faces": 11104,
+   "downloadable": true,
+   "animations": 0,
+   "author": "BAMEN"
+  },
+  "soldier_asshair": {
+   "name": "Soldier. Game Ready",
+   "licence": "CC Attribution",
+   "faces": 66772,
+   "downloadable": true,
+   "animations": 1,
+   "author": "asshair365"
+  },
+  "soldier_propshop": {
+   "name": "Captain Price",
+   "licence": "CC Attribution",
+   "faces": 27630,
+   "downloadable": true,
+   "animations": 0,
+   "author": "PropShop\u2122"
+  },
+  "current_soldier": {
+   "name": "Military tactical suit (LowPolyGameReady)",
+   "licence": "CC Attribution",
+   "faces": 31771,
+   "downloadable": true,
+   "animations": 1,
+   "author": "DanlyVostok"
+  },
+  "current_rifle": {
+   "name": "Low-Poly L115A3",
+   "licence": "CC Attribution",
+   "faces": 8132,
+   "downloadable": true,
+   "animations": 0,
+   "author": "TastyTony"
+  }
+ }
+}
