@@ -57,8 +57,11 @@ namespace SniperDuel.Game.World
             var go = new GameObject("Practice plates");
             go.transform.SetParent(parent, false);
             var p = go.AddComponent<Plates>();
-            p.paint = Library.Plain(new Color(0.9f, 0.9f, 0.86f), 0.3f, 0.15f);
-            p.orange = Library.Plain(new Color(0.95f, 0.42f, 0.08f), 0.3f, 0.15f);
+            // Fresh range paint: flat, bright, with a touch of its own light so a plate in shade still reads.
+            p.paint = Library.Glow(new Color(0.92f, 0.92f, 0.88f), new Color(0.22f, 0.22f, 0.21f));
+            p.orange = Library.Glow(new Color(0.95f, 0.42f, 0.08f), new Color(0.24f, 0.1f, 0.02f));
+            p.paint.SetFloat("_Smoothness", 0.15f);
+            p.orange.SetFloat("_Smoothness", 0.15f);
             p.frame = Library.Plain(new Color(0.2f, 0.21f, 0.2f), 0.3f, 0.6f);
             p.bare = Library.Plain(new Color(0.34f, 0.35f, 0.36f), 0.55f, 0.8f);
             return p;

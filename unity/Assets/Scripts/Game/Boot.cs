@@ -339,6 +339,7 @@ namespace SniperDuel.Game
             var b = map.Spots.B[0];
             var chestB = Combat.EyeOf(b, Stance.Prone, Config);
             var o = Aimed(a, Stance.Prone, new Vec3(chestB.X, chestB.Y + 1.2, chestB.Z));
+            Debug.Log($"[Capture] review shot: {o.Impact.Kind} after {o.Impact.T:0.000} s at {Library.ToUnity(o.Impact.Point)}, {o.Trajectory.Points.Count} points");
             foreach (var (label, screen, at) in new[] { ("Shot-Trace", "Scope", 0.35f), ("Shot-Trace-Far", "Scope", 0.8f), ("Shot-Trace-Eye", "Aim", 0.25f) })
             {
                 Frame(screen);
@@ -360,6 +361,26 @@ namespace SniperDuel.Game
             yield return Shoot(dir, next, "Shot-Enemy", 3);
             yield return Shoot(dir, next, "Shot-Enemy-Later", 12);
             Destroy(enemyShot.gameObject);
+            // The same two from the side, close, to judge the effects themselves: the enemy's
+            // muzzle blast from 8 m, and your round's trace from 6 m off its path.
+            ui.HideAll();
+            Frame("");
+            rig.Current = CameraRig.Mode.Director;
+            rig.Cam.fieldOfView = 40;
+            var muzzle = Library.ToUnity(Combat.EyeOf(b, Stance.Prone, Config));
+            rig.Cam.transform.position = muzzle + new Vector3(7, 2, -4);
+            rig.Cam.transform.LookAt(muzzle);
+            enemyShot = World.Effects.Shot(back, false, arena);
+            yield return Shoot(dir, next, "Shot-Blast-Side", 6);
+            Destroy(enemyShot.gameObject);
+            var mid = o.Trajectory.Points[o.Trajectory.Points.Count / 3];
+            var midAt = Library.ToUnity(SniperDuel.Rules.World.ShotToWorld(mid, o.Eye, o.Yaw));
+            rig.Cam.transform.position = midAt + new Vector3(6, 1.5f, -14);
+            rig.Cam.transform.LookAt(midAt);
+            var side = World.Effects.Shot(o, true, arena);
+            side.Seek((float)mid.T);
+            yield return Shoot(dir, next, "Shot-Trace-Side", 3);
+            Destroy(side.gameObject);
             ui.HideAll();
             Frame("");
             Time.captureDeltaTime = 0;

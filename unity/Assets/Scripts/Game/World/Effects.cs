@@ -248,7 +248,7 @@ namespace SniperDuel.Game.World
             var g = new Gradient();
             var c = new Color(0.86f, 0.88f, 0.9f);
             g.SetKeys(new[] { new GradientColorKey(c, 0), new GradientColorKey(c, 1) },
-                new[] { new GradientAlphaKey(0, 0), new GradientAlphaKey(0.16f, 0.55f), new GradientAlphaKey(0.32f, 0.92f), new GradientAlphaKey(0.12f, 1) });
+                new[] { new GradientAlphaKey(0, 0), new GradientAlphaKey(0.26f, 0.55f), new GradientAlphaKey(0.5f, 0.92f), new GradientAlphaKey(0.2f, 1) });
             line.colorGradient = g;
             // Thin at the round, wider where the disturbed air has spread.
             line.widthCurve = new AnimationCurve(new Keyframe(0, 1.6f), new Keyframe(0.7f, 1.1f), new Keyframe(1, 0.6f));
@@ -307,7 +307,7 @@ namespace SniperDuel.Game.World
             // A couple of pixels wide wherever it is, however far away and whatever the zoom.
             float pixel = cam != null ? 2 * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad) / Mathf.Max(1, cam.pixelHeight) : 0.001f;
             float range = Vector3.Distance(eye, at);
-            line.widthMultiplier = Mathf.Max(0.006f, range * pixel * 1.6f);
+            line.widthMultiplier = Mathf.Max(0.006f, range * pixel * 2.2f);
             float travelled = Vector3.Distance(Library.ToUnity(o.Eye), at);
             // Clear of the muzzle blast before it shows, gone over the last metres before the strike.
             float alpha = Mathf.Clamp01((travelled - 25) / 60f) * Mathf.Clamp01((float)(end - head) / 0.08f + 0.25f);
@@ -325,9 +325,9 @@ namespace SniperDuel.Game.World
             line.enabled = alpha > 0.01f && t < end;
             var gr = line.colorGradient;
             var keys = gr.alphaKeys;
-            keys[1].alpha = 0.16f * alpha;
-            keys[2].alpha = 0.32f * alpha;
-            keys[3].alpha = 0.12f * alpha;
+            keys[1].alpha = 0.26f * alpha;
+            keys[2].alpha = 0.5f * alpha;
+            keys[3].alpha = 0.2f * alpha;
             gr.alphaKeys = keys;
             line.colorGradient = gr;
         }
