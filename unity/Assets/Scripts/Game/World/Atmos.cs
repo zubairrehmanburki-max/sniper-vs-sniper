@@ -32,9 +32,9 @@ namespace SniperDuel.Game.World
         /// <summary>A clear-day photo that suits a map better than the default: snow light, dust, high summer cloud.</summary>
         static readonly Dictionary<string, string> MapSkies = new Dictionary<string, string>
         {
-            ["alpine-ridge"] = "snow_field_puresky",
+            ["alpine-ridge"] = "pizzo_pernice_puresky",
             ["training-lane"] = "sunflowers_puresky",
-            ["watchtowers"] = "qwantani_noon_puresky",
+            ["watchtowers"] = "kloofendal_38d_partly_cloudy_puresky",
         };
 
         static float hazeDensity;
@@ -57,6 +57,8 @@ namespace SniperDuel.Game.World
             string id = "";
             var candidates = new List<string>(Photos[kind]);
             if (kind == SkyKind.Clear && MapSkies.TryGetValue(map.Id, out var own)) candidates.Insert(0, own);
+            // The photo each map used before its own was added, should the download lack the new one.
+            if (map.Id == "alpine-ridge") candidates.Insert(1, "snow_field_puresky");
             foreach (var candidate in candidates)
             {
                 sky = Resources.Load<Material>("Materials/Sky-" + candidate);

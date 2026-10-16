@@ -150,7 +150,8 @@ namespace SniperDuel.Game.World
                 Resolution = 1024,
                 Layers = new[]
                 {
-                    ("sparse_grass", "sparse_grass", 10f, new Color(0.86f, 0.9f, 0.74f)),
+                    // Leafy_grass tinted green reads as alpine pasture; sparse_grass alone is mostly dry earth.
+                    ("leafy_grass", "sparse_grass", 8f, new Color(0.4f, 0.5f, 0.28f)),
                     ("rocky_terrain_02", "rocky_terrain_02", 12f, new Color(0.9f, 0.9f, 0.92f)),
                     ("cliff_side", "aerial_rocks_02", 20f, new Color(0.85f, 0.86f, 0.9f)),
                     ("snow_field_aerial", "snow_02", 14f, new Color(0.95f, 0.96f, 0.99f)),
@@ -182,7 +183,7 @@ namespace SniperDuel.Game.World
                 Resolution = 1024,
                 Layers = new[]
                 {
-                    ("sparse_grass", "sparse_grass", 8f, new Color(0.95f, 1.04f, 0.86f)),
+                    ("leafy_grass", "sparse_grass", 7f, new Color(0.36f, 0.5f, 0.24f)),
                     ("gravelly_sand", "coast_sand_rocks_02", 5f, new Color(0.92f, 0.9f, 0.86f)),
                     ("forest_ground_04", "brown_mud_leaves_01", 9f, White),
                     ("rocky_terrain_02", "rocky_terrain_02", 14f, White),
@@ -248,6 +249,30 @@ namespace SniperDuel.Game.World
                     w[3] = rock;
                 },
             },
+            // A drowned marsh in farmland: black mud and leaf litter at the waterline, rough wet
+            // meadow up the shores, drier grass on the knolls, forest floor under the woods.
+            "watchtowers" => new Soil
+            {
+                Resolution = 1024,
+                Layers = new[]
+                {
+                    ("brown_mud_leaves_01", "brown_mud_leaves_01", 6f, new Color(0.62f, 0.58f, 0.5f)),
+                    ("leafy_grass", "sparse_grass", 7f, new Color(0.36f, 0.5f, 0.24f)),
+                    ("sparse_grass", "sparse_grass", 9f, new Color(0.62f, 0.7f, 0.44f)),
+                    ("forest_ground_04", "brown_mud_leaves_01", 8f, new Color(0.8f, 0.8f, 0.72f)),
+                },
+                Mix = (x, s, y, slope, n1, n2, water, w) =>
+                {
+                    float mud = Mathf.Clamp01(1 - (y - water - 0.6f) / 1.4f);
+                    float r = new Vector2(x * 0.75f, s - 225).magnitude;
+                    float wood = Mathf.Clamp01((r - 470) / 30) * Mathf.Clamp01((n1 - 0.38f) * 4) * (1 - mud);
+                    float dry = Mathf.Clamp01((n2 - 0.55f) * 3) * (1 - mud) * (1 - wood);
+                    w[0] = mud * 2;
+                    w[1] = Mathf.Max(0, 1 - mud - wood - dry);
+                    w[2] = dry;
+                    w[3] = wood * 1.5f;
+                },
+            },
             // Elsewhere: wet sand at the waterline, grass on gentle slopes, rock on steep ones, leaf litter in hollows.
             _ => new Soil
             {
@@ -291,6 +316,24 @@ namespace SniperDuel.Game.World
                 mat.SetFloat("_BumpScale", 0.75f);
                 mat.SetFloat("_DetailNormalMapScale", 0.45f);
                 mat.SetColor("_BaseColor", new Color(0.07f, 0.11f, 0.1f));
+            }
+            if (map.Id == "oil-rigs")
+            {
+                // Open North Sea: a long swell under a short wind chop, slate grey-green, so the surface
+                // doesn't repeat in a fine pattern to the horizon.
+                mat.SetTextureScale("_BaseMap", Vector2.one / 70f);
+                mat.SetTextureScale("_DetailAlbedoMap", Vector2.one / 17f);
+                mat.SetFloat("_BumpScale", 1.1f);
+                mat.SetFloat("_DetailNormalMapScale", 0.6f);
+                mat.SetColor("_BaseColor", new Color(0.06f, 0.09f, 0.1f));
+            }
+            if (map.Id == "watchtowers")
+            {
+                // Still, peaty marsh water: dark brown-green, the faintest ripple.
+                mat.SetTextureScale("_BaseMap", Vector2.one / 30f);
+                mat.SetFloat("_BumpScale", 0.45f);
+                mat.SetFloat("_DetailNormalMapScale", 0.3f);
+                mat.SetColor("_BaseColor", new Color(0.07f, 0.08f, 0.05f));
             }
             var go = mb.Object("Water", mat, parent, shadows: false);
             go.GetComponent<MeshRenderer>().receiveShadows = true;

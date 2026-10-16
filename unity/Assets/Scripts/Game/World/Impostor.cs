@@ -279,17 +279,27 @@ namespace SniperDuel.Game.World
         public sealed class Field
         {
             readonly Card card;
+            readonly Material mat;
             readonly float size;
             readonly List<Vector3> v = new List<Vector3>();
             readonly List<Vector3> n = new List<Vector3>();
             readonly List<Vector2> uv = new List<Vector2>();
             readonly List<int> t = new List<int>();
 
-            /// <summary>A field whose plants stand `height` metres tall at scale 1, whatever the model's size.</summary>
-            public Field(Card card, float height)
+            /// <summary>
+            /// A field whose plants stand `height` metres tall at scale 1, whatever the model's size;
+            /// `tint` washes the picture (sun-dried scrub, frosted grass) on a copy of its material.
+            /// </summary>
+            public Field(Card card, float height, Color? tint = null)
             {
                 this.card = card;
                 size = height / Mathf.Max(0.1f, card.Height);
+                mat = card.Mat;
+                if (tint is Color c)
+                {
+                    mat = new Material(card.Mat) { name = card.Mat.name + " tinted" };
+                    mat.SetColor("_BaseColor", c);
+                }
             }
             public int Count { get; private set; }
 
@@ -332,7 +342,7 @@ namespace SniperDuel.Game.World
                 go.transform.SetParent(parent, false);
                 go.AddComponent<MeshFilter>().sharedMesh = m;
                 var r = go.AddComponent<MeshRenderer>();
-                r.sharedMaterial = card.Mat;
+                r.sharedMaterial = mat;
                 r.shadowCastingMode = ShadowCastingMode.Off;
                 return go;
             }

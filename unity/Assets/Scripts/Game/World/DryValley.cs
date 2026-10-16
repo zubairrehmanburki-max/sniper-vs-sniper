@@ -26,10 +26,16 @@ namespace SniperDuel.Game.World
             float length = (float)map.LaneLength;
 
             var rock = Library.Rock(3, new Color(1f, 0.86f, 0.72f));
-            Biomes.Cover(map, root, new Biomes.CoverKit { Rock = rock });
+            Biomes.Cover(map, root, new Biomes.CoverKit
+            {
+                Rock = rock,
+                Scans = new[] { "namaqualand_boulder_03", "namaqualand_boulder_05", "namaqualand_boulder_02", "namaqualand_boulder_04" },
+                ScanTint = Bleached,
+            });
 
             Outcrops(map, root, rng, lane, Y);
             Scrub(root, rng, lane, length, Y);
+            Veld(map, root, rng, lane, length, Y);
             Poles(root, rng, Y);
 
             // Ruins: an adobe farmstead by the track, a smaller one across the valley, and a gutted
@@ -53,7 +59,8 @@ namespace SniperDuel.Game.World
                 MinHeight = 90,
                 MaxHeight = 280,
                 Mesa = true,
-                Rock = Library.Rock(60, new Color(1f, 0.82f, 0.64f)),
+                // Darker and warmer than the floor, so the mesas stand out of the haze instead of fading white.
+                Rock = Library.Rock(60, new Color(0.86f, 0.64f, 0.48f)),
                 Seed = 34,
                 Ground = Y,
             });
@@ -112,6 +119,92 @@ namespace SniperDuel.Game.World
             var stone = Library.Rock(3, new Color(1f, 0.86f, 0.72f));
             boulders.Object("Boulders", stone, root);
             pebbles.Object("Pebbles", stone, root, shadows: false);
+        }
+
+        /// <summary>The Namaqualand granite scans, warmed a touch toward the valley's sandstone.</summary>
+        static readonly Color Bleached = new Color(1.06f, 0.95f, 0.84f);
+
+        /// <summary>
+        /// The desert's living ground from the Namaqualand scans: rooibos and thorn bushes in clumps
+        /// along the wash and the foot of the ridges, sun-dried bunch grass, low succulents, quiver
+        /// trees and taaibos standing alone on the slopes, granite boulders and boulder piles on the
+        /// ridges and the lane's edges, and dead branches lying about. Only succulents a hand high
+        /// grow in the lane, never right in front of a spot.
+        /// </summary>
+        static void Veld(DuelMap map, Transform root, System.Random rng, Biomes.Lane lane, float length, System.Func<float, float, float> Y)
+        {
+            float R(float a, float b) => a + (float)rng.NextDouble() * (b - a);
+            var straw = new Color(1.02f, 0.86f, 0.58f);
+            var flora = new Wilds.Flora()
+                .Kind("grass_medium_02", 0.55f, straw).Kind("grass_medium_01", 0.6f, straw)
+                .Kind("quiver_tree_01", null, new Color(1.04f, 0.98f, 0.9f)).Kind("quiver_tree_02", null, new Color(1.04f, 0.98f, 0.9f))
+                .Kind("cheiridopsis_succulent", 0.14f);
+            var bushes = flora.Available("wild_rooibos_bush", "didelta_spinosa", "searsia_lucida");
+            var grass = flora.Available("grass_medium_02", "grass_medium_01");
+            var trees = flora.Available("quiver_tree_01", "quiver_tree_02", "searsia_lucida");
+            bool Off(float x, float s, float margin) => !lane.Contains(x, s, margin) && Mathf.Abs(x - TrackX(s)) > 4 && Biomes.NearestSpot(map, x, s) > 12 + margin;
+
+            // Bushes in clumps: thickest in the wash, along the track and where the ridges begin.
+            Wilds.Clumps(flora, rng, bushes, 170, 6, 10, () =>
+            {
+                float x = R(-650, 650), s = R(-500, length + 600);
+                float q = (s - 430) / 70;
+                bool wet = Mathf.Exp(-q * q) > 0.3f, foot = Mathf.Abs(Mathf.Abs(x) - 110) < 50;
+                if (!wet && !foot && rng.NextDouble() > 0.35) return null;
+                return Off(x, s, 6) ? new Vector2(x, s) : (Vector2?)null;
+            }, (x, s) => Off(x, s, 3), Y, 0.6f, 1.25f, 0.08f);
+            // Bunch grass everywhere off the lane, and a margin of it up to the lane's edges.
+            Wilds.Clumps(flora, rng, grass, 420, 10, 7, () =>
+            {
+                float x = R(-560, 560), s = R(-400, length + 500);
+                return Off(x, s, 2) ? new Vector2(x, s) : (Vector2?)null;
+            }, (x, s) => Off(x, s, 0), Y, 0.6f, 1.3f, 0.03f);
+            // Lone trees on the slopes, none in the valley floor's sight lines.
+            for (int i = 0, n = 0; trees.Length > 0 && i < 600 && n < 46; i++)
+            {
+                float x = (rng.Next(2) == 0 ? -1 : 1) * R(90, 700), s = R(-450, length + 500);
+                if (!Off(x, s, 20)) continue;
+                n++;
+                flora.Plant(trees[rng.Next(trees.Length)], new Vector3(x, Y(x, s) - 0.1f, s), R(0, 360), R(0.75f, 1.3f), rng.Next(2) == 0);
+            }
+            // Succulents a hand high scattered over the lane floor, clear of every spot.
+            for (int i = 0; i < 420; i++)
+            {
+                float x = R(-70, 70), s = R(-40, length + 40);
+                if (Biomes.NearestSpot(map, x, s) < 7) continue;
+                flora.Plant("cheiridopsis_succulent", new Vector3(x, Y(x, s) - 0.02f, s), R(0, 360), R(0.7f, 1.1f), rng.Next(2) == 0);
+            }
+            flora.Build(root, "Veld");
+
+            // Granite: single boulders along the lane's edges and over the flats, piles and cliffs on the ridges.
+            var tinted = new Dictionary<Material, Material>();
+            var single = Wilds.Present("namaqualand_boulder_02", "namaqualand_boulder_03", "namaqualand_boulder_04", "namaqualand_boulder_05");
+            for (int i = 0, n = 0; single.Length > 0 && i < 800 && n < 44; i++)
+            {
+                bool edge = n % 3 == 0;
+                float x = (rng.Next(2) == 0 ? -1 : 1) * (edge ? R(lane.HalfWidth + 6, lane.HalfWidth + 40) : R(lane.HalfWidth + 20, 420));
+                float s = R(-300, length + 300);
+                if (!Off(x, s, 6)) continue;
+                n++;
+                Wilds.Rock(single[n % single.Length], new Vector3(x, Y(x, s), s), R(0, 360), edge ? R(1.4f, 3.2f) : R(2, 6), root, Bleached, tinted, 0.22f);
+            }
+            var piles = Wilds.Present("namaqualand_boulders_01", "namaqualand_cliff_01");
+            for (int i = 0, n = 0; piles.Length > 0 && i < 600 && n < 16; i++)
+            {
+                float x = (rng.Next(2) == 0 ? -1 : 1) * R(130, 650), s = R(-500, length + 600);
+                if (!Off(x, s, 30)) continue;
+                n++;
+                string id = piles[n % piles.Length];
+                Wilds.Rock(id, new Vector3(x, Y(x, s), s), R(0, 360), id.Contains("cliff") ? R(18, 34) : R(8, 16), root, Bleached, tinted, 0.25f);
+            }
+            var deadwood = Wilds.Present("dry_branches_medium_01");
+            for (int i = 0, n = 0; deadwood.Length > 0 && i < 300 && n < 30; i++)
+            {
+                float x = (rng.Next(2) == 0 ? -1 : 1) * R(lane.HalfWidth + 4, 260), s = R(-200, length + 200);
+                if (!Off(x, s, 4)) continue;
+                n++;
+                Wilds.Rock(deadwood[0], new Vector3(x, Y(x, s), s), R(0, 360), R(1.5f, 3), root, new Color(0.95f, 0.88f, 0.8f), tinted, 0.05f);
+            }
         }
 
         static void Boulder(MeshBuilder mb, System.Random rng, float x, float s, float size, System.Func<float, float, float> Y)

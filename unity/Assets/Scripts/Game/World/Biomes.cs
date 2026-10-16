@@ -97,6 +97,10 @@ namespace SniperDuel.Game.World
             /// <summary>Boulders whose top is above this height get a cap of snow.</summary>
             public float SnowAbove = float.MaxValue;
             public CoverLook Default = CoverLook.Rock;
+            /// <summary>Scanned boulders to draw rock cover with (the first downloaded ones); none: procedural boulders.</summary>
+            public string[] Scans = System.Array.Empty<string>();
+            /// <summary>Colour wash over the scans (sun-bleached sandstone, cold granite).</summary>
+            public Color? ScanTint;
         }
 
         /// <summary>
@@ -114,6 +118,8 @@ namespace SniperDuel.Game.World
             var concrete = new MeshBuilder();
             var ground = map.Terrain ?? map.Ground;
             int seed = 1;
+            var scans = Wilds.Present(kit.Scans);
+            var tinted = new Dictionary<Material, Material>();
             foreach (var box in map.Cover)
             {
                 if (skip != null && skip(box)) continue;
@@ -125,6 +131,12 @@ namespace SniperDuel.Game.World
                     low = Mathf.Min(low, (float)ground(b.center.x + dx * b.extents.x, -(b.center.z + dz * b.extents.z)) - 0.15f);
                 switch (box.Look ?? kit.Default)
                 {
+                    case CoverLook.Rock when scans.Length > 0:
+                        // A scanned boulder stretched over the box, with a cap of snow up high.
+                        Wilds.FitRock(scans[seed % scans.Length], b, low, seed, root, kit.ScanTint, tinted);
+                        if (kit.Snow != null && b.max.y > kit.SnowAbove)
+                            Boulder(snow, new Vector3(b.center.x, b.max.y - 0.02f, b.center.z), new Vector3(b.size.x * 0.75f, 0.16f, b.size.z * 0.7f), seed + 50, 0.7f, 0.1f, 0);
+                        break;
                     case CoverLook.Rock:
                         // A boxy boulder a little larger than its box, so no corner of the box is bare air.
                         var size = Vector3.Scale(new Vector3(b.size.x, b.max.y - low, b.size.z), new Vector3(1.14f, 1.03f, 1.18f));

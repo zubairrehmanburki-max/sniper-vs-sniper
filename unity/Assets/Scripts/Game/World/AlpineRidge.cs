@@ -6,7 +6,7 @@ namespace SniperDuel.Game.World
 {
     /// <summary>
     /// Alpine Ridge: a meadow shoulder (A) across a forested gully to a snowfield below the summit
-    /// (B). Fir forest on the lower flanks (scanned firs near the lane, low-poly firs beyond), scree
+    /// (B). Spruce forest on the lower flanks with young firs at its edges, bunch grass, scree
     /// and boulders, crags on the far flanks, a stone-and-timber hut under the snow line near B and
     /// a hay barn behind A, and three ranges of rock-and-snow peaks on the horizon, hazier and
     /// bluer with distance.
@@ -26,7 +26,14 @@ namespace SniperDuel.Game.World
             var snow = Snow(4, new Color(0.95f, 0.96f, 0.99f), 0.7f);
             var rock = Library.Rock(3, new Color(0.84f, 0.86f, 0.9f));
 
-            Biomes.Cover(map, root, new Biomes.CoverKit { Rock = rock, Snow = snow, SnowAbove = SnowLine });
+            Biomes.Cover(map, root, new Biomes.CoverKit
+            {
+                Rock = rock,
+                Snow = snow,
+                SnowAbove = SnowLine,
+                Scans = new[] { "boulder_01", "rock_09", "namaqualand_boulder_04", "rock_07" },
+                ScanTint = new Color(0.9f, 0.92f, 0.96f),
+            });
 
             // Huts: one under the snow line on B's flank, a hay barn on the meadow behind A.
             var huts = new HutKit();
@@ -188,53 +195,94 @@ namespace SniperDuel.Game.World
         }
 
         /// <summary>
-        /// Firs in clumps below the tree line on slopes a tree can hold. The nearest ones to either
-        /// firing position are the scanned model; the rest are low-poly cones merged into one mesh.
+        /// Spruce forest in clumps below the tree line on slopes a tree can hold, drawn as cut-out
+        /// pictures of the scanned spruce (hundreds for the cost of a few meshes), young firs and
+        /// pines along the forest edges and out on the meadow, and low-poly cones only on the
+        /// farthest slopes or if the spruce wasn't downloaded. The meadow itself gets bunch grass
+        /// in clumps and stumps where the forest was felled.
         /// </summary>
         static void Forest(DuelMap map, Transform root, System.Random rng, Biomes.Lane lane, float length, System.Func<float, float, float> Y, Vector3[] huts)
         {
+            float R(float lo, float hi) => lo + (float)rng.NextDouble() * (hi - lo);
             var needles = new MeshBuilder();
             var trunks = new MeshBuilder();
             var a = new Vector2(0, (float)map.Zones.A.Front);
             var b = new Vector2(0, (float)map.Zones.B.Front);
-            int models = 0, cones = 0;
-            for (int i = 0; i < 30000 && cones < 800; i++)
+            var flora = new Wilds.Flora()
+                .Kind("spruce", 20)
+                .Kind("grass_medium_01", 0.5f, new Color(0.92f, 0.96f, 0.86f)).Kind("grass_medium_02", 0.45f, new Color(0.92f, 0.96f, 0.86f));
+            bool spruce = flora.Has("spruce");
+            var young = flora.Available("fir_sapling_medium", "pine_sapling_medium");
+            var grass = flora.Available("grass_medium_01", "grass_medium_02");
+            bool ClearOfHuts(float x, float s)
             {
-                float x = (rng.Next(2) == 0 ? -1 : 1) * (70 + (float)rng.NextDouble() * 800);
-                float s = -700 + (float)rng.NextDouble() * (length + 1400);
+                foreach (var h in huts) if (new Vector2(x - h.x, s - h.z).magnitude < 16) return false;
+                return true;
+            }
+            int trees = 0, cones = 0;
+            for (int i = 0; i < 40000 && trees + cones < 2600; i++)
+            {
+                float x = (rng.Next(2) == 0 ? -1 : 1) * (70 + (float)rng.NextDouble() * 900);
+                float s = -800 + (float)rng.NextDouble() * (length + 1600);
                 if (lane.Contains(x, s, 14)) continue;
-                // Woods grow in clumps with meadow between.
-                if (Mathf.PerlinNoise(x * 0.009f + 3.1f, s * 0.009f + 7.7f) < 0.58f) continue;
+                if (Mathf.PerlinNoise(x * 0.009f + 3.1f, s * 0.009f + 7.7f) < 0.52f) continue;
                 float y = Y(x, s);
-                if (y > SnowLine + 12 + (float)rng.NextDouble() * 10 || Slope(Y, x, s) > 32) continue;
-                bool clear = true;
-                foreach (var h in huts) clear &= new Vector2(x - h.x, s - h.z).magnitude > 16;
-                if (!clear) continue;
+                if (y > SnowLine + 12 + (float)rng.NextDouble() * 10 || Slope(Y, x, s) > 32 || !ClearOfHuts(x, s)) continue;
                 float height = 12 + (float)rng.NextDouble() * 14;
                 var p = new Vector2(x, s);
                 float near = Mathf.Min((p - a).magnitude, (p - b).magnitude);
-                if (near < 380 && models < 48)
+                if (spruce && near < 1300)
                 {
-                    Biomes.PlaceSized("fir_tree_01", new Vector3(x, y, s), (float)rng.NextDouble() * 360, height, root, 0.3f);
-                    models++;
+                    flora.Plant("spruce", new Vector3(x, y - 0.3f, s), R(0, 360), height / 20, rng.Next(2) == 0);
+                    trees++;
                 }
-                else if (near > 300)
+                else
                 {
                     Biomes.Fir(needles, trunks, new Vector3(x, y, s), height);
                     cones++;
                 }
+                // Young trees seed out from the forest edge.
+                if (young.Length > 0 && rng.NextDouble() < 0.25)
+                {
+                    float yx = x + R(-14, 14), ys = s + R(-14, 14);
+                    if (!lane.Contains(yx, ys, 12) && ClearOfHuts(yx, ys) && Y(yx, ys) < SnowLine + 6)
+                        flora.Plant(young[rng.Next(young.Length)], new Vector3(yx, Y(yx, ys) - 0.1f, ys), R(0, 360), R(0.7f, 1.6f), rng.Next(2) == 0);
+                }
             }
-            needles.Object("Far firs", Library.Plain(new Color(0.06f, 0.11f, 0.07f), 0.12f), root, shadows: false);
-            trunks.Object("Far fir trunks", Library.Plain(new Color(0.16f, 0.12f, 0.09f), 0.1f), root, shadows: false);
+            // Bunch grass on the meadow and the gully floor, off the lane and clear of the spots.
+            Wilds.Clumps(flora, rng, grass, 380, 10, 6, () =>
+            {
+                float x = R(-520, 520), s = R(-400, length + 300);
+                if (lane.Contains(x, s, 2) || Biomes.NearestSpot(map, x, s) < 10) return null;
+                return Y(x, s) < SnowLine - 6 && Slope(Y, x, s) < 26 ? new Vector2(x, s) : (Vector2?)null;
+            }, (x, s) => !lane.Contains(x, s, 0) && Biomes.NearestSpot(map, x, s) > 8 && Y(x, s) < SnowLine - 4, Y, 0.7f, 1.3f, 0.03f);
+            flora.Build(root, "Forest");
+            Debug.Log($"[AlpineRidge] {trees} spruce pictures, {cones} far cones");
+            if (cones > 0)
+            {
+                needles.Object("Far firs", Library.Plain(new Color(0.06f, 0.11f, 0.07f), 0.12f), root, shadows: false);
+                trunks.Object("Far fir trunks", Library.Plain(new Color(0.16f, 0.12f, 0.09f), 0.1f), root, shadows: false);
+            }
+
+            // Stumps and a fallen trunk or two where the forest meets the meadow.
+            var tinted = new Dictionary<Material, Material>();
+            var logs = Wilds.Present("tree_stump_01", "dead_tree_trunk_02");
+            for (int i = 0, n = 0; logs.Length > 0 && i < 600 && n < 18; i++)
+            {
+                float x = (rng.Next(2) == 0 ? -1 : 1) * R(lane.HalfWidth + 8, 300), s = R(-200, length + 200);
+                if (Y(x, s) > SnowLine - 4 || !ClearOfHuts(x, s)) continue;
+                n++;
+                string id = logs[n % logs.Length];
+                Wilds.Rock(id, new Vector3(x, Y(x, s), s), R(0, 360), id.StartsWith("tree_stump") ? R(0.8f, 1.3f) : R(6, 10), root, null, tinted, 0.05f);
+            }
         }
 
-        /// <summary>Scanned rock faces on the steeper ground, crags far out on the flanks, and a scatter of scree boulders (snow-capped up high).</summary>
         static void Rocks(Transform root, System.Random rng, Biomes.Lane lane, float length, System.Func<float, float, float> Y, Material rock, Material snow)
         {
             var cool = new Dictionary<Material, Material>();
-            string[] ids = { "rock_face_01", "coast_rocks_01", "coast_rocks_03" };
+            string[] ids = Wilds.Present("rock_face_01", "rock_moss_set_01", "coast_rocks_03", "rock_moss_set_02", "coast_rocks_01");
             int placed = 0;
-            for (int i = 0; i < 600 && placed < 24; i++)
+            for (int i = 0; ids.Length > 0 && i < 600 && placed < 34; i++)
             {
                 float x = (rng.Next(2) == 0 ? -1 : 1) * (85 + (float)rng.NextDouble() * 600);
                 float s = -500 + (float)rng.NextDouble() * (length + 1000);

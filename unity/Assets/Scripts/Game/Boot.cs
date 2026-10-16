@@ -318,11 +318,26 @@ namespace SniperDuel.Game
                 if (arena != null) Destroy(arena.Root.gameObject);
                 try { BuildArena(id); }
                 catch (Exception e) { Debug.LogException(e); continue; }
-                foreach (var (label, screen) in new[] { ("Menu", "Title"), ("Eye", "Hud") })
+                foreach (var (label, screen) in new[] { ("Menu", "Title"), ("Eye", "Hud"), ("Scope", "Scope") })
                 {
                     Frame(screen);
                     for (int f = 0; f < 8; f++) yield return null;
                     ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"{++n:00}-Map-{id}-{label}.png"));
+                    yield return null;
+                    yield return new WaitForEndOfFrame();
+                }
+                // Standing at the player's spot looking out over the flank: the ground cover and set
+                // pieces beside the lane, at the distance a player sees them.
+                if (arena != null)
+                {
+                    var eye = Library.ToUnity(Combat.EyeOf(arena.Map.Spots.A[0], Stance.Standing, Config));
+                    Frame("");
+                    rig.Current = CameraRig.Mode.Director;
+                    rig.Cam.fieldOfView = 50;
+                    rig.Cam.transform.position = eye + Vector3.up * 0.4f;
+                    rig.Cam.transform.LookAt(eye + new Vector3(-70, -6, 90));
+                    for (int f = 0; f < 6; f++) yield return null;
+                    ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"{++n:00}-Map-{id}-Flank.png"));
                     yield return null;
                     yield return new WaitForEndOfFrame();
                 }

@@ -99,6 +99,7 @@ namespace SniperDuel.Game.World
             }
             // Water and steel reflect the finished scene; the probe renders once per map.
             arena.Sky.Probe.RenderProbe();
+            Debug.Log($"[Arena] {map.Id}: {Wilds.Triangles(root.gameObject):N0} triangles");
             return arena;
         }
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using SniperDuel.Rules;
 using UnityEngine;
 
@@ -186,12 +187,82 @@ namespace SniperDuel.Game.World
             Pier(wood, rng, ground, water, 62, lane + 60, lane + 420);
             Pier(wood, rng, ground, water, -58, -60, -420);
 
+            Shores(map, root, rng, Y, InCorridor, lane, water);
+
             green.Object("Reeds", Cloth(new Color(0.40f, 0.45f, 0.21f)), root, shadows: false);
             straw.Object("Dead reeds", Cloth(new Color(0.64f, 0.56f, 0.36f)), root, shadows: false);
             heads.Object("Bulrush heads", Library.Plain(new Color(0.22f, 0.13f, 0.07f), 0.15f), root, shadows: false);
             mud.Object("Mud banks", Library.Surface("brown_mud_leaves_01", 4, new Color(0.62f, 0.56f, 0.46f)), root, shadows: false);
             wood.Object("Dead wood", Library.Surface("weathered_planks", 3, new Color(0.64f, 0.62f, 0.57f)), root);
             wire.Object("Fence wire", Library.Plain(new Color(0.2f, 0.12f, 0.08f), 0.3f, 0.5f), root, shadows: false);
+        }
+
+        /// <summary>
+        /// The land round the marsh: a fringe of shrubs, ferns and tussock grass where the mud meets
+        /// the meadow, alder and willow woods in clumps up the shores (thick enough to close the view
+        /// behind each tower), fallen trunks and stumps at the wood edges, and low wooded hills
+        /// on the horizon.
+        /// </summary>
+        static void Shores(DuelMap map, Transform root, System.Random rng, System.Func<float, float, float> Y,
+            System.Func<float, float, float, bool> inCorridor, float lane, float water)
+        {
+            float R(float a, float b) => a + (float)rng.NextDouble() * (b - a);
+            // Distance out from the marsh's middle, in the terrain's own stretched measure.
+            float Ring(float x, float s) => new Vector2(x * 0.75f, s - 225).magnitude;
+            var flora = new Wilds.Flora()
+                .Kind("island_tree_01", 13).Kind("island_tree_02", 12).Kind("island_tree_03", 12).Kind("tree_small_02", 8)
+                .Kind("shrub_01", 1.6f).Kind("shrub_02", 1.5f).Kind("shrub_03", 1.4f).Kind("shrub_04", 1.3f);
+            var trees = flora.Available("island_tree_02", "island_tree_03", "island_tree_01", "tree_small_02");
+            var shrubs = flora.Available("shrub_01", "shrub_02", "shrub_03", "shrub_04");
+            var tussock = flora.Available("grass_medium_01", "grass_medium_02", "fern_02");
+
+            // Woods: clumps on the shores beyond the waterline, a few strays on the meadow between them.
+            Wilds.Clumps(flora, rng, trees, 150, 14, 40, () =>
+            {
+                float a = R(0, 2 * Mathf.PI), r = R(480, 1500);
+                float x = Mathf.Cos(a) * r / 0.75f, s = 225 + Mathf.Sin(a) * r;
+                if (Mathf.PerlinNoise(x * 0.004f + 3.3f, s * 0.004f + 8.1f) < 0.4f) return null;
+                return new Vector2(x, s);
+            }, (x, s) => Ring(x, s) > 470 && Y(x, s) > water + 1.2f, Y, 0.75f, 1.25f, 0.3f);
+            // The wood edge on the shore: shrubs and tussocks in a ragged band where mud meets meadow.
+            Wilds.Clumps(flora, rng, shrubs, 160, 7, 9, () =>
+            {
+                float a = R(0, 2 * Mathf.PI), r = R(430, 520);
+                float x = Mathf.Cos(a) * r / 0.75f, s = 225 + Mathf.Sin(a) * r;
+                return Y(x, s) > water + 0.3f && !inCorridor(x, s, 8) ? new Vector2(x, s) : (Vector2?)null;
+            }, (x, s) => Y(x, s) > water + 0.2f && !inCorridor(x, s, 4), Y, 0.6f, 1.3f);
+            // Tussocks and ferns along the waterline and on the mud islets out in the marsh.
+            Wilds.Clumps(flora, rng, tussock, 320, 9, 6, () =>
+            {
+                float x = R(-560, 560), s = R(-260, lane + 260);
+                float y = Y(x, s);
+                return y > water - 0.1f && y < water + 1.5f && !inCorridor(x, s, 6) ? new Vector2(x, s) : (Vector2?)null;
+            }, (x, s) => Y(x, s) > water - 0.15f && !inCorridor(x, s, 3), Y, 0.8f, 1.4f, 0.02f);
+            flora.Build(root, "Shore plants");
+
+            // Fallen trunks and stumps along the wood edges.
+            var tinted = new Dictionary<Material, Material>();
+            string[] logs = Wilds.Present("dead_tree_trunk", "dead_tree_trunk_02", "tree_stump_01");
+            for (int i = 0, n = 0; logs.Length > 0 && i < 400 && n < 22; i++)
+            {
+                float a = R(0, 2 * Mathf.PI), r = R(445, 560);
+                float x = Mathf.Cos(a) * r / 0.75f, s = 225 + Mathf.Sin(a) * r;
+                float y = Y(x, s);
+                if (y < water + 0.2f || inCorridor(x, s, 10)) continue;
+                n++;
+                string id = logs[n % logs.Length];
+                Wilds.Rock(id, new Vector3(x, y, s), R(0, 360), id.StartsWith("tree_stump") ? R(0.8f, 1.4f) : R(5, 9), root, null, tinted, 0.05f);
+            }
+
+            // Low wooded hills where the farmland rolls away, so the far shore has a skyline.
+            Biomes.Horizon(root, lane / 2, new Biomes.Hills
+            {
+                MinHeight = 40,
+                MaxHeight = 120,
+                Rock = Library.Surface("sparse_grass", 60, new Color(0.42f, 0.52f, 0.36f)),
+                Seed = 52,
+                Ground = Y,
+            });
         }
 
         /// <summary>A double-sided foliage material (the flag cloth template) in a flat colour.</summary>

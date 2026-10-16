@@ -14,6 +14,8 @@ namespace SniperDuel.Game.World
     {
         /// <summary>Lane distances of the two firing lines (the middle of each side's spots) and the service road's x.</summary>
         public const float LineA = 70, LineB = 581, RoadX = 84;
+        /// <summary>Where the hedge runs, just outside the foot of each side berm (|x|).</summary>
+        const float Hedge = 110;
 
         public static void Build(DuelMap map, Transform root, List<Flag> flags)
         {
@@ -43,17 +45,7 @@ namespace SniperDuel.Game.World
             hut.Object("Range huts", Library.Surface("concrete_wall_008", 4, new Color(0.86f, 0.84f, 0.78f)), root);
             tin.Object("Range hut roofs", Library.Surface("corrugated_iron_02", 2, new Color(0.7f, 0.72f, 0.74f)), root);
 
-            // Woods on the hills either side.
-            int planted = 0;
-            for (int i = 0; i < 2000 && planted < 44; i++)
-            {
-                float x = (rng.Next(2) == 0 ? -1 : 1) * (130 + (float)rng.NextDouble() * 520);
-                float s = -350 + (float)rng.NextDouble() * (length + 700);
-                if (lane.Contains(x, s, 30) || Mathf.PerlinNoise(x * 0.012f, s * 0.012f) < 0.45f) continue;
-                string id = rng.Next(3) == 0 ? "island_tree_01" : "fir_tree_01";
-                Biomes.PlaceSized(id, new Vector3(x, Y(x, s), s), (float)rng.NextDouble() * 360, 9 + (float)rng.NextDouble() * 9, root, 0.3f);
-                planted++;
-            }
+            Woods(map, root, rng, lane, length, Y);
 
             Biomes.Horizon(root, length / 2, new Biomes.Hills
             {
@@ -63,6 +55,61 @@ namespace SniperDuel.Game.World
                 Seed = 65,
                 Ground = Y,
             });
+        }
+
+        /// <summary>
+        /// Mixed woods on the hills either side (broadleaf and spruce, as cut-out pictures in clumps),
+        /// a hedge of shrubs along the outside of each side berm, rough grass in clumps everywhere off
+        /// the mown lane, and the clutter of a working range by the huts: old tyres, oil drums and a
+        /// generator.
+        /// </summary>
+        static void Woods(DuelMap map, Transform root, System.Random rng, Biomes.Lane lane, float length, System.Func<float, float, float> Y)
+        {
+            float R(float a, float b) => a + (float)rng.NextDouble() * (b - a);
+            var flora = new Wilds.Flora()
+                .Kind("island_tree_01", 13).Kind("island_tree_02", 12).Kind("island_tree_03", 12).Kind("tree_small_02", 8).Kind("spruce", 19)
+                .Kind("shrub_01", 1.6f).Kind("shrub_02", 1.5f).Kind("shrub_03", 1.5f).Kind("shrub_04", 1.3f)
+                .Kind("grass_medium_01", 0.55f).Kind("grass_medium_02", 0.5f);
+            var trees = flora.Available("island_tree_02", "island_tree_03", "spruce", "island_tree_01", "spruce", "tree_small_02");
+            var shrubs = flora.Available("shrub_01", "shrub_02", "shrub_03", "shrub_04");
+            var grass = flora.Available("grass_medium_01", "grass_medium_02", "grass_bermuda_01");
+            Wilds.Clumps(flora, rng, trees, 120, 16, 45, () =>
+            {
+                float x = (rng.Next(2) == 0 ? -1 : 1) * R(150, 1300), s = R(-900, length + 900);
+                return Mathf.PerlinNoise(x * 0.006f + 1.7f, s * 0.006f + 4.2f) > 0.42f ? new Vector2(x, s) : (Vector2?)null;
+            }, (x, s) => !lane.Contains(x, s, 70) && Mathf.Abs(x - RoadX) > 8, Y, 0.75f, 1.3f, 0.3f);
+            // A hedge line along the outside foot of each side berm.
+            foreach (float side in new[] { -1f, 1f })
+                for (float s = LineA - 60; s < LineB + 60 && shrubs.Length > 0; s += R(2.5f, 5))
+                {
+                    float x = side * R(Hedge - 2, Hedge + 3);
+                    if (Mathf.Abs(x - RoadX) < 6) continue;
+                    flora.Plant(shrubs[rng.Next(shrubs.Length)], new Vector3(x, Y(x, s) - 0.05f, s), R(0, 360), R(0.8f, 1.4f), rng.Next(2) == 0);
+                }
+            Wilds.Clumps(flora, rng, grass, 400, 10, 6, () =>
+            {
+                float x = R(-500, 500), s = R(-300, length + 300);
+                return !lane.Contains(x, s, 4) && Biomes.NearestSpot(map, x, s) > 12 ? new Vector2(x, s) : (Vector2?)null;
+            }, (x, s) => !lane.Contains(x, s, 2) && Mathf.Abs(x - RoadX) > 4, Y, 0.7f, 1.3f, 0.03f);
+            flora.Build(root, "Range woods");
+
+            // Clutter round the range huts.
+            var tinted = new Dictionary<Material, Material>();
+            foreach (var (hx, hs) in new[] { (-78f, LineA - 40), (72f, LineB + 36) })
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    float x = hx - 3.5f + R(-0.3f, 0.3f), s = hs + 2.6f - i * 0.9f;
+                    Wilds.Rock("old_tyre", new Vector3(x, Y(x, s), s), R(0, 360), 0.75f, root, null, tinted, 0);
+                }
+                for (int i = 0; i < 3; i++)
+                {
+                    float x = hx + 2.6f + i * 0.7f, s = hs - 2.3f + R(-0.2f, 0.2f);
+                    Wilds.Rock(rng.Next(2) == 0 ? "Barrel_02" : "barrel_03", new Vector3(x, Y(x, s), s), R(0, 360), 0.62f, root, null, tinted, 0);
+                }
+                float gx = hx - 2.8f, gs = hs - 2.4f;
+                Wilds.Rock("portable_generator", new Vector3(gx, Y(gx, gs), gs), R(0, 360), 0.9f, root, null, tinted, 0);
+            }
         }
 
         /// <summary>A rubber mat under each spot, benches under a canopy behind each line.</summary>

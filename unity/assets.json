@@ -45,6 +45,16 @@
       "id": "quarry_01_puresky",
       "res": "4k",
       "format": "exr"
+    },
+    {
+      "id": "pizzo_pernice_puresky",
+      "res": "4k",
+      "format": "exr"
+    },
+    {
+      "id": "kloofendal_38d_partly_cloudy_puresky",
+      "res": "4k",
+      "format": "exr"
     }
   ],
   "textures": [
@@ -397,6 +407,134 @@
     },
     {
       "id": "shrub_01",
+      "res": "1k"
+    },
+    {
+      "id": "namaqualand_boulder_02",
+      "res": "1k"
+    },
+    {
+      "id": "namaqualand_boulder_03",
+      "res": "1k"
+    },
+    {
+      "id": "namaqualand_boulder_04",
+      "res": "1k"
+    },
+    {
+      "id": "namaqualand_boulder_05",
+      "res": "1k"
+    },
+    {
+      "id": "namaqualand_boulders_01",
+      "res": "1k"
+    },
+    {
+      "id": "namaqualand_cliff_01",
+      "res": "1k"
+    },
+    {
+      "id": "quiver_tree_01",
+      "res": "1k"
+    },
+    {
+      "id": "quiver_tree_02",
+      "res": "1k"
+    },
+    {
+      "id": "searsia_lucida",
+      "res": "1k"
+    },
+    {
+      "id": "wild_rooibos_bush",
+      "res": "1k"
+    },
+    {
+      "id": "didelta_spinosa",
+      "res": "1k"
+    },
+    {
+      "id": "cheiridopsis_succulent",
+      "res": "1k"
+    },
+    {
+      "id": "dry_branches_medium_01",
+      "res": "1k"
+    },
+    {
+      "id": "grass_medium_01",
+      "res": "1k"
+    },
+    {
+      "id": "grass_medium_02",
+      "res": "1k"
+    },
+    {
+      "id": "grass_bermuda_01",
+      "res": "1k"
+    },
+    {
+      "id": "fern_02",
+      "res": "1k"
+    },
+    {
+      "id": "pine_sapling_medium",
+      "res": "1k"
+    },
+    {
+      "id": "fir_sapling_medium",
+      "res": "1k"
+    },
+    {
+      "id": "rock_moss_set_01",
+      "res": "1k"
+    },
+    {
+      "id": "rock_moss_set_02",
+      "res": "1k"
+    },
+    {
+      "id": "boulder_01",
+      "res": "1k"
+    },
+    {
+      "id": "rock_07",
+      "res": "1k"
+    },
+    {
+      "id": "rock_09",
+      "res": "1k"
+    },
+    {
+      "id": "tree_stump_01",
+      "res": "1k"
+    },
+    {
+      "id": "dead_tree_trunk",
+      "res": "1k"
+    },
+    {
+      "id": "dead_tree_trunk_02",
+      "res": "1k"
+    },
+    {
+      "id": "old_tyre",
+      "res": "1k"
+    },
+    {
+      "id": "Barrel_02",
+      "res": "1k"
+    },
+    {
+      "id": "portable_generator",
+      "res": "1k"
+    },
+    {
+      "id": "propane_tank",
+      "res": "1k"
+    },
+    {
+      "id": "exterior_aircon_unit",
       "res": "1k"
     }
   ],

@@ -25,7 +25,8 @@ namespace SniperDuel.Game.World
             // Rock along the waterline wherever the bank rises out of the water.
             string[] rocks = { "coastal_cliff_01", "coastal_cliff_02", "coastal_cliff_04", "coast_rocks_01", "coast_rocks_03", "rock_face_01" };
             // Twin Bridges has its own rip-rap and river front (Estuary) instead of the scanned cliffs.
-            if (open && map.Id != "twin-bridges")
+            // The marsh's shores are soft mud and reed (Marsh), not sea cliffs.
+            if (open && map.Id != "twin-bridges" && map.Id != "watchtowers")
             {
                 for (float s = -400; s < lane + 700; s += 85)
                 {
@@ -50,7 +51,7 @@ namespace SniperDuel.Game.World
 
             // Trees on the land beyond the banks, thinning with distance. Maps with their own biome plant their own.
             string[] trees = { "island_tree_01", "island_tree_01", "shrub_02" };
-            int planted = 0, toPlant = Biomes.Handles(map.Id) || map.Id == "twin-bridges" ? 0 : 70;
+            int planted = 0, toPlant = Biomes.Handles(map.Id) || map.Id is "twin-bridges" or "watchtowers" or "oil-rigs" ? 0 : 70;
             for (int i = 0; i < 2000 && planted < toPlant; i++)
             {
                 float x = ((float)rng.NextDouble() * 2 - 1) * 1400;
