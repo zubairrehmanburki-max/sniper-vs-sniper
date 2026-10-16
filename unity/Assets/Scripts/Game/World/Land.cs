@@ -321,11 +321,11 @@ namespace SniperDuel.Game.World
             {
                 // Open North Sea: a long swell under a short wind chop, slate grey-green, so the surface
                 // doesn't repeat in a fine pattern to the horizon.
-                mat.SetTextureScale("_BaseMap", Vector2.one / 70f);
-                mat.SetTextureScale("_DetailAlbedoMap", Vector2.one / 17f);
-                mat.SetFloat("_BumpScale", 1.1f);
-                mat.SetFloat("_DetailNormalMapScale", 0.6f);
-                mat.SetColor("_BaseColor", new Color(0.06f, 0.09f, 0.1f));
+                mat.SetTextureScale("_BaseMap", Vector2.one / 95f);
+                mat.SetTextureScale("_DetailAlbedoMap", Vector2.one / 23f);
+                mat.SetFloat("_BumpScale", 0.7f);
+                mat.SetFloat("_DetailNormalMapScale", 0.32f);
+                mat.SetColor("_BaseColor", new Color(0.07f, 0.1f, 0.11f));
             }
             if (map.Id == "watchtowers")
             {

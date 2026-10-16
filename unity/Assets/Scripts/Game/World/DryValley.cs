@@ -173,8 +173,12 @@ namespace SniperDuel.Game.World
             }
             // Succulents and sun-dried tufts a hand high over the lane floor, clear of the spots.
             Wilds.LaneCarpet(flora, map, lane, rng, new[] { "cheiridopsis_succulent" }, 14000, 0.7f, 1f, Y);
-            Wilds.LaneCarpet(flora, map, lane, rng, grass, 30000, 0.25f, 0.36f, Y, (x, s) => Mathf.Abs(x - TrackX(s)) > 3);
+            Wilds.LaneCarpet(flora, map, lane, rng, grass, 22000, 0.25f, 0.36f, Y, (x, s) => Mathf.Abs(x - TrackX(s)) > 3);
+            // Tufts in patches with bare sand between, and loose stones over the whole floor.
+            Wilds.LanePatches(flora, map, lane, rng, grass, 900, 22, 1.6f, 0.28f, 0.36f, Y, (x, s) => Mathf.Abs(x - TrackX(s)) > 3);
+            Wilds.LanePatches(flora, map, lane, rng, new[] { "cheiridopsis_succulent" }, 500, 14, 1.2f, 0.75f, 1f, Y);
             flora.Build(root, "Veld");
+            Wilds.LaneStones(root, map, lane, rng, Library.Rock(0.9f, new Color(0.96f, 0.82f, 0.68f)), 9000, Y);
 
             // Granite: single boulders along the lane's edges and over the flats, piles and cliffs on the ridges.
             var tinted = new Dictionary<Material, Material>();

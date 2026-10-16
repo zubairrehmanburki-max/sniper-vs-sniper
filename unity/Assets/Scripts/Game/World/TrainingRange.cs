@@ -92,8 +92,10 @@ namespace SniperDuel.Game.World
                 return !lane.Contains(x, s, 4) && Biomes.NearestSpot(map, x, s) > 12 ? new Vector2(x, s) : (Vector2?)null;
             }, (x, s) => !lane.Contains(x, s, 2) && Mathf.Abs(x - RoadX) > 4, Y, 0.7f, 1.3f, 0.03f);
             // Clover and short grass in the mown lane, a hand high.
-            Wilds.LaneCarpet(flora, map, lane, rng, grass, 24000, 0.22f, 0.3f, Y);
+            Wilds.LaneCarpet(flora, map, lane, rng, grass, 20000, 0.22f, 0.3f, Y);
+            Wilds.LanePatches(flora, map, lane, rng, grass, 600, 22, 1.5f, 0.26f, 0.32f, Y);
             flora.Build(root, "Range woods");
+            Wilds.LaneStones(root, map, lane, rng, Library.Rock(0.9f, new Color(0.74f, 0.72f, 0.68f)), 2500, Y, null, 0.3f);
 
             // Clutter round the range huts.
             var tinted = new Dictionary<Material, Material>();

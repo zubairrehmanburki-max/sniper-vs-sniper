@@ -142,6 +142,114 @@ namespace SniperDuel.Game.World
             return false;
         }
 
+        /// <summary>
+        /// Clumps of ground cover on the lane floor: `patches` centres anywhere LaneCarpet would plant,
+        /// each a tight patch of `per` tufts within `radius` m, so the cover reads as tufts and bare
+        /// ground at a prone eye rather than an even sprinkle of specks. Same limits as LaneCarpet.
+        /// </summary>
+        public static void LanePatches(Flora flora, SniperDuel.Rules.DuelMap map, Biomes.Lane lane, System.Random rng, string[] kinds,
+            int patches, int per, float radius, float scaleLo, float scaleHi, System.Func<float, float, float> Y, System.Func<float, float, bool>? keep = null)
+        {
+            Clumps(flora, rng, kinds, patches, per, radius, () => LanePoint(map, lane, rng, keep), (x, s) => LaneOk(map, x, s, keep), Y, scaleLo, scaleHi, 0.02f);
+        }
+
+        /// <summary>A random point on the lane floor (and 4 m past its sides and 30 m past its ends) where low cover may lie; null when refused.</summary>
+        public static Vector2? LanePoint(SniperDuel.Rules.DuelMap map, Biomes.Lane lane, System.Random rng, System.Func<float, float, bool>? keep = null)
+        {
+            float x = Mathf.Lerp(-lane.HalfWidth - 4, lane.HalfWidth + 4, (float)rng.NextDouble());
+            float s = Mathf.Lerp(lane.SMin - 30, lane.SMax + 30, (float)rng.NextDouble());
+            return LaneOk(map, x, s, keep) ? new Vector2(x, s) : (Vector2?)null;
+        }
+
+        /// <summary>A random point `rMin`..`rMax` m from a random spot, off the strip ahead of every spot; null when refused.</summary>
+        public static Vector2? NearSpot(SniperDuel.Rules.DuelMap map, System.Random rng, float rMin, float rMax)
+        {
+            var spots = map.Spots[rng.Next(2) == 0 ? SniperDuel.Rules.Side.A : SniperDuel.Rules.Side.B];
+            if (spots.Count == 0) return null;
+            var p = spots[rng.Next(spots.Count)];
+            float a = (float)rng.NextDouble() * 2 * Mathf.PI, d = Mathf.Lerp(rMin, rMax, (float)rng.NextDouble());
+            float x = (float)p.X + Mathf.Cos(a) * d, s = (float)-p.Z + Mathf.Sin(a) * d;
+            return Biomes.NearestSpot(map, x, s) >= rMin && !InFront(map, x, s) ? new Vector2(x, s) : (Vector2?)null;
+        }
+
+        /// <summary>
+        /// The lane floor's loose stones: cobbles and pebbles wherever LaneCarpet would plant, and
+        /// a scatter of small pebbles round the spots themselves (a shooter's own ground), all in `mat`.
+        /// </summary>
+        public static void LaneStones(Transform parent, SniperDuel.Rules.DuelMap map, Biomes.Lane lane, System.Random rng, Material mat, int count,
+            System.Func<float, float, float> Y, System.Func<float, float, bool>? keep = null, float sizeHi = 0.42f)
+        {
+            Stones(parent, "Lane stones", mat, rng, count, 0.05f, sizeHi, () => LanePoint(map, lane, rng, keep), Y);
+            Stones(parent, "Spot pebbles", mat, rng, count / 12, 0.04f, 0.16f, () =>
+            {
+                var at = NearSpot(map, rng, 2.2f, 6);
+                return at != null && (keep == null || keep(at.Value.x, at.Value.y)) ? at : null;
+            }, Y, 0.5f, 0.08f);
+        }
+
+        static bool LaneOk(SniperDuel.Rules.DuelMap map, float x, float s, System.Func<float, float, bool>? keep) =>
+            Biomes.NearestSpot(map, x, s) >= 6 && !InFront(map, x, s) && (keep == null || keep(x, s));
+
+        /// <summary>
+        /// Loose stones, all in one mesh: `count` faceted pebbles and cobbles `sizeLo`..`sizeHi` m across
+        /// (mostly small), each about `flat` as high as it is wide and half bedded in the ground, at points
+        /// `where` draws (null to reject). Real lit geometry, so they cast shadows and catch the sun at a
+        /// prone eye where a flat picture reads as a speck. No stone stands higher than `maxHeight`.
+        /// </summary>
+        public static GameObject? Stones(Transform parent, string name, Material mat, System.Random rng, int count, float sizeLo, float sizeHi,
+            System.Func<Vector2?> where, System.Func<float, float, float> Y, float flat = 0.5f, float maxHeight = 0.18f)
+        {
+            var mb = new MeshBuilder { UvScale = 1.5f };
+            float R() => (float)rng.NextDouble();
+            const int Segs = 6;
+            var low = new Vector3[Segs];
+            var mid = new Vector3[Segs];
+            int placed = 0;
+            for (int i = 0, tries = 0; placed < count && tries < count * 6; tries++)
+            {
+                var at = where();
+                if (at == null) continue;
+                float size = Mathf.Lerp(sizeLo, sizeHi, R() * R() * R());
+                float h = Mathf.Min(size * flat * Mathf.Lerp(0.6f, 1.2f, R()), maxHeight * 1.5f);
+                float yaw = R() * Mathf.PI * 2, stretch = Mathf.Lerp(0.65f, 1f, R());
+                // Bedded: the widest ring sits at ground level, a third of the stone below it.
+                var c = new Vector3(at.Value.x, Y(at.Value.x, at.Value.y) - h * 0.35f, at.Value.y);
+                Vector3 Ring(float a, float r, float y)
+                {
+                    float jr = r * Mathf.Lerp(0.78f, 1.15f, R());
+                    float lx = Mathf.Cos(a) * jr, lz = Mathf.Sin(a) * jr * stretch;
+                    return c + new Vector3(lx * Mathf.Cos(yaw) - lz * Mathf.Sin(yaw), y, lx * Mathf.Sin(yaw) + lz * Mathf.Cos(yaw));
+                }
+                for (int k = 0; k < Segs; k++)
+                {
+                    float a = k * 2 * Mathf.PI / Segs;
+                    low[k] = Ring(a, size * 0.5f, 0);
+                    mid[k] = Ring(a + Mathf.PI / Segs, size * 0.38f, h * Mathf.Lerp(0.55f, 0.75f, R()));
+                }
+                var top = Ring(R() * 6.28f, size * 0.12f * R(), h);
+                var centre = c + Vector3.up * h * 0.4f;
+                void Tri(Vector3 p, Vector3 q, Vector3 r)
+                {
+                    // Wind each facet outward, whatever order the rings were laid in.
+                    if (Vector3.Dot(Vector3.Cross(q - p, r - p), (p + q + r) / 3 - centre) < 0) (q, r) = (r, q);
+                    mb.Triangle(p, q, r);
+                }
+                for (int k = 0; k < Segs; k++)
+                {
+                    int n = (k + 1) % Segs;
+                    Tri(low[k], low[n], mid[k]);
+                    Tri(mid[k], low[n], mid[n]);
+                    Tri(mid[k], mid[n], top);
+                }
+                placed++;
+                i++;
+            }
+            if (mb.VertexCount == 0) return null;
+            var go = mb.Object(name, mat, parent);
+            Debug.Log($"[Wilds] {name}: {placed} stones");
+            return go;
+        }
+
         // ---- scanned rock ----------------------------------------------------------------------------
 
         /// <summary>The first `ids` that were downloaded.</summary>

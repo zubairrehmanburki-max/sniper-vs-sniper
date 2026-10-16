@@ -257,8 +257,10 @@ namespace SniperDuel.Game.World
                 return Y(x, s) < SnowLine - 6 && Slope(Y, x, s) < 26 ? new Vector2(x, s) : (Vector2?)null;
             }, (x, s) => !lane.Contains(x, s, 0) && Biomes.NearestSpot(map, x, s) > 8 && Y(x, s) < SnowLine - 4, Y, 0.7f, 1.3f, 0.03f);
             // Meadow grass over the lane floor too, cropped to a pebble's height, down to the gully.
-            Wilds.LaneCarpet(flora, map, lane, rng, grass, 36000, 0.32f, 0.44f, Y, (x, s) => Y(x, s) < SnowLine - 6);
+            Wilds.LaneCarpet(flora, map, lane, rng, grass, 28000, 0.32f, 0.44f, Y, (x, s) => Y(x, s) < SnowLine - 6);
+            Wilds.LanePatches(flora, map, lane, rng, grass, 900, 24, 1.8f, 0.36f, 0.44f, Y, (x, s) => Y(x, s) < SnowLine - 6);
             flora.Build(root, "Forest");
+            Wilds.LaneStones(root, map, lane, rng, Library.Rock(0.9f, new Color(0.78f, 0.78f, 0.76f)), 7000, Y);
             Debug.Log($"[AlpineRidge] {trees} spruce pictures, {cones} far cones");
             if (cones > 0)
             {

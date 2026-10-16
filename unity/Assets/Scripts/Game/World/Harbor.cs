@@ -36,6 +36,10 @@ namespace SniperDuel.Game.World
             /// <summary>Roof finishes and rooftop kit: ballast, felt, single-ply membrane, galvanised flashing, skylight glass, white dishes.</summary>
             public readonly MeshBuilder Gravel = new MeshBuilder(), Felt = new MeshBuilder(), Membrane = new MeshBuilder(), Flashing = new MeshBuilder();
             public readonly MeshBuilder Glass = new MeshBuilder(), White = new MeshBuilder();
+            /// <summary>Standing rainwater on the decks.</summary>
+            public readonly MeshBuilder Puddles = new MeshBuilder();
+            public Transform Root = null!;
+            public readonly Dictionary<Material, Material> Tinted = new Dictionary<Material, Material>();
             /// <summary>The sight corridor between the spots: rooftop kit never stands in it.</summary>
             public Biomes.Lane Lane;
         }
@@ -47,7 +51,7 @@ namespace SniperDuel.Game.World
             // Roof heights straight from the rules' ground, so the slab is where the shooter stands.
             float roofA = (float)ground(0, -20), roofB = (float)ground(0, -420);
 
-            var k = new Kit { Lane = Biomes.LaneOf(map) };
+            var k = new Kit { Lane = Biomes.LaneOf(map), Root = root };
             // Harbor-town facades: limestone, ochre, brick red, harbor blue-grey, pale render, dark glass.
             var tones = new[]
             {
@@ -78,6 +82,7 @@ namespace SniperDuel.Game.World
             k.Flashing.Object("Flashing", Library.Plain(new Color(0.6f, 0.62f, 0.63f), 0.45f, 0.6f), root);
             if (k.Glass.VertexCount > 0) k.Glass.Object("Skylights", Library.Plain(new Color(0.13f, 0.16f, 0.19f), 0.85f), root);
             if (k.White.VertexCount > 0) k.White.Object("Dishes", Library.Plain(new Color(0.8f, 0.8f, 0.78f), 0.4f), root);
+            if (k.Puddles.VertexCount > 0) k.Puddles.Object("Puddles", Library.Plain(new Color(0.05f, 0.055f, 0.06f), 0.96f), root, shadows: false);
             k.Roofs.Object("Roofs", Library.Plain(new Color(0.33f, 0.33f, 0.32f), 0.2f), root);
             k.Plant.Object("Rooftop plant", Library.Plain(new Color(0.62f, 0.64f, 0.63f), 0.35f, 0.3f), root);
             k.Iron.Object("Corrugated iron", Library.Surface("corrugated_iron_02", 3, new Color(0.62f, 0.66f, 0.7f)), root);
@@ -189,6 +194,67 @@ namespace SniperDuel.Game.World
             }
             foreach (var (x, ds, size, yaw) in new[] { (14f, 40f, 1.0f, 150f), (-22f, 40f, 0.7f, 200f), (40f, 40f, 1.2f, 170f) })
                 if (Clear(At(x, ds), size + 1)) Dish(k, At(x, ds), size, yaw);
+            RoofLife(map, k, rng, roof, s0, s1, side);
+        }
+
+        /// <summary>
+        /// What a working roof collects: rainwater standing in the low spots and felt patched over old
+        /// leaks across the whole deck (flat, so the zone stays open), and along the side strip
+        /// outside the zone a bank of condenser units on rails, a cable tray on posts by the parapet,
+        /// propane bottles and oil drums. The side strip lies outside every sight line: the zone
+        /// ends 42 m out and nothing stands nearer the middle than 43.5 m.
+        /// </summary>
+        static void RoofLife(DuelMap map, Kit k, System.Random rng, float roof, float s0, float s1, Side side)
+        {
+            float R(float a, float b) => a + (float)rng.NextDouble() * (b - a);
+            for (int i = 0; i < 34; i++)
+            {
+                var c = new Vector3(R(-BuildingHalfX + 3, BuildingHalfX - 3), roof + 0.002f, R(s0 + 3, s1 - 3));
+                if (Biomes.NearestSpot(map, c.x, c.z) < 1.5f) continue;
+                k.Puddles.Mound(c, R(0.5f, 2.6f), R(0.35f, 1.6f), 0.006f, rng, 0.4f, 2, 12);
+            }
+            for (int i = 0; i < 26; i++)
+            {
+                var c = new Vector3(R(-BuildingHalfX + 3, BuildingHalfX - 3), roof + 0.005f, R(s0 + 3, s1 - 3));
+                k.Felt.Box(c, new Vector3(R(0.6f, 2.6f), 0.01f, R(0.5f, 1.8f)), Quaternion.Euler(0, R(-20, 20), 0));
+            }
+
+            // The strip on the side away from the duct run.
+            float e = side == Side.A ? -1 : 1;
+            float x0 = e * 45.4f;
+            // Condensers in banks of four on a pair of steel rails.
+            for (float s = s0 + 10; s + 11 < s1 - 6; s += 13)
+            {
+                foreach (float rail in new[] { -0.35f, 0.35f })
+                    k.Steel.Box(new Vector3(x0 + rail, roof + 0.06f, s + 5), new Vector3(0.12f, 0.12f, 10.6f));
+                for (int u = 0; u < 4; u++)
+                    Upright("exterior_aircon_unit", new Vector3(x0, roof + 0.12f, s + 1.2f + u * 2.6f), 1.15f, k);
+            }
+            // Cable tray on posts along the inside of the parapet.
+            float xt = e * 47.6f;
+            k.Steel.Box(new Vector3(xt, roof + 0.4f, (s0 + s1) / 2), new Vector3(0.32f, 0.07f, s1 - s0 - 4));
+            for (float s = s0 + 2.5f; s < s1 - 2; s += 2.2f)
+                k.Steel.Box(new Vector3(xt, roof + 0.2f, s), new Vector3(0.06f, 0.4f, 0.06f));
+            // Propane bottles in a pair by the back corner, oil drums along the strip.
+            float back = side == Side.A ? s0 + 4 : s1 - 4, dir = side == Side.A ? 1 : -1;
+            for (int i = 0; i < 2; i++)
+                Upright("propane_tank", new Vector3(x0 + 0.6f * (i * 2 - 1), roof, back), 1.25f, k, true);
+            for (int i = 0; i < 3; i++)
+                Upright(i % 2 == 0 ? "Barrel_02" : "barrel_03", new Vector3(x0 - e * 0.3f + R(-0.15f, 0.15f), roof, back + dir * (2.4f + i * 0.75f)), 0.9f, k, true);
+            Upright("portable_generator", new Vector3(-x0 * 0.98f, roof, back + dir * 1.5f), 0.95f, k);
+        }
+
+        /// <summary>A scanned prop standing on a roof at `foot`, `size` m along its longest side, turned so that side runs along the lane (or by chance if `anyYaw`).</summary>
+        static void Upright(string id, Vector3 foot, float size, Kit k, bool anyYaw = false)
+        {
+            var go = Wilds.Rock(id, foot, 0, size, k.Root, null, k.Tinted, 0);
+            if (go == null) return;
+            var b = Library.BoundsOf(go.gameObject);
+            if (anyYaw) go.localRotation = Quaternion.Euler(0, (foot.x * 37 + foot.z * 11) % 360, 0);
+            else if (b.size.x > b.size.z) go.localRotation = Quaternion.Euler(0, 90, 0);
+            // Stand it on the roof whatever its pivot.
+            b = Library.BoundsOf(go.gameObject);
+            go.position += new Vector3(foot.x - b.center.x, foot.y - b.min.y, foot.z - b.center.z);
         }
 
         /// <summary>

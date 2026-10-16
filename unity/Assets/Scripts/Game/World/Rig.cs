@@ -51,6 +51,8 @@ namespace SniperDuel.Game.World
             var yellow = new MeshBuilder();
             var white = new MeshBuilder();
             var net = new MeshBuilder();
+            var rope = new MeshBuilder();
+            var foam = new MeshBuilder();
             var pipe = new MeshBuilder();
             var orange = new MeshBuilder();
             var boxes = new MeshBuilder[boxTints.Length];
@@ -289,6 +291,40 @@ namespace SniperDuel.Game.World
             // Deck name block and weight box: white panels at the back of the deck.
             white.Box(new Vector3(0, paintY, -hs + 2.2f), new Vector3(9, 0.012f, 2.2f));
             white.Box(new Vector3(-hs + 4.5f, paintY, -hs + 4.8f), new Vector3(2.6f, 0.012f, 1.6f));
+
+            // The landing net: a 12 m square of 20 cm rope mesh over the touchdown circle, a heavier
+            // edge rope round it, pegged at the corners and the middles of its sides.
+            if (detail)
+            {
+                const float NetHalf = 6, Gap = 0.25f;
+                float ny = top + 0.02f;
+                for (float u = -NetHalf; u <= NetHalf + 0.01f; u += Gap)
+                {
+                    rope.Box(new Vector3(u, ny, 0), new Vector3(0.022f, 0.014f, 2 * NetHalf));
+                    rope.Box(new Vector3(0, ny + 0.004f, u), new Vector3(2 * NetHalf, 0.014f, 0.022f));
+                }
+                foreach (float e in new[] { -NetHalf, NetHalf })
+                {
+                    rope.Box(new Vector3(e, ny + 0.01f, 0), new Vector3(0.05f, 0.035f, 2 * NetHalf + 0.05f));
+                    rope.Box(new Vector3(0, ny + 0.01f, e), new Vector3(2 * NetHalf + 0.05f, 0.035f, 0.05f));
+                    foreach (float f in new[] { -NetHalf, 0f, NetHalf })
+                    {
+                        frame.Cylinder(new Vector3(e, top, f), 0.09f, 0.05f, 8);
+                        frame.Cylinder(new Vector3(f, top, e), 0.09f, 0.05f, 8);
+                    }
+                }
+            }
+
+            // Foam where the swell breaks round each leg at the waterline.
+            foreach (var (sx, sf) in plan)
+            {
+                var c = JL(sx, sf, water);
+                for (int i = 0; i < 14; i++)
+                {
+                    float a = R(0, 2 * Mathf.PI), d = R(1.2f, 3.4f);
+                    foam.Mound(c + new Vector3(Mathf.Cos(a) * d, 0.02f, Mathf.Sin(a) * d), R(0.4f, 1.3f), R(0.3f, 0.9f), R(0.03f, 0.08f), rng, 0.45f, 2, 10);
+                }
+            }
 
             // Helideck stair: down the left side from a landing beside the deck to the main deck.
             float stairX = -(hs + 1.4f);
@@ -542,6 +578,8 @@ namespace SniperDuel.Game.World
             yellow.Object("Helideck yellow", yellowMat, root, shadows: false);
             white.Object("Helideck white", whiteMat, root, shadows: false);
             if (net.VertexCount > 0) net.Object("Helideck net", netMat, root, shadows: false);
+            if (rope.VertexCount > 0) rope.Object("Landing net", Library.Plain(new Color(0.55f, 0.5f, 0.4f), 0.15f), root);
+            foam.Object("Foam", Library.Plain(new Color(0.78f, 0.8f, 0.8f), 0.25f), root, shadows: false);
             pipe.Object("Pipes", pipeMat, root);
             orange.Object("Lifeboats", orangeMat, root);
             for (int i = 0; i < boxes.Length; i++)
