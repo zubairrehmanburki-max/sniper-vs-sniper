@@ -79,7 +79,7 @@ namespace SniperDuel.Game.World
             var boulders = new MeshBuilder();
             var pebbles = new MeshBuilder();
             int placed = 0;
-            for (int i = 0; i < 400 && placed < 30; i++)
+            for (int i = 0; i < 400 && placed < 20; i++)
             {
                 // Mostly on the ridges, a few nearer the lane edge where the ground starts to rise.
                 bool near = i % 4 == 0;
@@ -136,7 +136,8 @@ namespace SniperDuel.Game.World
         static void Veld(DuelMap map, Transform root, System.Random rng, Biomes.Lane lane, float length, System.Func<float, float, float> Y)
         {
             float R(float a, float b) => a + (float)rng.NextDouble() * (b - a);
-            var straw = new Color(1.02f, 0.86f, 0.58f);
+            // Dry grass a little greyer and greener than the sand, so it shows against it.
+            var straw = new Color(0.9f, 0.84f, 0.62f);
             var flora = new Wilds.Flora()
                 .Kind("grass_medium_02", 0.6f, straw).Kind("grass_medium_01", 0.65f, straw)
                 .Kind("wild_rooibos_bush", 1.1f).Kind("didelta_spinosa", 1.7f).Kind("searsia_lucida", 3.4f)
@@ -171,14 +172,14 @@ namespace SniperDuel.Game.World
                 flora.Plant(trees[rng.Next(trees.Length)], new Vector3(x, Y(x, s) - 0.1f, s), R(0, 360), R(0.75f, 1.3f), rng.Next(2) == 0);
             }
             // Succulents and sun-dried tufts a hand high over the lane floor, clear of the spots.
-            Wilds.LaneCarpet(flora, map, lane, rng, new[] { "cheiridopsis_succulent" }, 2600, 0.6f, 0.9f, Y);
-            Wilds.LaneCarpet(flora, map, lane, rng, grass, 3200, 0.22f, 0.32f, Y, (x, s) => Mathf.Abs(x - TrackX(s)) > 3);
+            Wilds.LaneCarpet(flora, map, lane, rng, new[] { "cheiridopsis_succulent" }, 14000, 0.7f, 1f, Y);
+            Wilds.LaneCarpet(flora, map, lane, rng, grass, 30000, 0.25f, 0.36f, Y, (x, s) => Mathf.Abs(x - TrackX(s)) > 3);
             flora.Build(root, "Veld");
 
             // Granite: single boulders along the lane's edges and over the flats, piles and cliffs on the ridges.
             var tinted = new Dictionary<Material, Material>();
             var single = Wilds.Present("namaqualand_boulder_02", "namaqualand_boulder_03", "namaqualand_boulder_04", "namaqualand_boulder_05");
-            for (int i = 0, n = 0; single.Length > 0 && i < 800 && n < 26; i++)
+            for (int i = 0, n = 0; single.Length > 0 && i < 800 && n < 18; i++)
             {
                 bool edge = n % 3 == 0;
                 float x = (rng.Next(2) == 0 ? -1 : 1) * (edge ? R(lane.HalfWidth + 6, lane.HalfWidth + 40) : R(lane.HalfWidth + 20, 420));
@@ -217,7 +218,7 @@ namespace SniperDuel.Game.World
         {
             var dried = new Dictionary<Material, Material>();
             int planted = 0;
-            for (int i = 0; i < 600 && planted < 42; i++)
+            for (int i = 0; i < 600 && planted < 20; i++)
             {
                 float x = ((float)rng.NextDouble() * 2 - 1) * 420;
                 float s = -250 + (float)rng.NextDouble() * (length + 500);

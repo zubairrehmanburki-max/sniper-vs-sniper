@@ -160,7 +160,7 @@ namespace SniperDuel.Game.World
             if (bark.VertexCount > 0) bark.Object("Cover logs", Bark, root);
             if (metal.VertexCount > 0) metal.Object("Cover metal", Library.Plain(new Color(0.66f, 0.68f, 0.67f), 0.35f, 0.3f), root);
             if (grille.VertexCount > 0) grille.Object("Cover grilles", Library.Plain(new Color(0.06f, 0.065f, 0.07f), 0.3f, 0.6f), root, shadows: false);
-            if (concrete.VertexCount > 0) concrete.Object("Cover concrete", Library.Weathered("concrete_wall_008", 4, new Color(0.82f, 0.8f, 0.76f), 0.8f), root);
+            if (concrete.VertexCount > 0) concrete.Object("Cover concrete", Library.Surface("concrete_wall_008", 4, new Color(0.82f, 0.8f, 0.76f)), root);
         }
 
         public static Material Bark => Library.Surface("weathered_planks", 1.6f, new Color(0.6f, 0.47f, 0.36f));
