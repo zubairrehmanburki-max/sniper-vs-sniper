@@ -82,7 +82,7 @@ namespace SniperDuel.Game.World
             k.Flashing.Object("Flashing", Library.Plain(new Color(0.6f, 0.62f, 0.63f), 0.45f, 0.6f), root);
             if (k.Glass.VertexCount > 0) k.Glass.Object("Skylights", Library.Plain(new Color(0.13f, 0.16f, 0.19f), 0.85f), root);
             if (k.White.VertexCount > 0) k.White.Object("Dishes", Library.Plain(new Color(0.8f, 0.8f, 0.78f), 0.4f), root);
-            if (k.Puddles.VertexCount > 0) k.Puddles.Object("Puddles", Library.Plain(new Color(0.05f, 0.055f, 0.06f), 0.96f), root, shadows: false);
+            if (k.Puddles.VertexCount > 0) k.Puddles.Object("Puddles", Library.Plain(new Color(0.1f, 0.1f, 0.1f), 0.82f), root, shadows: false);
             k.Roofs.Object("Roofs", Library.Plain(new Color(0.33f, 0.33f, 0.32f), 0.2f), root);
             k.Plant.Object("Rooftop plant", Library.Plain(new Color(0.62f, 0.64f, 0.63f), 0.35f, 0.3f), root);
             k.Iron.Object("Corrugated iron", Library.Surface("corrugated_iron_02", 3, new Color(0.62f, 0.66f, 0.7f)), root);
@@ -211,7 +211,7 @@ namespace SniperDuel.Game.World
             {
                 var c = new Vector3(R(-BuildingHalfX + 3, BuildingHalfX - 3), roof + 0.002f, R(s0 + 3, s1 - 3));
                 if (Biomes.NearestSpot(map, c.x, c.z) < 1.5f) continue;
-                k.Puddles.Mound(c, R(0.5f, 2.6f), R(0.35f, 1.6f), 0.006f, rng, 0.4f, 2, 12);
+                k.Puddles.Mound(c, R(0.4f, 1.8f), R(0.3f, 1.1f), 0.006f, rng, 0.4f, 2, 12);
             }
             for (int i = 0; i < 26; i++)
             {

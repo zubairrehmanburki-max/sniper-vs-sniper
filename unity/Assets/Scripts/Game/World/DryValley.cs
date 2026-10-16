@@ -75,7 +75,7 @@ namespace SniperDuel.Game.World
         {
             var tinted = new Dictionary<Material, Material>();
             // The coast rock scans run to 700k triangles apiece: the Namaqualand cliff and piles instead.
-            string[] ids = Wilds.Present("rock_face_01", "namaqualand_cliff_01", "namaqualand_boulders_01");
+            string[] ids = Wilds.Present("namaqualand_cliff_01", "namaqualand_boulders_01");
             var boulders = new MeshBuilder();
             var pebbles = new MeshBuilder();
             int placed = 0;
@@ -177,8 +177,9 @@ namespace SniperDuel.Game.World
             // Tufts in patches with bare sand between, and loose stones over the whole floor.
             Wilds.LanePatches(flora, map, lane, rng, grass, 900, 22, 1.6f, 0.28f, 0.36f, Y, (x, s) => Mathf.Abs(x - TrackX(s)) > 3);
             Wilds.LanePatches(flora, map, lane, rng, new[] { "cheiridopsis_succulent" }, 500, 14, 1.2f, 0.75f, 1f, Y);
+            Wilds.SpotTufts(flora, map, rng, grass, 9000, 0.12f, 0.17f, Y);
             flora.Build(root, "Veld");
-            Wilds.LaneStones(root, map, lane, rng, Library.Rock(0.9f, new Color(0.96f, 0.82f, 0.68f)), 9000, Y);
+            Wilds.LaneStones(root, map, lane, rng, Library.Rock(0.9f, new Color(0.96f, 0.82f, 0.68f)), 16000, Y);
 
             // Granite: single boulders along the lane's edges and over the flats, piles and cliffs on the ridges.
             var tinted = new Dictionary<Material, Material>();

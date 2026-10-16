@@ -94,8 +94,9 @@ namespace SniperDuel.Game.World
             // Clover and short grass in the mown lane, a hand high.
             Wilds.LaneCarpet(flora, map, lane, rng, grass, 20000, 0.22f, 0.3f, Y);
             Wilds.LanePatches(flora, map, lane, rng, grass, 600, 22, 1.5f, 0.26f, 0.32f, Y);
+            Wilds.SpotTufts(flora, map, rng, grass, 8000, 0.14f, 0.18f, Y);
             flora.Build(root, "Range woods");
-            Wilds.LaneStones(root, map, lane, rng, Library.Rock(0.9f, new Color(0.74f, 0.72f, 0.68f)), 2500, Y, null, 0.3f);
+            Wilds.LaneStones(root, map, lane, rng, Library.Rock(0.9f, new Color(0.74f, 0.72f, 0.68f)), 6000, Y, null, 0.3f);
 
             // Clutter round the range huts.
             var tinted = new Dictionary<Material, Material>();

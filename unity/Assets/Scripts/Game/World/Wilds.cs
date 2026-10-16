@@ -161,15 +161,19 @@ namespace SniperDuel.Game.World
             return LaneOk(map, x, s, keep) ? new Vector2(x, s) : (Vector2?)null;
         }
 
-        /// <summary>A random point `rMin`..`rMax` m from a random spot, off the strip ahead of every spot; null when refused.</summary>
-        public static Vector2? NearSpot(SniperDuel.Rules.DuelMap map, System.Random rng, float rMin, float rMax)
+        /// <summary>
+        /// A random point `rMin`..`rMax` m from a random spot (thickest near it), off the strip ahead of
+        /// every spot unless `inFront`; null when refused.
+        /// </summary>
+        public static Vector2? NearSpot(SniperDuel.Rules.DuelMap map, System.Random rng, float rMin, float rMax, bool inFront = false)
         {
             var spots = map.Spots[rng.Next(2) == 0 ? SniperDuel.Rules.Side.A : SniperDuel.Rules.Side.B];
             if (spots.Count == 0) return null;
             var p = spots[rng.Next(spots.Count)];
-            float a = (float)rng.NextDouble() * 2 * Mathf.PI, d = Mathf.Lerp(rMin, rMax, (float)rng.NextDouble());
+            float t = (float)rng.NextDouble();
+            float a = (float)rng.NextDouble() * 2 * Mathf.PI, d = Mathf.Lerp(rMin, rMax, t * t);
             float x = (float)p.X + Mathf.Cos(a) * d, s = (float)-p.Z + Mathf.Sin(a) * d;
-            return Biomes.NearestSpot(map, x, s) >= rMin && !InFront(map, x, s) ? new Vector2(x, s) : (Vector2?)null;
+            return Biomes.NearestSpot(map, x, s) >= rMin && (inFront || !InFront(map, x, s)) ? new Vector2(x, s) : (Vector2?)null;
         }
 
         /// <summary>
@@ -180,11 +184,28 @@ namespace SniperDuel.Game.World
             System.Func<float, float, float> Y, System.Func<float, float, bool>? keep = null, float sizeHi = 0.42f)
         {
             Stones(parent, "Lane stones", mat, rng, count, 0.05f, sizeHi, () => LanePoint(map, lane, rng, keep), Y);
-            Stones(parent, "Spot pebbles", mat, rng, count / 12, 0.04f, 0.16f, () =>
+            // Grit and pebbles a few centimetres high round each spot, the ground ahead of it included:
+            // what a prone eye sees most of, and far too low to hide anything.
+            Stones(parent, "Spot pebbles", mat, rng, count, 0.03f, 0.2f, () =>
             {
-                var at = NearSpot(map, rng, 2.2f, 6);
+                var at = NearSpot(map, rng, 1.8f, 70, true);
                 return at != null && (keep == null || keep(at.Value.x, at.Value.y)) ? at : null;
-            }, Y, 0.5f, 0.08f);
+            }, Y, 0.45f, 0.08f);
+        }
+
+        /// <summary>Short tufts no higher than `maxHeight` round each spot, the strip ahead included (thickest near the spot).</summary>
+        public static void SpotTufts(Flora flora, SniperDuel.Rules.DuelMap map, System.Random rng, string[] kinds, int count, float scaleLo, float scaleHi,
+            System.Func<float, float, float> Y, System.Func<float, float, bool>? keep = null)
+        {
+            if (kinds.Length == 0) return;
+            for (int i = 0; i < count; i++)
+            {
+                var at = NearSpot(map, rng, 3, 60, true);
+                if (at == null || (keep != null && !keep(at.Value.x, at.Value.y))) continue;
+                float x = at.Value.x, s = at.Value.y;
+                flora.Plant(kinds[rng.Next(kinds.Length)], new Vector3(x, Y(x, s) - 0.02f, s), (float)rng.NextDouble() * 360,
+                    Mathf.Lerp(scaleLo, scaleHi, (float)rng.NextDouble()), rng.Next(2) == 0);
+            }
         }
 
         static bool LaneOk(SniperDuel.Rules.DuelMap map, float x, float s, System.Func<float, float, bool>? keep) =>
