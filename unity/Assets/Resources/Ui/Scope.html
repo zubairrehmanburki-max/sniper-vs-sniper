@@ -23,12 +23,6 @@
 </div>
 </div>
 
-<div data-bind="dialled" style="position: absolute; left: 32px; top: 150px; display: flex; flex-direction: column; gap: 4px">
-<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.18em; color: #A7AD9F">DIALLED</span>
-<div style="display: flex; align-items: center; gap: 10px; font-family: 'Share Tech Mono', monospace; font-size: 20px"><span data-bind="dialZoom">12×</span><span data-bind="dialElev" style="color: #F2B33D">U 3.1</span></div>
-<div style="display: flex; align-items: center; gap: 8px; font-family: 'Share Tech Mono', monospace; font-size: 20px"><span data-bind="dialWind">R 0.5</span><span style="color: #A7AD9F">·</span><span data-bind="dialFocus">600 m</span></div>
-</div>
-
 <div data-bind="lrfBox" style="position: absolute; left: 288px; top: 348px; display: flex; align-items: center; gap: 8px">
 <button data-on="lrf" data-bind="lrfBtn" aria-label="Laser rangefinder" style="width: 54px; height: 54px; border-radius: 50%; border: 2px solid rgba(237,239,232,0.55); background: rgba(10,12,11,0.6); display: grid; place-items: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="1.8" aria-hidden="true"><rect x="3" y="7" width="14" height="10" rx="2"></rect><path d="M17 10h4M17 14h4M7 12h6"></path></svg></button>
 <div style="display: flex; flex-direction: column; gap: 0">
@@ -37,20 +31,6 @@
 </div>
 </div>
 
-<div data-bind="fireTip" style="position: absolute; right: 200px; top: 188px; width: 230px; padding: 8px 12px; box-sizing: border-box; border-radius: 6px; background: rgba(10,12,11,0.78); display: flex; flex-direction: column; gap: 3px; font-size: 13px; text-shadow: none">
-<div style="display: flex; gap: 5px"><span style="font-weight: 600; color: #4FB3E8">PRESS &amp; HOLD</span><span>hold breath</span></div>
-<div style="display: flex; gap: 5px"><span style="font-weight: 600">SLIDE THUMB</span><span>fine-aim the scope</span></div>
-<div style="display: flex; gap: 5px"><span style="font-weight: 600; color: #E5483B">RELEASE</span><span>fire</span></div>
-<div style="color: #A7AD9F">Slide off the button to cancel</div>
-</div>
-<div data-bind="fireCancel" data-hidden style="position: absolute; right: 200px; top: 220px; width: 230px; padding: 8px 12px; box-sizing: border-box; border-radius: 6px; background: rgba(10,12,11,0.78); display: flex; flex-direction: column; gap: 3px; font-size: 13px; text-shadow: none">
-<div style="font-weight: 600; color: #E5483B">SHOT CANCELLED ON RELEASE</div>
-<div style="color: #C9CDC2">Slide back onto the button to fire</div>
-</div>
-
-<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#EDEFE8" stroke-width="2" aria-hidden="true" style="position: absolute; right: 105px; top: 154px; opacity: 0.7"><path d="M2 10l5-5 5 5"></path></svg>
-<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#EDEFE8" stroke-width="2" aria-hidden="true" style="position: absolute; right: 188px; top: 241px; opacity: 0.7"><path d="M10 2L5 7l5 5"></path></svg>
-<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#EDEFE8" stroke-width="2" aria-hidden="true" style="position: absolute; right: 22px; top: 241px; opacity: 0.7"><path d="M4 2l5 5-5 5"></path></svg>
 <div data-bind="fireRing" style="position: absolute; right: 44px; top: 180px; width: 136px; height: 136px">
 <div data-bind="fireBtn" aria-label="Fire" style="position: absolute; left: 14px; top: 14px; width: 108px; height: 108px; border-radius: 50%; border: 3px solid #E5483B; background: rgba(128,24,20,0.86); box-sizing: border-box; display: grid; place-items: center"><svg width="52" height="52" viewBox="0 0 52 52" aria-hidden="true"><path d="M26 3 L30 15 L41 8 L36 20 L49 22 L38 29 L46 40 L33 37 L32 50 L26 40 L20 50 L19 37 L6 40 L14 29 L3 22 L16 20 L11 8 L22 15 Z" fill="#EDEFE8"></path><circle cx="26" cy="26" r="7" fill="#1a1a1a"></circle></svg></div>
 </div>

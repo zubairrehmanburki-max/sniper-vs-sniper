@@ -6,8 +6,7 @@ namespace SniperDuel.Game.World
 {
     /// <summary>
     /// Training Lane as a proper rifle range: gravel firing pads with rubber mats at every spot and
-    /// shooting benches under a canopy behind each line, concrete barricades for cover, distance
-    /// boards every 100 m along the edges (each set counting from its own line), steel gongs and
+    /// shooting benches under a canopy behind each line, concrete barricades for cover, steel gongs and
     /// silhouettes on A-frames, earth side berms and a bare-earth backstop behind each end, a range
     /// hut flying the red flag, wooded hills beyond.
     /// </summary>
@@ -27,7 +26,6 @@ namespace SniperDuel.Game.World
             Biomes.Cover(map, root, new Biomes.CoverKit { Rock = Library.Rock(3), Default = CoverLook.Concrete });
 
             FiringLines(map, root, Y);
-            Boards(root, Y);
             Targets(root, Y);
             Berms(root, Y, length);
 
@@ -109,85 +107,6 @@ namespace SniperDuel.Game.World
             wood.Object("Benches", Library.Surface("weathered_planks", 1.5f, new Color(0.8f, 0.7f, 0.58f)), root);
             steel.Object("Range steel", Library.Plain(new Color(0.3f, 0.32f, 0.33f), 0.4f, 0.7f), root);
             roof.Object("Canopies", Library.Surface("corrugated_iron_02", 2, new Color(0.75f, 0.77f, 0.8f)), root);
-        }
-
-        /// <summary>
-        /// Distance boards every 100 m: A's set down the west edge facing A, B's down the east edge
-        /// facing B, each counting from its own firing line. White panels with black figures from a
-        /// generated texture.
-        /// </summary>
-        static void Boards(Transform root, System.Func<float, float, float> Y)
-        {
-            const int Labels = 5;
-            var atlas = Numbers(Labels);
-            var faces = new MeshBuilder();
-            var posts = new MeshBuilder();
-            for (int k = 1; k <= Labels; k++)
-            {
-                var uvMin = new Vector2((k - 1f) / Labels, 0);
-                var uvMax = new Vector2((float)k / Labels, 1);
-                foreach (var (x, s, toward) in new[] { (-63f, LineA + 100 * k, -1f), (63f, LineB - 100 * k, 1f) })
-                {
-                    float y = Y(x, s);
-                    float y0 = y + 1.3f, y1 = y + 2.2f;
-                    float z = s + toward * 0.03f;
-                    // Front face toward its own line: left-to-right as that shooter sees it.
-                    float l = toward < 0 ? x - 0.9f : x + 0.9f, r = toward < 0 ? x + 0.9f : x - 0.9f;
-                    faces.Face(new Vector3(l, y0, z), new Vector3(l, y1, z), new Vector3(r, y1, z), new Vector3(r, y0, z), uvMin, uvMax);
-                    posts.Box(new Vector3(x, (y0 + y1) / 2, s - toward * 0.01f), new Vector3(1.86f, 0.98f, 0.05f));
-                    posts.Box(new Vector3(x - 0.7f, y + 0.8f, s - toward * 0.06f), new Vector3(0.1f, 2.0f, 0.08f));
-                    posts.Box(new Vector3(x + 0.7f, y + 0.8f, s - toward * 0.06f), new Vector3(0.1f, 2.0f, 0.08f));
-                }
-            }
-            var mat = Library.Plain(Color.white, 0.2f);
-            mat.SetTexture("_BaseMap", atlas);
-            mat.mainTexture = atlas;
-            faces.Object("Distance boards", mat, root, shadows: false);
-            posts.Object("Board frames", Library.Plain(new Color(0.24f, 0.26f, 0.25f), 0.3f), root);
-        }
-
-        static readonly string[] Font =
-        {
-            "01110100011001110101110011000101110", "00100011000010000100001000010001110", "01110100010000100010001000100011111",
-            "11110000010000101110000010000111110", "00010001100101010010111110001000010", "11111100001111000001000011000101110",
-            "00110010001000011110100011000101110", "11111000010001000100010000100001000", "01110100011000101110100011000101110",
-            "01110100011000101111000010001001100",
-        };
-
-        /// <summary>A strip of `count` white cells reading 100, 200 … with a black border, 5×7 pixel figures.</summary>
-        static Texture2D Numbers(int count)
-        {
-            const int Cw = 96, Ch = 48, Px = 4;
-            var tex = new Texture2D(Cw * count, Ch, TextureFormat.RGBA32, true) { name = "Distance numbers", wrapMode = TextureWrapMode.Clamp, anisoLevel = 4 };
-            var px = new Color32[Cw * count * Ch];
-            var white = new Color32(235, 235, 228, 255);
-            var black = new Color32(18, 18, 18, 255);
-            for (int i = 0; i < px.Length; i++) px[i] = white;
-            for (int c = 0; c < count; c++)
-            {
-                for (int y = 0; y < Ch; y++)
-                    for (int x = 0; x < Cw; x++)
-                        if (x < 3 || x >= Cw - 3 || y < 3 || y >= Ch - 3) px[y * Cw * count + c * Cw + x] = black;
-                string label = ((c + 1) * 100).ToString();
-                int width = label.Length * 6 * Px - Px;
-                int x0 = c * Cw + (Cw - width) / 2, y0 = (Ch - 7 * Px) / 2;
-                for (int d = 0; d < label.Length; d++)
-                {
-                    string glyph = Font[label[d] - '0'];
-                    for (int row = 0; row < 7; row++)
-                        for (int col = 0; col < 5; col++)
-                        {
-                            if (glyph[row * 5 + col] != '1') continue;
-                            // Glyph rows run top to bottom; texture rows bottom to top.
-                            for (int py = 0; py < Px; py++)
-                                for (int pxl = 0; pxl < Px; pxl++)
-                                    px[(y0 + (6 - row) * Px + py) * Cw * count + x0 + (d * 6 + col) * Px + pxl] = black;
-                        }
-                }
-            }
-            tex.SetPixels32(px);
-            tex.Apply(true);
-            return tex;
         }
 
         /// <summary>

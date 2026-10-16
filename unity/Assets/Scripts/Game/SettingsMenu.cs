@@ -77,7 +77,6 @@ namespace SniperDuel.Game
 
             // HUD.
             Toggle("hud-wind", () => Settings.WindArrows, v => Settings.WindArrows = v);
-            Toggle("hud-card", () => Settings.RangeCard, v => Settings.RangeCard = v);
             Toggle("hud-marker", () => Settings.RangeMarker, v => Settings.RangeMarker = v);
             Toggle("hud-crosshair", () => Settings.Crosshair, v => Settings.Crosshair = v);
             Slider("hud-opacity", 0.4f, 1f, 0.1f, () => Settings.HudOpacity, v => Settings.HudOpacity = v, Percent);
@@ -330,8 +329,8 @@ namespace SniperDuel.Game
                     help = "By zoom keeps a drag covering the same part of the view at every magnification. Soft moves faster at high zoom.";
                     break;
                 case 3:
-                    int shown = (Settings.WindArrows ? 1 : 0) + (Settings.RangeCard ? 1 : 0) + (Settings.RangeMarker ? 1 : 0) + (Settings.Crosshair ? 1 : 0);
-                    rows = new[] { ("Elements", $"{shown} / 4 shown"), ("Opacity", Percent(Settings.HudOpacity)), ("Scale", Settings.HudScales[Settings.HudScale] + "%") };
+                    int shown = (Settings.WindArrows ? 1 : 0) + (Settings.RangeMarker ? 1 : 0) + (Settings.Crosshair ? 1 : 0);
+                    rows = new[] { ("Elements", $"{shown} / 3 shown"), ("Opacity", Percent(Settings.HudOpacity)), ("Scale", Settings.HudScales[Settings.HudScale] + "%") };
                     help = "Without wind arrows you read the wind from the flags and the water instead, as a real spotter would.";
                     break;
                 case 4:

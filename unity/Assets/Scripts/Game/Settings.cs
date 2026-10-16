@@ -63,7 +63,6 @@ namespace SniperDuel.Game
         // ---- hud -----------------------------------------------------------
 
         public static bool WindArrows { get => GetBool("hud.wind", true); set => Set("hud.wind", value); }
-        public static bool RangeCard { get => GetBool("hud.card", true); set => Set("hud.card", value); }
         public static bool RangeMarker { get => GetBool("hud.marker", true); set => Set("hud.marker", value); }
         public static bool Crosshair { get => GetBool("hud.crosshair", true); set => Set("hud.crosshair", value); }
         public static float HudOpacity { get => GetFloat("hud.opacity", 1f, 0.4f, 1f); set => Set("hud.opacity", value); }

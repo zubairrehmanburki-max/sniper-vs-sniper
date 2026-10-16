@@ -29,6 +29,8 @@ namespace SniperDuel.Game
 
         public MatchState State = null!;
         public event Action<MatchState>? Finished;
+        /// <summary>Solo practice ended from the pause menu.</summary>
+        public event Action? Left;
         /// <summary>Your last shot and last hit of the match, with bullet cam captions, for a replay from the results.</summary>
         public ShotOutcome? LastShot { get; private set; }
         public string LastShotWho { get; private set; } = "";
@@ -72,8 +74,6 @@ namespace SniperDuel.Game
         bool fireCancel;
         float fireDownAt = -10;
         bool breathSpent;
-        /// <summary>The fire button's how-to shows until it is first used.</summary>
-        static bool fireTaught;
         /// <summary>With the hold-to-fire setting, how long the fire button must be held.</summary>
         const float FireHoldSeconds = 0.3f;
         /// <summary>Aim per thumb movement on the fire button, relative to dragging the screen.</summary>
@@ -115,6 +115,11 @@ namespace SniperDuel.Game
         Stance planStance;
         int botDelays;
 
+        /// <summary>Solo practice: steel plates down the lane, no bot, no clock, as many shots as you like.</summary>
+        bool solo;
+        Plates? plates;
+        int soloShots, soloHits, fields;
+
         /// <summary>The rifle the bot takes into a duel: the starter .308 when easy, the 6.5 Creedmoor at medium, the .338 when hard.</summary>
         public static string BotRifle(GameConfig cfg, BotDifficulty bot, string playerRifle)
         {
@@ -126,11 +131,17 @@ namespace SniperDuel.Game
         public static uint NewSeed() => (uint)(DateTime.UtcNow.Ticks ^ UnityEngine.Random.Range(0, int.MaxValue)) | 1;
 
         /// <summary>Starts a duel with the player's kit (fitted rifle, optic, finish, outfit) against the bot.</summary>
-        public static Duel Begin(Kit kit, UiHost ui, CameraRig rig, Arena arena, string playerName, string baseRifle, BotDifficulty bot, uint seed)
+        public static Duel Begin(Kit kit, UiHost ui, CameraRig rig, Arena arena, string playerName, string baseRifle, BotDifficulty bot, uint seed, bool solo = false)
         {
             var cfg = kit.Config;
             var d = new GameObject("Duel").AddComponent<Duel>();
             d.cfg = cfg;
+            d.solo = solo;
+            if (solo && arena.Enemy != null)
+            {
+                Destroy(arena.Enemy.gameObject);
+                arena.Enemy = null;
+            }
             d.recoilRecovery = kit.RecoilRecovery;
             arena.PlayerTint = kit.Outfit;
             arena.PlayerFinish = kit.Finish;
@@ -153,7 +164,12 @@ namespace SniperDuel.Game
             d.zoom = (int)Math.Round((cfg.Scope.MinZoom + cfg.Scope.MaxZoom) / 2);
             d.BindScreens();
             d.EnterPhase();
-            d.LookAtEnemy();
+            if (solo)
+            {
+                d.plates = Plates.Create(arena.Root);
+                d.NewField();
+            }
+            else d.LookAtEnemy();
             d.ShowHud();
             return d;
         }
@@ -171,8 +187,19 @@ namespace SniperDuel.Game
             if (hud.Has("stick")) Stick(hud["stick"], hud.Has("stickKnob") ? hud["stickKnob"] : null);
             hud.On("pause", () => SetPaused(true));
             hud.On("resume", () => SetPaused(false));
+            hud.On("newField", () =>
+            {
+                SetPaused(false);
+                NewField();
+            });
             hud.On("forfeit", () =>
             {
+                if (solo)
+                {
+                    SetPaused(false);
+                    Left?.Invoke();
+                    return;
+                }
                 // A second tap confirms: a stray one mustn't throw the match.
                 if (!forfeitArmed)
                 {
@@ -184,8 +211,6 @@ namespace SniperDuel.Game
                 SetPaused(false);
                 Quit();
             });
-            // The marker shows a range only once the laser has measured one.
-            hud.Text("markerRange", "");
             Look(hud.Root);
             ApplyHudSettings(hud, ui.Get("Scope"));
             HudLayoutMenu.ApplyTo(hud, Settings.HudScales[Settings.HudScale] / 100f);
@@ -459,7 +484,6 @@ namespace SniperDuel.Game
                 fireLast = e.position;
                 fireCancel = false;
                 fireDownAt = Time.unscaledTime;
-                fireTaught = true;
                 pad.CapturePointer(e.pointerId);
                 button.style.scale = new Scale(new Vector2(0.94f, 0.94f));
                 SetBreath(true);
@@ -519,12 +543,7 @@ namespace SniperDuel.Game
         static void ApplyHudSettings(UiScreen hud, UiScreen scope)
         {
             foreach (var s in new[] { hud, scope })
-            {
                 s.Show("windBox", Settings.WindArrows);
-                s.Show("dialled", Settings.RangeCard);
-            }
-            foreach (var card in new[] { "cardElevBox", "cardWindBox", "cardZoomBox", "cardFocusBox" })
-                hud.Show(card, Settings.RangeCard);
             hud.Show("marker", Settings.RangeMarker);
             hud.Show("crosshair", Settings.Crosshair);
             hud.Root.style.opacity = Settings.HudOpacity;
@@ -677,21 +696,17 @@ namespace SniperDuel.Game
             var s = State;
             phaseKey = $"{s.Round}:{s.Pair}:{s.Step}:{s.Phase}";
             botQueue.Clear();
-            if (s.Players.B.Bot != null) botQueue.AddRange(Bot.Plan(s, Side.B, cfg));
+            if (s.Players.B.Bot != null && !solo) botQueue.AddRange(Bot.Plan(s, Side.B, cfg));
             botQueue.Sort((a, b) => a.Time.CompareTo(b.Time));
             NotePlan();
             botDelays = 0;
             if (s.Phase == PhaseKind.Setup)
             {
                 // Fixed spots: take ours, prone, and get on with it.
-                var spot = map.Spots[Me][0];
+                // Practice starts from the middle of the line.
+                var spot = map.Spots[Me][solo ? map.Spots[Me].Count / 2 : 0];
                 Apply(MatchInput.PlaceAt(Me, spot, Match.ClampStance(s, Stance.Prone, cfg), time));
                 Apply(MatchInput.ReadyUp(Me, time));
-                Call("Find the enemy on the far bridge. Read the flags.");
-            }
-            else if (s.Phase == PhaseKind.Shot)
-            {
-                Call(s.Actor == Me ? "Your shot. Set the dials, scope in, hold fire and let go." : "Enemy shot. Get low or keep moving.");
             }
             else if (s.Phase == PhaseKind.Move && s.Actor == Me)
             {
@@ -728,10 +743,9 @@ namespace SniperDuel.Game
                 else if (o.NearMiss) Haptics.Snap();
             }
 
-            string dist = Math.Round(Math.Sqrt(Sq(o.Impact.Point.X - o.Eye.X) + Sq(o.Impact.Point.Z - o.Eye.Z))).ToString("0");
             string text;
-            if (o.Verdict == Verdict.Kill) text = mine ? $"KILL · {o.Zone} at {dist} m, {o.Impact.T:0.00} s" : "You were killed.";
-            else if (o.Verdict == Verdict.Wound) text = mine ? $"HIT · {o.Zone} wound at {dist} m" : "You're hit. Your aim will shake.";
+            if (o.Verdict == Verdict.Kill) text = mine ? $"KILL · {o.Zone}" : "You were killed.";
+            else if (o.Verdict == Verdict.Wound) text = mine ? $"HIT · {o.Zone} wound" : "You're hit.";
             else if (mine && o.Call.HasValue) text = "Miss · " + SpotterCall(o.Call.Value.UpMrad, o.Call.Value.RightMrad);
             else text = mine ? "Miss." : o.NearMiss ? "Snap! It passed within a metre." : "Enemy fired and missed.";
 
@@ -781,14 +795,11 @@ namespace SniperDuel.Game
             k.Text("velocity", $"{o.Impact.Speed:0} m/s");
             k.Text("drop", $"{Math.Abs(last.Y):0.00} m");
             k.Text("drift", $"{Math.Abs(last.Z):0.00} m {(last.Z >= 0 ? "R" : "L")}");
-            double dist = Math.Sqrt(Sq(o.Impact.Point.X - o.Eye.X) + Sq(o.Impact.Point.Z - o.Eye.Z));
-            k.Text("lane", $"{dist:0} m");
             var cam = BulletCam.Play(o, rig, arena.Root, (f, speed) =>
             {
                 k.Fill("progress", f);
                 if (k.Has("knob")) k["knob"].style.left = Length.Percent(f * 100);
                 k.Text("speed", $"{speed:0.00}×");
-                k.Text("distance", $"{dist * f:0} / {dist:0} m");
             }, done, arena.Enemy);
             k.On("skip", cam.Finish);
             k.On("pause", () => cam.Paused = !cam.Paused);
@@ -874,7 +885,7 @@ namespace SniperDuel.Game
             pitch = Math.Atan2(target.Y - eye.Y, Math.Sqrt(Sq(target.X - eye.X) + Sq(target.Z - eye.Z)));
         }
 
-        bool CanFire() => State.Phase == PhaseKind.Shot && State.Actor == Me && !State.Acted && resume == null;
+        bool CanFire() => solo ? resume == null : State.Phase == PhaseKind.Shot && State.Actor == Me && !State.Acted && resume == null;
 
         void Fire()
         {
@@ -891,6 +902,12 @@ namespace SniperDuel.Game
             }
             lastShotAt = time;
             var aim = TrueAim();
+            if (solo)
+            {
+                FireSolo(aim);
+                if (scoped && Settings.UnscopeAfterShot) SetScoped(false);
+                return;
+            }
             Apply(MatchInput.FireShot(Me, new FireInput
             {
                 Yaw = aim.Yaw,
@@ -901,19 +918,67 @@ namespace SniperDuel.Game
             if (scoped && Settings.UnscopeAfterShot) SetScoped(false);
         }
 
+        /// <summary>
+        /// A practice shot: the round flies with the rifle, dials, wind and air of the session at
+        /// the plates. A hit rings the steel and swings the plate once the round gets there; with
+        /// every plate rung, a fresh field goes out.
+        /// </summary>
+        void FireSolo(Aim aim)
+        {
+            var me = State.Players[Me];
+            var fire = new FireInput { Yaw = aim.Yaw, Pitch = aim.Pitch, DialElevationMrad = elevMrad, DialWindageMrad = windMrad };
+            var o = Practice.ResolvePracticeShot(new ShotRequest
+            {
+                Map = map,
+                Conditions = Match.ActiveConditions(State),
+                RifleId = me.RifleId,
+                ShooterPosition = me.Position,
+                ShooterStance = me.Stance,
+                Input = fire,
+                Seed = State.Seed,
+                ShotIndex = soloShots + 1,
+                FireTime = time,
+                ColdBore = soloShots == 0,
+            }, plates!.Shapes, cfg);
+            soloShots++;
+            World.Effects.Shot(o, true, arena);
+            recoil = 0.004;
+            Haptics.Recoil();
+            Sound.FireMine();
+            float tof = (float)o.Impact.T;
+            float range = (float)Math.Sqrt(Sq(o.Impact.Point.X - o.Eye.X) + Sq(o.Impact.Point.Z - o.Eye.Z));
+            bool steel = o.Impact.Kind == ImpactKind.Target && o.Impact.TargetId != null;
+            Sound.Landed(range, tof, steel ? Sound.Surface.Metal : Sound.SurfaceOf(o, map), o.Seed);
+            resumeAt = time + tof;
+            resume = () =>
+            {
+                if (!steel || plates == null) return;
+                plates.Strike(o.Impact.TargetId!, o.Impact.Point, o.Impact.Energy);
+                soloHits++;
+                Call("HIT");
+                if (plates.DownCount == plates.Count) Pause(2.5, NewField);
+            };
+        }
+
+        /// <summary>Sets out a fresh field of plates at new, unannounced ranges and looks down the lane.</summary>
+        void NewField()
+        {
+            if (plates == null) return;
+            fields++;
+            plates.Lay(map, Eye(), (int)(State.Seed ^ (uint)(fields * 7919)), cfg);
+            yaw = 0;
+            pitch = 0;
+        }
+
         /// <summary>The laser rangefinder: measures along the line of sight and shows it. It never dials anything.</summary>
         void Laser()
         {
             var e = State.Players[Side.B];
-            var targets = new List<Silhouette> { Combat.SilhouetteFor("B", e.Position, e.Stance, Combat.FacingYaw(Side.B), cfg) };
+            var targets = solo && plates != null ? new List<Silhouette>(plates.Shapes)
+                : new List<Silhouette> { Combat.SilhouetteFor("B", e.Position, e.Stance, Combat.FacingYaw(Side.B), cfg) };
             var d = Hits.Rangefind(Eye(), TrueAim(), targets, map.Ground, 3000, map.Cover);
-            Call(d.HasValue ? $"Laser: {d.Value:0} m" : "Laser: no return");
             laserText = d.HasValue ? $"{d.Value:0} m" : "no return";
-            if (d.HasValue) ui.Get("Hud").Text("markerRange", $"{d.Value:0} m");
         }
-
-        static string Fmt(double mrad, string pos, string neg) =>
-            Math.Abs(mrad) < 0.05 ? "0.0" : $"{(mrad > 0 ? pos : neg)} {Math.Abs(mrad):0.0}";
 
         // ---- frame ---------------------------------------------------------
 
@@ -923,8 +988,10 @@ namespace SniperDuel.Game
             paused = on && State.Phase != PhaseKind.MatchOver;
             forfeitArmed = false;
             var hud = ui.Get("Hud");
-            hud.Text("forfeit", "FORFEIT MATCH");
-            hud.Text("pauseNote", "The clock is stopped. The bot waits for you.");
+            hud.Text("forfeit", solo ? "END PRACTICE" : "FORFEIT MATCH");
+            hud.Text("pauseNote", solo ? "" : "The clock is stopped. The bot waits for you.");
+            hud.Show("pauseNote", !solo);
+            hud.Show("newField", solo);
             hud.Show("pauseMenu", paused);
         }
 
@@ -953,7 +1020,7 @@ namespace SniperDuel.Game
                 resume = null;
                 r();
             }
-            if (resume == null)
+            if (resume == null && !solo)
             {
                 while (botQueue.Count > 0 && botQueue[0].Time <= time && resume == null)
                 {
@@ -1030,6 +1097,8 @@ namespace SniperDuel.Game
             var a = State.Players[Me].Position;
             var b = State.Players[Side.B].Position;
             double range = Math.Max(20, Math.Sqrt(Sq(b.X - a.X) + Sq(b.Z - a.Z)));
+            // In practice, whichever plate the scope is on.
+            if (solo && plates != null && plates.RangeNear(Eye(), yaw, pitch) is double near) range = Math.Max(20, near);
             double set = Math.Min(20000, ScopeDials.FocusMetres(focus));
             return Mathf.Clamp01((float)((Math.Abs(Math.Log(set / range)) - 0.12) / 0.8));
         }
@@ -1100,11 +1169,13 @@ namespace SniperDuel.Game
             PostFx.Scope(0);
             PostFx.Defocus(0);
             rig.Raise = 1;
+            if (plates != null) Destroy(plates.gameObject);
             if (ScopeDials.Turned?.Target == (object)this) ScopeDials.Turned = null;
         }
 
         void SyncEnemy()
         {
+            if (solo) return;
             var e = State.Players[Side.B];
             if (e.Stance == enemyStanceShown && e.Position.Equals(enemyPosShown) && arena.Enemy != null) return;
             enemyStanceShown = e.Stance;
@@ -1136,10 +1207,15 @@ namespace SniperDuel.Game
             double left = Match.TimeLeft(s, time);
             string clock = double.IsInfinity(left) || s.Phase == PhaseKind.RoundOver || s.Phase == PhaseKind.MatchOver ? "--" : $"0:{Math.Ceiling(left):00}";
             string score = $"{s.Players.A.Kills} – {s.Players.B.Kills}";
-            Color turnColor = s.Actor == Me ? new Color(0.95f, 0.70f, 0.24f) : new Color(0.90f, 0.28f, 0.23f);
+            if (solo)
+            {
+                // Plates rung this field, and every shot and hit of the session.
+                turn = "PRACTICE";
+                clock = plates != null ? $"{plates.DownCount}/{plates.Count}" : "--";
+                score = $"{soloHits}/{soloShots} HITS";
+            }
+            Color turnColor = s.Actor == Me || solo ? new Color(0.95f, 0.70f, 0.24f) : new Color(0.90f, 0.28f, 0.23f);
             bool can = CanFire() && time - lastShotAt >= CycleSeconds;
-            string elev = Fmt(elevMrad, "U", "D"), windage = Fmt(windMrad, "R", "L");
-            string zoomText = $"{zoom}×", focusText = ScopeDials.FocusText(focus);
 
             // The mid-lane wind: speed, and an arrow showing where it blows relative to our facing.
             float heading = Mathf.Repeat((float)(yaw * Mathf.Rad2Deg), 360);
@@ -1160,7 +1236,8 @@ namespace SniperDuel.Game
             }
 
             var hud = ui.Get("Hud");
-            hud.Text("hint", hintTimer > 0 ? hint : "Stick to move, drag to look");
+            hud.Text("hint", hint);
+            hud.Show("hintBox", hintTimer > 0);
             var stance = State.Players[Me].Stance;
             foreach (var (id, st) in new[] { ("standBtn", Stance.Standing), ("crouchBtn", Stance.Crouch), ("proneBtn", Stance.Prone) })
             {
@@ -1171,22 +1248,12 @@ namespace SniperDuel.Game
                 Skin.Text(b, on ? Skin.Ink : Skin.Paper);
                 b.style.opacity = open ? 1 : 0.35f;
             }
-            hud.Text("cardElev", elev);
-            hud.Text("cardWind", windage);
-            hud.Text("cardZoom", zoomText);
-            hud.Text("cardFocus", focusText);
             Marker(hud);
 
             var scope = ui.Get("Scope");
-            scope.Text("dialZoom", zoomText);
-            scope.Text("dialElev", elev);
-            scope.Text("dialWind", windage);
-            scope.Text("dialFocus", focusText);
             scope.Text("lrf", laserText);
             scope.Text("solution", hintTimer > 0 ? hint : "");
             scope.Show("solution", hintTimer > 0);
-            scope.Show("fireTip", !fireTaught && !director);
-            scope.Show("fireCancel", firePointer != null && fireCancel);
             if (scope.Has("fireBtn")) scope["fireBtn"].style.opacity = firePointer != null && fireCancel ? 0.35f : can ? 1 : 0.5f;
         }
 
@@ -1195,6 +1262,11 @@ namespace SniperDuel.Game
         {
             if (!hud.Has("marker")) return;
             var marker = hud["marker"];
+            if (solo)
+            {
+                marker.style.display = DisplayStyle.None;
+                return;
+            }
             var root = marker.panel?.visualTree;
             var e = State.Players[Side.B];
             var head = Library.ToUnity(Combat.EyeOf(e.Position, e.Stance, cfg)) + Vector3.up * 0.6f;

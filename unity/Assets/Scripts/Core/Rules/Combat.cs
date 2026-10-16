@@ -94,7 +94,8 @@ namespace SniperDuel.Rules
 
         public static double FacingYaw(Side side) => side == Side.A ? 0 : Math.PI;
 
-        public static ShotOutcome ResolveShot(ShotRequest req, GameConfig cfg)
+        /// <summary>Flies the round for a shot: its trajectory, the shooter's eye it starts from, and the shot's seed.</summary>
+        public static (Trajectory trajectory, Vec3 eye, uint seed) Fly(ShotRequest req, GameConfig cfg)
         {
             var rifle = cfg.RifleById(req.RifleId);
             var b = cfg.Ballistics;
@@ -124,6 +125,12 @@ namespace SniperDuel.Rules
                 Transonic = new TransonicConfig { MachThreshold = b.Transonic.MachThreshold, Sigma = b.Transonic.SigmaRadPerSqrtS },
                 MaxTime = 5,
             });
+            return (trajectory, eye, seed);
+        }
+
+        public static ShotOutcome ResolveShot(ShotRequest req, GameConfig cfg)
+        {
+            var (trajectory, eye, seed) = Fly(req, cfg);
             var target = SilhouetteFor(req.Target.Id, req.Target.Position, req.Target.Stance, FacingYaw(req.Target.Side), cfg);
             var impact = Hits.ResolveImpact(trajectory, eye, req.Input.Yaw, new[] { target }, req.Map.Ground, req.Map.Cover, Penetration.From(cfg.SoftCover));
             var call = Hits.MissCall(trajectory, eye, req.Input.Yaw, target);

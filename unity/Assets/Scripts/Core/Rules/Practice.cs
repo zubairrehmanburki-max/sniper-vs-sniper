@@ -69,6 +69,19 @@ namespace SniperDuel.Rules
         }
 
         /// <summary>
+        /// A practice shot at a field of steel: the round flies as in a duel (same rifle, dials,
+        /// wind and air) and strikes the first plate, piece of cover or patch of ground on its
+        /// path. Nobody is hurt, so the verdict is always a miss; a plate strike is an impact of
+        /// kind Target naming the plate.
+        /// </summary>
+        public static ShotOutcome ResolvePracticeShot(ShotRequest req, IReadOnlyList<Silhouette> plates, GameConfig cfg)
+        {
+            var (trajectory, eye, seed) = Combat.Fly(req, cfg);
+            var impact = Hits.ResolveImpact(trajectory, eye, req.Input.Yaw, plates, req.Map.Ground, req.Map.Cover, Penetration.From(cfg.SoftCover));
+            return new ShotOutcome { Verdict = Verdict.Miss, Zone = impact.Zone, Impact = impact, Trajectory = trajectory, Eye = eye, Yaw = req.Input.Yaw, Seed = seed };
+        }
+
+        /// <summary>
         /// World wind vector for air moving toward compass-like direction `dir` measured from north (−z)
         /// toward east (+x). E.g. dir = π/2 blows toward +x (a crosswind from the shooter's left).
         /// </summary>

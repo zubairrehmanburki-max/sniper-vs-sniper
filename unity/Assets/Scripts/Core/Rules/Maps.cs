@@ -647,7 +647,7 @@ namespace SniperDuel.Rules
             {
                 Id = "twin-bridges",
                 Name = "Twin Bridges",
-                Blurb = "Mid-span to mid-span across an estuary, 640 m",
+                Blurb = "Mid-span to mid-span across an estuary.",
                 LaneLength = 640,
                 Fixed = true,
                 Water = 0,
@@ -722,7 +722,7 @@ namespace SniperDuel.Rules
             {
                 Id = "watchtowers",
                 Name = "Watchtowers",
-                Blurb = "Tower to tower over a drowned marsh, 450 m",
+                Blurb = "Tower to tower over a drowned marsh.",
                 LaneLength = 450,
                 Fixed = true,
                 Water = 0,
@@ -785,7 +785,7 @@ namespace SniperDuel.Rules
             {
                 Id = "oil-rigs",
                 Name = "Oil Rigs",
-                Blurb = "Helideck to helideck in the open sea, 870 m",
+                Blurb = "Helideck to helideck in the open sea.",
                 LaneLength = 900,
                 Fixed = true,
                 Water = 0,

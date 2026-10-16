@@ -1,6 +1,9 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using SniperDuel.Ballistics;
 using SniperDuel.Game.Ui;
 using SniperDuel.Game.World;
 using SniperDuel.Rules;
@@ -22,7 +25,7 @@ namespace SniperDuel.Game
 
         public static string? Arg(string name)
         {
-            var args = Environment.GetCommandLineArgs();
+            var args = System.Environment.GetCommandLineArgs();
             int i = Array.IndexOf(args, name);
             return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
         }
@@ -133,7 +136,6 @@ namespace SniperDuel.Game
             if (scope)
             {
                 var s = ui.Get("Scope");
-                s.Text("dialZoom", $"{ScopeDials.Zoom}×");
                 s.Text("lrf", "641 m");
                 s.Show("solution", false);
             }
@@ -204,6 +206,7 @@ namespace SniperDuel.Game
             }
             ui.HideAll();
             Frame("");
+            if (arena != null) yield return CaptureShots(dir, () => ++n);
             // Twin Bridges in detail for review: the whole estuary from the air, the river front from
             // the deck, along the deck to a pylon, a pylon from the water, and the soldier's head.
             if (arena != null && arena.Map.Id == "twin-bridges")
@@ -285,8 +288,114 @@ namespace SniperDuel.Game
                     yield return new WaitForEndOfFrame();
                 }
             }
+            // Solo practice on the range lane (the last map built): the HUD from a live session,
+            // then a plate through the scope at 12x after a hit.
+            if (arena != null && arena.Map.Id == "training-lane") yield return CapturePractice(dir, () => ++n);
             for (int f = 0; f < 10; f++) yield return null;
             Application.Quit(0);
+        }
+
+        /// <summary>A shot aimed straight at a point (no dials), flown with the map's first-round conditions.</summary>
+        ShotOutcome Aimed(Vec3 from, Stance stance, Vec3 at)
+        {
+            var map = arena!.Map;
+            var eye = Combat.EyeOf(from, stance, Config);
+            var state = Match.CreateMatch(0x5eed, map.Id, new PerSide<PlayerSetup>(new PlayerSetup("A", Profile.Rifle(Config)), new PlayerSetup("B", Profile.Rifle(Config))), 0, Config);
+            double yaw = Math.Atan2(at.X - eye.X, -(at.Z - eye.Z));
+            double pitch = Math.Atan2(at.Y - eye.Y, Math.Sqrt((at.X - eye.X) * (at.X - eye.X) + (at.Z - eye.Z) * (at.Z - eye.Z)));
+            return Practice.ResolvePracticeShot(new ShotRequest
+            {
+                Map = map,
+                Conditions = Match.ActiveConditions(state),
+                RifleId = Profile.Rifle(Config),
+                ShooterPosition = from,
+                ShooterStance = stance,
+                Input = new FireInput { Yaw = yaw, Pitch = pitch },
+                Seed = 0x5eed,
+                ShotIndex = 1,
+            }, new List<Silhouette>(), Config);
+        }
+
+        static IEnumerator Shoot(string dir, Func<int> next, string label, int frames = 4)
+        {
+            for (int f = 0; f < frames; f++) yield return null;
+            ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"{next():00}-{label}.png"));
+            yield return null;
+            yield return new WaitForEndOfFrame();
+            Debug.Log($"[Capture] {label}");
+        }
+
+        /// <summary>
+        /// The shots for review on the first map, at a fixed 30 frames a second of game time: your
+        /// round's vapour trace a third of the way out and near the far bridge, through the scope
+        /// at 12x and from the 1x eye; then the enemy firing, seen through the scope just after the
+        /// trigger: flash and muzzle blast.
+        /// </summary>
+        IEnumerator CaptureShots(string dir, Func<int> next)
+        {
+            var map = arena!.Map;
+            Time.captureDeltaTime = 1f / 30;
+            var a = map.Spots.A[0];
+            var b = map.Spots.B[0];
+            var chestB = Combat.EyeOf(b, Stance.Prone, Config);
+            var o = Aimed(a, Stance.Prone, new Vec3(chestB.X, chestB.Y + 1.2, chestB.Z));
+            foreach (var (label, screen, at) in new[] { ("Shot-Trace", "Scope", 0.35f), ("Shot-Trace-Far", "Scope", 0.8f), ("Shot-Trace-Eye", "Aim", 0.25f) })
+            {
+                Frame(screen);
+                AimAtEnemy();
+                if (screen == "Scope") ui.Show("Scope");
+                else ui.HideAll();
+                var flight = World.Effects.Shot(o, true, arena);
+                flight.Seek((float)o.Impact.T * at);
+                yield return Shoot(dir, next, label);
+                Destroy(flight.gameObject);
+            }
+            // The enemy fires back at us.
+            var eyeA = Combat.EyeOf(a, Stance.Prone, Config);
+            var back = Aimed(b, Stance.Prone, eyeA);
+            Frame("Scope");
+            AimAtEnemy();
+            ui.Show("Scope");
+            var enemyShot = World.Effects.Shot(back, false, arena);
+            yield return Shoot(dir, next, "Shot-Enemy", 3);
+            yield return Shoot(dir, next, "Shot-Enemy-Later", 12);
+            Destroy(enemyShot.gameObject);
+            ui.HideAll();
+            Frame("");
+            Time.captureDeltaTime = 0;
+        }
+
+        IEnumerator CapturePractice(string dir, Func<int> next)
+        {
+            Time.captureDeltaTime = 1f / 30;
+            string rifle = Profile.Rifle(Config);
+            var duel = Duel.Begin(Gear.ForMatch(Config, rifle), ui, rig, arena!, "YOU", rifle, BotDifficulty.Medium, 0x5eed, solo: true);
+            yield return Shoot(dir, next, "Practice-Hud", 20);
+            Destroy(duel.gameObject);
+            yield return null;
+            // Through the scope on the third plate of a fresh field, struck in the chest a moment ago.
+            var map = arena!.Map;
+            var spot = map.Spots.A[map.Spots.A.Count / 2];
+            var eye = Combat.EyeOf(spot, Stance.Prone, Config);
+            var plates = Plates.Create(arena.Root);
+            plates.Lay(map, eye, 0x5eed, Config);
+            var shapes = plates.Shapes;
+            Debug.Log($"[Capture] practice plates: {string.Join(", ", shapes.Select(x => $"{x.Id} at {-x.Position.Z:0} m, x {x.Position.X:0}"))}");
+            if (shapes.Count > 2)
+            {
+                var p = shapes[2];
+                plates.Strike(p.Id, new Vec3(p.Position.X + 0.06, p.Position.Y + 0.5, p.Position.Z), 3000);
+                Frame("Scope");
+                rig.Eye = Library.ToUnity(eye);
+                var to = Library.ToUnity(new Vec3(p.Position.X, p.Position.Y + 0.6, p.Position.Z)) - rig.Eye;
+                rig.Yaw = Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg;
+                rig.Pitch = Mathf.Atan2(to.y, new Vector2(to.x, to.z).magnitude) * Mathf.Rad2Deg;
+                ui.Show("Scope");
+                yield return Shoot(dir, next, "Practice-Scope", 8);
+            }
+            Destroy(plates.gameObject);
+            ui.HideAll();
+            Time.captureDeltaTime = 0;
         }
     }
 }

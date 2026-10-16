@@ -187,8 +187,8 @@ namespace SniperDuel.Game
 
             l.Text("modeName", Catalog.ModeNames[(int)mode]);
             var map = Maps.ById(MatchMap);
-            string tail = Catalog.Online(mode) ? "Best of 3" : $"{Catalog.DifficultyNames[(int)Profile.Difficulty].ToLowerInvariant()} bot";
-            l.Text("mode", $"{map.Name} · {map.LaneLength:0} m · {tail}");
+            string tail = mode == GameMode.Training ? "solo targets" : Catalog.Online(mode) ? "Best of 3" : $"{Catalog.DifficultyNames[(int)Profile.Difficulty].ToLowerInvariant()} bot";
+            l.Text("mode", $"{map.Name} · {tail}");
 
             int tier = Profile.PassTier, unclaimed = Profile.FirstUnclaimed();
             l.Show("passNew", unclaimed > 0);
@@ -274,7 +274,7 @@ namespace SniperDuel.Game
                 Skin.Text(e, on ? Skin.Amber : Skin.Paper);
             }
             play.Text("online", online ? Catalog.OnlineSoon.ToUpperInvariant()
-                : training ? "OFFLINE · TRAINING LANE · NO RATING" : $"OFFLINE · VS BOT · {Catalog.DifficultyNames[(int)Profile.Difficulty]}");
+                : training ? "OFFLINE · SOLO PRACTICE · NO RATING" : $"OFFLINE · VS BOT · {Catalog.DifficultyNames[(int)Profile.Difficulty]}");
             play.Color("online", online ? Skin.Amber : Skin.Muted);
 
             for (int i = 0; i < MapTiles; i++)
@@ -284,7 +284,7 @@ namespace SniperDuel.Game
                 {
                     var m = Maps.ById(Maps.Ids[i]);
                     play.Text("map" + i, m.Name.ToUpperInvariant());
-                    play.Text("sub" + i, $"{m.LaneLength:#,0} m · {Catalog.MapInfo(m.Id).region}");
+                    play.Text("sub" + i, Catalog.MapInfo(m.Id).region);
                 }
                 bool on = !training && i < Maps.Ids.Length && Maps.Ids[i] == mapId;
                 Skin.Border(play["map" + i], on ? Skin.Amber : new Color(Skin.Paper.r, Skin.Paper.g, Skin.Paper.b, 0.2f), on ? 2 : 1);
@@ -295,16 +295,16 @@ namespace SniperDuel.Game
 
             var map = Maps.ById(MatchMap);
             play.Text("title", map.Name.ToUpperInvariant());
-            play.Text("blurb", map.Blurb ?? (training ? "A flat range lane with layered wind. Practise your holds against the bot; nothing here touches your rating or career." : ""));
-            play.Text("range", $"{map.LaneLength:0} m");
+            play.Text("blurb", training ? "Steel plates down a range lane in layered wind. Just you and the targets, no bot and no clock. Nothing here touches your rating or career." : map.Blurb ?? "");
+            play.Text("range", Catalog.MapInfo(map.Id).region);
             var c = map.Climate;
             play.Text("wind", $"{c.WindSpeedMps[0]:0}–{c.WindSpeedMps[1]:0} m/s");
             play.Text("light", Catalog.LightName(map.Look.Palette?.Sky));
-            play.Text("format", training ? "PRACTICE" : "BEST OF 3");
+            play.Text("format", training ? "SOLO" : "BEST OF 3");
 
             // Online modes may rotate maps; bot modes pick the bot instead.
             play.Show("rotationRow", online);
-            play.Show("diffRow", !online);
+            play.Show("diffRow", !online && !training);
             Skin.Toggle(play, "rotation", Profile.MapRotation);
             for (int i = 0; i < 3; i++)
                 if (play.Has("diff-" + i)) Skin.Segment(play["diff-" + i], i == (int)Profile.Difficulty);
@@ -318,7 +318,19 @@ namespace SniperDuel.Game
             // Online modes rotate maps if asked. Nobody is online until the server is hosted, so every
             // mode goes straight to a bot duel rather than pretending to search.
             if (Catalog.Online(mode) && Profile.MapRotation) mapId = Maps.Ids[UnityEngine.Random.Range(0, Mathf.Min(MapTiles, Maps.Ids.Length))];
-            StartCoroutine(Versus());
+            if (mode == GameMode.Training) StartPractice();
+            else StartCoroutine(Versus());
+        }
+
+        /// <summary>Solo practice: straight onto the range lane with the plates out, no bot and no versus card.</summary>
+        void StartPractice()
+        {
+            matchMode = mode;
+            matchRifle = Profile.Rifle(cfg);
+            EnsureArena();
+            duel = Duel.Begin(Gear.ForMatch(cfg, matchRifle), ui, rig, arena!, PlayerName, matchRifle, Profile.Difficulty, Duel.NewSeed(), solo: true);
+            Settings.SetInMenus(false);
+            duel.Left += () => Go("Play");
         }
 
         void EnsureArena()
@@ -377,7 +389,6 @@ namespace SniperDuel.Game
             if (v.Has("first")) v["first"].style.backgroundColor = meFirst ? Skin.Amber : Skin.Red;
 
             v.Text("map", map.Name.ToUpperInvariant());
-            v.Text("range", $"{map.LaneLength:#,0} m");
             // Round 1's mid-lane wind, as the clock face a spotter calls it: where it blows from.
             var zones = preview.Conditions.Wind.Zones;
             var mid = zones.Count > 0 ? zones[zones.Count / 2] : new Vec3(0, 0, 0);
@@ -423,7 +434,7 @@ namespace SniperDuel.Game
                 string shot = nth == 1 ? "first shot" : $"shot {nth}";
                 r.Text("row" + i + "round", "R" + (i + 1));
                 r.Text("row" + i + "text", me ? $"{decisive.Zone} hit · {shot}" : $"Hit by enemy · {shot}");
-                r.Text("row" + i + "value", $"{decisive.Distance:0} m");
+                r.Text("row" + i + "value", $"{decisive.Energy / 1000:0.0} kJ");
                 if (r.Has("row" + i)) r["row" + i].style.borderLeftColor = me ? Skin.Amber : Skin.Red;
             }
 
