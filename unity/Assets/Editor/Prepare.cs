@@ -75,6 +75,17 @@ namespace SniperDuel.EditorTools
                 litCut.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
                 EditorUtility.SetDirty(litCut);
             }
+            // Downloaded models with alpha-tested parts (ghillie fringe, leaves, fences), with their maps.
+            var litCutMapped = Template("LitCutoutMapped", "Universal Render Pipeline/Lit", "_ALPHATEST_ON", "_NORMALMAP", "_METALLICSPECGLOSSMAP", "_OCCLUSIONMAP");
+            if (litCutMapped != null)
+            {
+                litCutMapped.SetFloat("_AlphaClip", 1);
+                litCutMapped.SetFloat("_Cutoff", 0.5f);
+                litCutMapped.SetFloat("_Cull", 0);
+                litCutMapped.doubleSidedGI = true;
+                litCutMapped.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
+                EditorUtility.SetDirty(litCutMapped);
+            }
             // Cut-out pictures of far plants (Impostor): alpha tested, both faces drawn.
             var cutout = Template("UnlitCutout", "Universal Render Pipeline/Unlit", "_ALPHATEST_ON");
             if (cutout != null)

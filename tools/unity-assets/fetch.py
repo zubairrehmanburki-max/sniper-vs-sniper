@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """
 Downloads the free third-party assets listed in unity/assets.json into an output folder, with a
-CREDITS.md. Everything is CC0 (Poly Haven), OFL (Google Fonts) or CC-BY (Sketchfab, credited; needs
-SKETCHFAB_API_TOKEN). Run by the unity-assets action on
+CREDITS.md. Everything is CC0 (Poly Haven, OpenGameArt packs), OFL (Google Fonts) or CC-BY (Sketchfab,
+credited; needs SKETCHFAB_API_TOKEN). Sketchfab models with a `fix` are readied for phones by glbfix.py
+(needs Pillow, and npx for simplification). Run by the unity-assets action on
 a GitHub runner; the result is cached as a release so builds don't hit the sources every time.
 
 usage: fetch.py unity/assets.json OUT_DIR
 """
-import json, os, sys, time, urllib.request
+import io, json, os, sys, time, urllib.request, zipfile
+
+import glbfix
 
 API = "https://api.polyhaven.com"
 UA = {"User-Agent": "sniper-vs-sniper-asset-fetch"}
@@ -81,7 +84,11 @@ def sketchfab(item, out, credits, problems):
             problems.append(f"{mid}: licence {lic} not allowed; skipped")
             return
         dl = json.loads(get(f"https://api.sketchfab.com/v3/models/{uid}/download", auth))
-        save(dl["glb"]["url"], os.path.join(out, "Models", mid, f"{mid}_1k.glb"))
+        path = os.path.join(out, "Models", mid, f"{mid}_1k.glb")
+        save(dl["glb"]["url"], path)
+        if item.get("fix"):
+            glbfix.fix(path, item["fix"])
+            print(f"  fixed: {os.path.getsize(path) / 1e6:.1f} MB")
     except Exception as e:
         problems.append(f"{mid}: {e}")
         return
@@ -102,6 +109,20 @@ def main():
     for item in manifest.get("sketchfab", []):
         print(f"sketchfab: {item['id']}")
         sketchfab(item, out, credits, problems)
+    for item in manifest.get("zips", []):
+        # A CC0 pack: its images unpacked flat under dest.
+        print(f"zip: {item['dest']}")
+        try:
+            with zipfile.ZipFile(io.BytesIO(get(item["url"]))) as z:
+                for name in z.namelist():
+                    if name.lower().endswith((".png", ".jpg", ".jpeg", ".tga")) and not name.startswith("__MACOSX"):
+                        dest = os.path.join(out, item["dest"], os.path.basename(name).replace(" ", "_"))
+                        os.makedirs(os.path.dirname(dest), exist_ok=True)
+                        with open(dest, "wb") as f:
+                            f.write(z.read(name))
+            credits.append(f"| {item['dest']} | {item['source']} | {item.get('author', '')} | {item['license']} | {item.get('page', item['url'])} |")
+        except Exception as e:
+            problems.append(f"{item['dest']}: {e}")
     for item in manifest.get("files", []):
         print(f"file: {item['dest']}")
         try:

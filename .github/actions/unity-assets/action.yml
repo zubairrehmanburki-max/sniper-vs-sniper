@@ -17,7 +17,7 @@ runs:
   steps:
     - id: key
       shell: bash
-      run: echo "tag=unity-assets-$(sha256sum unity/assets.json tools/unity-assets/fetch.py | sha256sum | cut -c1-12)" >> "$GITHUB_OUTPUT"
+      run: echo "tag=unity-assets-$(sha256sum unity/assets.json tools/unity-assets/fetch.py tools/unity-assets/glbfix.py | sha256sum | cut -c1-12)" >> "$GITHUB_OUTPUT"
     - name: Download or build the asset set
       shell: bash
       env:
@@ -26,6 +26,7 @@ runs:
         TAG: ${{ steps.key.outputs.tag }}
       run: |
         if ! gh release download "$TAG" -p assets.tgz -D "$RUNNER_TEMP" 2>/dev/null; then
+          python3 -m pip install -q pillow==10.4.0 || python3 -m pip install -q --break-system-packages pillow==10.4.0
           python3 tools/unity-assets/fetch.py unity/assets.json "$RUNNER_TEMP/assets"
           tar -czf "$RUNNER_TEMP/assets.tgz" -C "$RUNNER_TEMP/assets" .
           gh release create "$TAG" "$RUNNER_TEMP/assets.tgz" --prerelease --title "$TAG" \

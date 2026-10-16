@@ -1,5 +1,5 @@
 {
-  "$comment": "Free third-party assets fetched by tools/unity-assets/fetch.py at build time (not committed). Poly Haven assets are CC0; Sketchfab models are CC-BY (credited, need SKETCHFAB_API_TOKEN); fonts are OFL. Models over maxModelMB (sum of files) are skipped and reported in PROBLEMS.txt.",
+  "$comment": "Free third-party assets fetched by tools/unity-assets/fetch.py at build time (not committed). Poly Haven assets are CC0; Sketchfab models are CC-BY (credited, need SKETCHFAB_API_TOKEN; `fix` readies a model for a phone, see tools/unity-assets/glbfix.py); zips are CC0 packs unpacked under dest; fonts are OFL. Models over maxModelMB (sum of files) are skipped and reported in PROBLEMS.txt.",
   "hdris": [
     {
       "id": "belfast_sunset_puresky",
@@ -18,6 +18,31 @@
     },
     {
       "id": "kloofendal_48d_partly_cloudy_puresky",
+      "res": "4k",
+      "format": "exr"
+    },
+    {
+      "id": "sunflowers_puresky",
+      "res": "4k",
+      "format": "exr"
+    },
+    {
+      "id": "qwantani_noon_puresky",
+      "res": "4k",
+      "format": "exr"
+    },
+    {
+      "id": "qwantani_dusk_1_puresky",
+      "res": "4k",
+      "format": "exr"
+    },
+    {
+      "id": "snow_field_puresky",
+      "res": "4k",
+      "format": "exr"
+    },
+    {
+      "id": "quarry_01_puresky",
       "res": "4k",
       "format": "exr"
     }
@@ -196,6 +221,51 @@
     },
     {
       "id": "concrete_pavers_02",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "aerial_grass_rock",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "rocky_trail",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "snow_field_aerial",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "forest_ground_04",
+      "res": "2k",
+      "maps": [
+        "Diffuse",
+        "nor_gl",
+        "arm"
+      ]
+    },
+    {
+      "id": "aerial_beach_01",
       "res": "2k",
       "maps": [
         "Diffuse",
@@ -411,6 +481,273 @@
       "id": "fps_sniper_arms",
       "uid": "eae1ba5b43ae4bc89b0647fb5d8a2d27",
       "name": "sniper animated"
+    },
+    {
+      "id": "rifle_m40a5",
+      "uid": "f724d89f40db46b0afce2b57ac6d4823",
+      "name": "USMC M40A5 Sniper",
+      "fix": {
+        "maxTexture": 2048
+      }
+    },
+    {
+      "id": "rifle_fn_spr",
+      "uid": "9931c4b26dab4a878cdff7989731d25b",
+      "name": "FN SPR A3G",
+      "fix": {
+        "maxTexture": 2048
+      }
+    },
+    {
+      "id": "rifle_l115a3_hd",
+      "uid": "b3a829d236004a769c0b3ac07cc3a9ad",
+      "name": "L115A3",
+      "fix": {
+        "maxTexture": 2048
+      }
+    },
+    {
+      "id": "rifle_hecate",
+      "uid": "d575acc6c9c54240b6aa486bd9398b47",
+      "name": "Low-Poly PGM Hecate II"
+    },
+    {
+      "id": "rifle_sv98m",
+      "uid": "bf79b7f1d4304123823bb345848de80f",
+      "name": "SV-98M Sniper rifle",
+      "fix": {
+        "maxTexture": 2048
+      }
+    },
+    {
+      "id": "rifle_mosin",
+      "uid": "a94bd6b2c90840e88f0d6332ec4fe137",
+      "name": "Mosin Nagant",
+      "fix": {
+        "maxTexture": 2048
+      }
+    },
+    {
+      "id": "rifle_timberwolf",
+      "uid": "33e433907d2741a49b500bbcaeb84aaf",
+      "name": "Low-Poly PGW Timberwolf"
+    },
+    {
+      "id": "rifle_l118a1",
+      "uid": "5e2f001d6e6245bcacf2b1e2de8892f4",
+      "name": "Low-Poly L118A1"
+    },
+    {
+      "id": "arms_sniper",
+      "uid": "c15ae8393d824f5b929e3f69691cdd31",
+      "name": "FPS animations sniper rifle",
+      "fix": {
+        "maxTexture": 2048
+      }
+    },
+    {
+      "id": "soldier_boonie",
+      "uid": "e1201dde63a247f7acb232ccaced9270",
+      "name": "Sniper",
+      "fix": {
+        "opaque": true,
+        "maxTexture": 2048
+      }
+    },
+    {
+      "id": "soldier_multicam",
+      "uid": "ca2962e93f984443bea22807970df6b2",
+      "name": "Soldier. Game Ready",
+      "fix": {
+        "drop": [
+          "Std_Eyelash.005",
+          "Male_Brow_Transparency.001",
+          "Male_Brow_Base_Transparency.001",
+          "Std_Eye_Occlusion_R.001",
+          "Std_Eye_Occlusion_L.001",
+          "Std_Cornea_R.001",
+          "Std_Cornea_L.001",
+          "Std_Upper_Teeth.001",
+          "Std_Lower_Teeth.001",
+          "Std_Tongue.001"
+        ],
+        "maxTexture": 1024,
+        "simplify": 0.6
+      }
+    },
+    {
+      "id": "soldier_ghillie",
+      "uid": "b49a99c29e65494d966d3b314c60d61d",
+      "name": "Ghillie Suit Sniper",
+      "fix": {
+        "drop": [
+          "ground",
+          "grass1",
+          "Material_1792",
+          "Material_1789",
+          "Material_1788",
+          "Material_1786",
+          "silencer",
+          "material_0",
+          "human.Eyelashes01"
+        ],
+        "maxTexture": 1024,
+        "simplify": 0.5
+      }
+    },
+    {
+      "id": "bridge_high",
+      "uid": "1a98cc4fe0064c009f4c2da35f0fc232",
+      "name": "NYC, The High Bridge",
+      "fix": {
+        "maxTexture": 2048
+      }
+    },
+    {
+      "id": "bridge_road",
+      "uid": "62412773c6ba408c9fb2985024760278",
+      "name": "American Road Bridge",
+      "fix": {
+        "maxTexture": 1024
+      }
+    },
+    {
+      "id": "tower_steel",
+      "uid": "3b32a0bd560743c38f27882fa94575c3",
+      "name": "Watchtower - 11MB",
+      "fix": {
+        "maxTexture": 2048
+      }
+    },
+    {
+      "id": "tower_lattice",
+      "uid": "042f327a0f4c4fc9bf458903666bb257",
+      "name": "Watch tower",
+      "fix": {
+        "maxTexture": 2048
+      }
+    },
+    {
+      "id": "rig_benkos",
+      "uid": "9bbb61d0e1434d9f8dba7a0ecf28a2fe",
+      "name": "Oil Rig - Low Poly",
+      "fix": {
+        "maxTexture": 2048
+      }
+    },
+    {
+      "id": "rig_deepwater",
+      "uid": "800cec2552164d6682e556742f024344",
+      "name": "Deepwater Horizon Oil Platform",
+      "fix": {
+        "maxTexture": 1024
+      }
+    },
+    {
+      "id": "battlefield_pack",
+      "uid": "dcd0ade8c80e46d982a54fe4619f1c87",
+      "name": "Battlefield Pack",
+      "fix": {
+        "maxTexture": 1024
+      }
+    },
+    {
+      "id": "trench_set",
+      "uid": "f91624a4e7bd4832ba06f8f7f3ff45e5",
+      "name": "Trench set",
+      "fix": {
+        "maxTexture": 1024
+      }
+    },
+    {
+      "id": "sandbag_barrier",
+      "uid": "593800671c8e45eca93b8b7c765c0f77",
+      "name": "Sandbag Barrier",
+      "fix": {
+        "maxTexture": 1024
+      }
+    },
+    {
+      "id": "container_rusted",
+      "uid": "2b787d1a02174d0bbca9eac34eb3a486",
+      "name": "Freight shipping container - Rusted",
+      "fix": {
+        "maxTexture": 1024
+      }
+    },
+    {
+      "id": "pier_old",
+      "uid": "3c21842960a74452a13609a584f38762",
+      "name": "Old pier (Game ready)",
+      "fix": {
+        "maxTexture": 1024
+      }
+    },
+    {
+      "id": "rocks_scan_1",
+      "uid": "d9ffac943bb24a609c1082c1aa118d76",
+      "name": "Lowpoly Rocks - 1",
+      "fix": {
+        "maxTexture": 512
+      }
+    },
+    {
+      "id": "rocks_scan_2",
+      "uid": "7f8361d14ff24e27bc460f7f7ba318b6",
+      "name": "Lowpoly Rocks - 2",
+      "fix": {
+        "maxTexture": 512
+      }
+    },
+    {
+      "id": "rocks_scan_3",
+      "uid": "c985042a860a40859c4d5ac94f1b3479",
+      "name": "Lowpoly Rocks - 3",
+      "fix": {
+        "maxTexture": 512
+      }
+    },
+    {
+      "id": "cliffs_set",
+      "uid": "36808d850b784cc4b9b2cae345d5306a",
+      "name": "Cliffs Set | Low-Poly | Game-ready",
+      "fix": {
+        "maxTexture": 2048
+      }
+    },
+    {
+      "id": "desert_cliff",
+      "uid": "ed2e9c7e976e4768868481e4a5c63f6f",
+      "name": "Desert Cliff 6",
+      "fix": {
+        "maxTexture": 2048
+      }
+    },
+    {
+      "id": "rock_kit",
+      "uid": "b53bc50a41f547a69318fecc8b5c6781",
+      "name": "Forest Rock Kit PBR Game Ready",
+      "fix": {
+        "maxTexture": 1024
+      }
+    },
+    {
+      "id": "spruce",
+      "uid": "ef06bbc949b64e81a5016e18d3263416",
+      "name": "Low-Poly Game-Ready Spruce Tree",
+      "fix": {
+        "maxTexture": 1024
+      }
+    }
+  ],
+  "zips": [
+    {
+      "url": "https://opengameart.org/sites/default/files/rc_art_-_muzzle_effects.zip",
+      "dest": "Effects/muzzle",
+      "source": "OpenGameArt (Reactorcore)",
+      "author": "Reactorcore",
+      "license": "CC0",
+      "page": "https://opengameart.org/content/gun-muzzle-flash-effects-fire-and-ion-and-melee"
     }
   ]
 }

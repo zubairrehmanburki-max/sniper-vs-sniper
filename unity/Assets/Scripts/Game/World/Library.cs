@@ -182,6 +182,168 @@ namespace SniperDuel.Game.World
             return mat;
         }
 
+        static readonly Dictionary<Material, Material> Converted = new Dictionary<Material, Material>();
+
+        static Texture? Tex(Material? m, string prop) => m != null && m.HasProperty(prop) ? m.GetTexture(prop) : null;
+
+        /// <summary>
+        /// A URP Lit material from an imported glTF one (the glTF materials draw nothing on some
+        /// renderers): colour, normal and occlusion maps, the glTF metal/roughness map repacked
+        /// into Unity's mask, and alpha-tested leaves, fringes and fences kept cut out.
+        /// `metal` scales the metal (worn paint reads better than polished chrome under the sky),
+        /// `smoothness` caps the shine (null keeps the model's own).
+        /// </summary>
+        public static Material Pbr(Material? src, float metal = 1, float? smoothness = null)
+        {
+            if (src != null && Converted.TryGetValue(src, out var done) && done != null && metal == 1 && smoothness == null) return done;
+            bool cut = src != null && (src.IsKeywordEnabled("_ALPHATEST_ON") || src.HasProperty("alphaCutoff") && src.renderQueue >= 2450 && src.renderQueue < 3000);
+            var m = new Material(Template(cut ? "LitCutoutMapped" : "Lit")) { name = "Pbr " + (src != null ? src.name : "") };
+            var tex = Tex(src, "baseColorTexture") ?? Tex(src, "_BaseMap") ?? (src != null && src.HasProperty("_MainTex") ? src.mainTexture : null);
+            m.SetTexture("_BaseMap", tex != null ? tex : Texture2D.whiteTexture);
+            var factor = src != null && src.HasProperty("baseColorFactor") ? src.GetColor("baseColorFactor") : src != null && src.HasProperty("_BaseColor") ? src.GetColor("_BaseColor") : Color.white;
+            m.SetColor("_BaseColor", factor);
+            var nor = Tex(src, "normalTexture") ?? Tex(src, "_BumpMap");
+            if (nor != null) m.SetTexture("_BumpMap", nor);
+            float rough = src != null && src.HasProperty("roughnessFactor") ? src.GetFloat("roughnessFactor") : 0.7f;
+            float metalFactor = src != null && src.HasProperty("metallicFactor") ? src.GetFloat("metallicFactor") : 0;
+            var mask = Repack(Tex(src, "metallicRoughnessTexture"), Tex(src, "occlusionTexture"), metal);
+            if (mask != null)
+            {
+                m.SetTexture("_MetallicGlossMap", mask);
+                m.SetTexture("_OcclusionMap", mask);
+                m.SetFloat("_Smoothness", smoothness ?? 1);
+                m.SetFloat("_Metallic", 1);
+            }
+            else
+            {
+                // Without a map the Lit template's metallic map reads as chrome: a flat one instead.
+                m.SetTexture("_MetallicGlossMap", Flat(metalFactor * metal, smoothness ?? Mathf.Clamp01(1 - rough)));
+                m.SetTexture("_OcclusionMap", Texture2D.whiteTexture);
+                m.SetFloat("_Smoothness", 1);
+                m.SetFloat("_Metallic", 1);
+            }
+            if (cut)
+            {
+                float cutoff = src != null && src.HasProperty("alphaCutoff") ? src.GetFloat("alphaCutoff") : 0.5f;
+                m.SetFloat("_Cutoff", Mathf.Clamp(cutoff, 0.05f, 0.9f));
+                m.SetFloat("_AlphaClip", 1);
+                m.SetFloat("_Cull", 0);
+                m.EnableKeyword("_ALPHATEST_ON");
+            }
+            if (src != null && metal == 1 && smoothness == null) Converted[src] = m;
+            return m;
+        }
+
+        /// <summary>Converts every material under an object with <see cref="Pbr"/>.</summary>
+        public static void PbrAll(GameObject go, float metal = 1, float? smoothness = null)
+        {
+            foreach (var r in go.GetComponentsInChildren<Renderer>(true))
+            {
+                var src = r.sharedMaterials;
+                var mats = new Material[src.Length];
+                for (int i = 0; i < src.Length; i++) mats[i] = Pbr(src[i], metal, smoothness);
+                r.sharedMaterials = mats;
+            }
+        }
+
+        static readonly Dictionary<(Texture?, Texture?, float), Texture2D> Repacked = new Dictionary<(Texture?, Texture?, float), Texture2D>();
+
+        /// <summary>
+        /// glTF packs occlusion, roughness and metal in red, green and blue (occlusion sometimes in
+        /// its own map); URP Lit reads metal from red, occlusion from green and smoothness from alpha.
+        /// </summary>
+        public static Texture2D? Repack(Texture? orm, Texture? occlusion = null, float metal = 1)
+        {
+            if (orm == null) return null;
+            var key = (orm, occlusion, metal);
+            if (Repacked.TryGetValue(key, out var done) && done != null) return done;
+            var px = Pixels(orm, out int w, out int h);
+            var ao = occlusion != null && occlusion != orm ? Pixels(occlusion, out int aw, out int ah, w, h) : null;
+            for (int i = 0; i < px.Length; i++)
+            {
+                var p = px[i];
+                byte occ = ao != null ? ao[i].r : p.r;
+                // Some exports leave occlusion black where there is none.
+                if (ao == null && p.r == 0) occ = 255;
+                px[i] = new Color32((byte)(p.b * metal), occ, 0, (byte)(255 - p.g));
+            }
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, true, true) { name = orm.name + " (mask)", wrapMode = orm.wrapMode };
+            tex.SetPixels32(px);
+            tex.Apply(true, true);
+            Repacked[key] = tex;
+            return tex;
+        }
+
+        /// <summary>A texture's pixels through the GPU (imported textures aren't readable), at most 2048 square.</summary>
+        static Color32[] Pixels(Texture src, out int w, out int h, int forceW = 0, int forceH = 0)
+        {
+            w = forceW > 0 ? forceW : Mathf.Min(src.width, 2048);
+            h = forceH > 0 ? forceH : Mathf.Min(src.height, 2048);
+            var rt = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+            Graphics.Blit(src, rt);
+            var was = RenderTexture.active;
+            RenderTexture.active = rt;
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false, true);
+            tex.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+            RenderTexture.active = was;
+            RenderTexture.ReleaseTemporary(rt);
+            var px = tex.GetPixels32();
+            Object.Destroy(tex);
+            return px;
+        }
+
+        static readonly Dictionary<(int, int), Texture2D> Flats = new Dictionary<(int, int), Texture2D>();
+
+        /// <summary>A 4×4 mask map of one metal and smoothness.</summary>
+        public static Texture2D Flat(float metallic, float smoothness)
+        {
+            var key = (Mathf.RoundToInt(metallic * 255), Mathf.RoundToInt(smoothness * 255));
+            if (Flats.TryGetValue(key, out var done) && done != null) return done;
+            var px = new Color32[16];
+            for (int i = 0; i < px.Length; i++) px[i] = new Color32((byte)key.Item1, 255, 0, (byte)key.Item2);
+            var tex = new Texture2D(4, 4, TextureFormat.RGBA32, false, true) { name = "Flat mask" };
+            tex.SetPixels32(px);
+            tex.Apply();
+            Flats[key] = tex;
+            return tex;
+        }
+
+        /// <summary>
+        /// A downloaded model ready to place: skinned parts frozen into static meshes, every
+        /// material on URP Lit (<see cref="Pbr"/>). An empty object when the model is missing.
+        /// </summary>
+        public static GameObject Prop(string id, Transform? parent = null, float metal = 1, float? smoothness = null)
+        {
+            var prefab = Model(id);
+            var go = prefab != null ? Object.Instantiate(prefab) : new GameObject(id + " (missing)");
+            go.name = id;
+            if (parent != null) go.transform.SetParent(parent, false);
+            if (prefab == null) return go;
+            foreach (var a in go.GetComponentsInChildren<Animation>(true)) Object.DestroyImmediate(a);
+            foreach (var a in go.GetComponentsInChildren<Animator>(true)) Object.DestroyImmediate(a);
+            Figure.Freeze(go);
+            PbrAll(go, metal, smoothness);
+            return go;
+        }
+
+        /// <summary>
+        /// Wraps a model in a holder whose origin is the middle of the model's footprint at its
+        /// base, scaled so its largest horizontal side (or its height, `byHeight`) is `size` metres.
+        /// </summary>
+        public static Transform Fit(GameObject model, float size, bool byHeight = false, Transform? parent = null)
+        {
+            var holder = new GameObject(model.name + " (fitted)").transform;
+            if (parent != null) holder.SetParent(parent, false);
+            model.transform.SetParent(holder, false);
+            model.transform.localPosition = Vector3.zero;
+            var b = BoundsOf(model);
+            float now = byHeight ? b.size.y : Mathf.Max(b.size.x, b.size.z);
+            if (now > 1e-4f) model.transform.localScale *= size / now;
+            b = BoundsOf(model);
+            model.transform.position -= new Vector3(b.center.x, b.min.y, b.center.z) - holder.position;
+            return holder;
+        }
+
         public static T? Load<T>(string path) where T : Object
         {
             var a = Resources.Load<T>(path);
