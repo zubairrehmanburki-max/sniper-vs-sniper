@@ -54,7 +54,6 @@ namespace SniperDuel.Game.World
                     foreach (var (x, s, yaw) in new[] { (250f, 620f, 180f), (-260f, 760f, 10f) })
                         Put("cliffs_set", root, new Vector3(x, Y(x, s) - 6, s), yaw, 240, false, Sandstone, "cliff_04", "cliff_lp");
                     Put("desert_cliff", root, new Vector3(-500, Y(-500, lane + 900) - 30, lane + 900), 30, 700);
-                    Rocks(root, rng, Y, lane, 34, 1.5f, 7, 30, 260, Sandstone, "rock_kit");
                     Sandbags(root, Y, new[] { (-150f, lane * 0.5f + 26, 20f), (-140f, lane * 0.5f + 31, 30f) });
                     break;
                 case "alpine-ridge":
