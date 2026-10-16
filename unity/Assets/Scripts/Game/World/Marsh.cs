@@ -211,7 +211,7 @@ namespace SniperDuel.Game.World
             float Ring(float x, float s) => new Vector2(x * 0.75f, s - 225).magnitude;
             var flora = new Wilds.Flora()
                 .Kind("island_tree_01", 13).Kind("island_tree_02", 12).Kind("island_tree_03", 12).Kind("tree_small_02", 8)
-                .Kind("shrub_01", 1.6f).Kind("shrub_02", 1.5f).Kind("shrub_03", 1.4f).Kind("shrub_04", 1.3f);
+                .Kind("fern_02", 0.9f).Kind("grass_medium_01", 0.75f).Kind("grass_medium_02", 0.7f).Kind("shrub_01", 1.6f).Kind("shrub_02", 1.5f).Kind("shrub_03", 1.4f).Kind("shrub_04", 1.3f);
             var trees = flora.Available("island_tree_02", "island_tree_03", "island_tree_01", "tree_small_02");
             var shrubs = flora.Available("shrub_01", "shrub_02", "shrub_03", "shrub_04");
             var tussock = flora.Available("grass_medium_01", "grass_medium_02", "fern_02");

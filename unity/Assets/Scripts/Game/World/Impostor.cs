@@ -80,8 +80,12 @@ namespace SniperDuel.Game.World
             if (hash >= 0 && int.TryParse(cardId.Substring(hash + 1), out int k))
             {
                 var parts = Library.Parts(go);
-                for (int i = 0; i < parts.Count; i++)
-                    if (i != k) foreach (var r in parts[i]) if (r != null) Object.DestroyImmediate(r.gameObject);
+                if (k < parts.Count)
+                {
+                    var keep = new HashSet<Renderer>(parts[k]);
+                    foreach (var r in go.GetComponentsInChildren<Renderer>())
+                        if (r != null && !keep.Contains(r)) Object.DestroyImmediate(r);
+                }
             }
             return go;
         }

@@ -74,7 +74,8 @@ namespace SniperDuel.Game.World
         static void Outcrops(DuelMap map, Transform root, System.Random rng, Biomes.Lane lane, System.Func<float, float, float> Y)
         {
             var tinted = new Dictionary<Material, Material>();
-            string[] ids = { "rock_face_01", "coast_rocks_01", "coast_rocks_03", "rock_face_01" };
+            // The coast rock scans run to 700k triangles apiece: the Namaqualand cliff and piles instead.
+            string[] ids = Wilds.Present("rock_face_01", "namaqualand_cliff_01", "namaqualand_boulders_01");
             var boulders = new MeshBuilder();
             var pebbles = new MeshBuilder();
             int placed = 0;
@@ -85,7 +86,7 @@ namespace SniperDuel.Game.World
                 float ax = near ? 78 + (float)rng.NextDouble() * 50 : 120 + (float)rng.NextDouble() * 650;
                 float x = (rng.Next(2) == 0 ? -1 : 1) * ax;
                 float s = -600 + (float)rng.NextDouble() * 2100;
-                if (lane.Contains(x, s, 18) || Mathf.Abs(x - TrackX(s)) < 14) continue;
+                if (ids.Length == 0 || lane.Contains(x, s, 18) || Mathf.Abs(x - TrackX(s)) < 14) continue;
                 float h = near ? 3 + (float)rng.NextDouble() * 3 : 5 + (float)rng.NextDouble() * 13;
                 var go = Biomes.PlaceSized(ids[rng.Next(ids.Length)], new Vector3(x, Y(x, s), s), (float)rng.NextDouble() * 360, h, root, h * 0.2f, h * 3);
                 Biomes.Tint(go, Warm, tinted);
@@ -137,9 +138,10 @@ namespace SniperDuel.Game.World
             float R(float a, float b) => a + (float)rng.NextDouble() * (b - a);
             var straw = new Color(1.02f, 0.86f, 0.58f);
             var flora = new Wilds.Flora()
-                .Kind("grass_medium_02", 0.55f, straw).Kind("grass_medium_01", 0.6f, straw)
-                .Kind("quiver_tree_01", null, new Color(1.04f, 0.98f, 0.9f)).Kind("quiver_tree_02", null, new Color(1.04f, 0.98f, 0.9f))
-                .Kind("cheiridopsis_succulent", 0.14f);
+                .Kind("grass_medium_02", 0.6f, straw).Kind("grass_medium_01", 0.65f, straw)
+                .Kind("wild_rooibos_bush", 1.1f).Kind("didelta_spinosa", 1.7f).Kind("searsia_lucida", 3.4f)
+                .Kind("quiver_tree_01", 5.5f, new Color(1.04f, 0.98f, 0.9f)).Kind("quiver_tree_02", 4.2f, new Color(1.04f, 0.98f, 0.9f))
+                .Kind("cheiridopsis_succulent", 0.22f);
             var bushes = flora.Available("wild_rooibos_bush", "didelta_spinosa", "searsia_lucida");
             var grass = flora.Available("grass_medium_02", "grass_medium_01");
             var trees = flora.Available("quiver_tree_01", "quiver_tree_02", "searsia_lucida");
@@ -168,13 +170,9 @@ namespace SniperDuel.Game.World
                 n++;
                 flora.Plant(trees[rng.Next(trees.Length)], new Vector3(x, Y(x, s) - 0.1f, s), R(0, 360), R(0.75f, 1.3f), rng.Next(2) == 0);
             }
-            // Succulents a hand high scattered over the lane floor, clear of every spot.
-            for (int i = 0; i < 420; i++)
-            {
-                float x = R(-70, 70), s = R(-40, length + 40);
-                if (Biomes.NearestSpot(map, x, s) < 7) continue;
-                flora.Plant("cheiridopsis_succulent", new Vector3(x, Y(x, s) - 0.02f, s), R(0, 360), R(0.7f, 1.1f), rng.Next(2) == 0);
-            }
+            // Succulents and sun-dried tufts a hand high over the lane floor, clear of the spots.
+            Wilds.LaneCarpet(flora, map, lane, rng, new[] { "cheiridopsis_succulent" }, 2600, 0.6f, 0.9f, Y);
+            Wilds.LaneCarpet(flora, map, lane, rng, grass, 3200, 0.22f, 0.32f, Y, (x, s) => Mathf.Abs(x - TrackX(s)) > 3);
             flora.Build(root, "Veld");
 
             // Granite: single boulders along the lane's edges and over the flats, piles and cliffs on the ridges.

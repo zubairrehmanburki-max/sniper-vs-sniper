@@ -379,43 +379,50 @@ namespace SniperDuel.Game.World
         }
 
         /// <summary>
-        /// The separate things a model holds side by side, each a list of its renderers: the
-        /// children of the deepest node above every renderer, grouped. One part when the pieces
-        /// overlap (a tree's trunk and crown), several when they stand apart (a row of variants).
+        /// The separate things a model holds side by side, each a list of its renderers: renderers
+        /// whose footprints overlap belong together (a tree's trunk and its branches), apart they are
+        /// separate plants (a row of grass clumps, a stand of spruce). Scraps far shorter than the
+        /// tallest are left out. One part when nothing stands apart.
         /// </summary>
         public static List<List<Renderer>> Parts(GameObject go)
         {
             var rs = go.GetComponentsInChildren<Renderer>();
             var whole = new List<List<Renderer>> { new List<Renderer>(rs) };
-            if (rs.Length < 2) return whole;
-            // The deepest common ancestor of all renderers.
-            var top = rs[0].transform;
-            foreach (var r in rs)
-                while (top != null && !r.transform.IsChildOf(top)) top = top.parent;
-            if (top == null) return whole;
-            var groups = new Dictionary<Transform, List<Renderer>>();
-            var order = new List<Transform>();
-            foreach (var r in rs)
+            if (rs.Length < 2 || rs.Length > 600) return whole;
+            var root = new int[rs.Length];
+            for (int i = 0; i < rs.Length; i++) root[i] = i;
+            int Find(int i) { while (root[i] != i) i = root[i] = root[root[i]]; return i; }
+            for (int i = 0; i < rs.Length; i++)
             {
-                var t = r.transform;
-                if (t == top) return whole;
-                while (t.parent != top) t = t.parent;
-                if (!groups.TryGetValue(t, out var list)) { groups[t] = list = new List<Renderer>(); order.Add(t); }
-                list.Add(r);
+                var bi = rs[i].bounds;
+                for (int j = i + 1; j < rs.Length; j++)
+                {
+                    var bj = rs[j].bounds;
+                    if (bi.min.x <= bj.max.x && bj.min.x <= bi.max.x && bi.min.z <= bj.max.z && bj.min.z <= bi.max.z)
+                        root[Find(i)] = Find(j);
+                }
             }
-            if (order.Count < 2) return whole;
-            // Only a row of things: the whole far wider than its widest part.
-            var all = BoundsOf(go);
-            float widest = 0;
+            var groups = new Dictionary<int, List<Renderer>>();
+            var order = new List<int>();
+            for (int i = 0; i < rs.Length; i++)
+            {
+                int k = Find(i);
+                if (!groups.TryGetValue(k, out var list)) { groups[k] = list = new List<Renderer>(); order.Add(k); }
+                list.Add(rs[i]);
+            }
+            if (order.Count < 2 || order.Count > 24) return whole;
+            float tallest = 0;
+            foreach (var k in order) tallest = Mathf.Max(tallest, Height(groups[k]));
             var parts = new List<List<Renderer>>();
-            foreach (var t in order)
-            {
-                var b = groups[t][0].bounds;
-                foreach (var r in groups[t]) b.Encapsulate(r.bounds);
-                widest = Mathf.Max(widest, Mathf.Max(b.size.x, b.size.z));
-                parts.Add(groups[t]);
-            }
-            return Mathf.Max(all.size.x, all.size.z) > widest * 1.6f ? parts : whole;
+            foreach (var k in order) if (Height(groups[k]) >= tallest * 0.25f) parts.Add(groups[k]);
+            return parts.Count < 2 ? whole : parts;
+        }
+
+        static float Height(List<Renderer> part)
+        {
+            var b = part[0].bounds;
+            foreach (var r in part) b.Encapsulate(r.bounds);
+            return b.size.y;
         }
 
         /// <summary>World-space bounds of everything rendered under an object.</summary>

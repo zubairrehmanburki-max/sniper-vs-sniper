@@ -256,6 +256,8 @@ namespace SniperDuel.Game.World
                 if (lane.Contains(x, s, 2) || Biomes.NearestSpot(map, x, s) < 10) return null;
                 return Y(x, s) < SnowLine - 6 && Slope(Y, x, s) < 26 ? new Vector2(x, s) : (Vector2?)null;
             }, (x, s) => !lane.Contains(x, s, 0) && Biomes.NearestSpot(map, x, s) > 8 && Y(x, s) < SnowLine - 4, Y, 0.7f, 1.3f, 0.03f);
+            // Meadow grass over the lane floor too, cropped to a pebble's height, down to the gully.
+            Wilds.LaneCarpet(flora, map, lane, rng, grass, 5000, 0.3f, 0.42f, Y, (x, s) => Y(x, s) < SnowLine - 6);
             flora.Build(root, "Forest");
             Debug.Log($"[AlpineRidge] {trees} spruce pictures, {cones} far cones");
             if (cones > 0)
@@ -280,7 +282,7 @@ namespace SniperDuel.Game.World
         static void Rocks(Transform root, System.Random rng, Biomes.Lane lane, float length, System.Func<float, float, float> Y, Material rock, Material snow)
         {
             var cool = new Dictionary<Material, Material>();
-            string[] ids = Wilds.Present("rock_face_01", "rock_moss_set_01", "coast_rocks_03", "rock_moss_set_02", "coast_rocks_01");
+            string[] ids = Wilds.Present("rock_face_01", "rock_moss_set_01", "rock_moss_set_02");
             int placed = 0;
             for (int i = 0; ids.Length > 0 && i < 600 && placed < 34; i++)
             {

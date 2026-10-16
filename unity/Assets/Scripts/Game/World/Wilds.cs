@@ -109,6 +109,39 @@ namespace SniperDuel.Game.World
             }
         }
 
+        /// <summary>
+        /// A carpet of ground cover over the lane floor itself, kept to `maxHeight` (a pebble's height,
+        /// so it never hides what the rules call open), clear of the ground round every spot and of
+        /// the strip straight ahead of each, where a prone shooter's eye is lowest.
+        /// </summary>
+        public static void LaneCarpet(Flora flora, SniperDuel.Rules.DuelMap map, Biomes.Lane lane, System.Random rng, string[] kinds,
+            int count, float scaleLo, float scaleHi, System.Func<float, float, float> Y, System.Func<float, float, bool>? keep = null)
+        {
+            if (kinds.Length == 0) return;
+            float R(float a, float b) => a + (float)rng.NextDouble() * (b - a);
+            for (int i = 0; i < count; i++)
+            {
+                float x = R(-lane.HalfWidth - 4, lane.HalfWidth + 4), s = R(lane.SMin - 30, lane.SMax + 30);
+                if (Biomes.NearestSpot(map, x, s) < 6 || InFront(map, x, s) || (keep != null && !keep(x, s))) continue;
+                flora.Plant(kinds[rng.Next(kinds.Length)], new Vector3(x, Y(x, s) - 0.02f, s), R(0, 360), R(scaleLo, scaleHi), rng.Next(2) == 0);
+            }
+        }
+
+        /// <summary>True in the 5 m-wide, 35 m-long strip ahead of any spot, toward the other side.</summary>
+        public static bool InFront(SniperDuel.Rules.DuelMap map, float x, float s)
+        {
+            foreach (var side in new[] { SniperDuel.Rules.Side.A, SniperDuel.Rules.Side.B })
+            {
+                float dir = side == SniperDuel.Rules.Side.A ? 1 : -1;
+                foreach (var p in map.Spots[side])
+                {
+                    float ahead = (s - (float)-p.Z) * dir;
+                    if (Mathf.Abs(x - (float)p.X) < 2.5f && ahead > -1 && ahead < 35) return true;
+                }
+            }
+            return false;
+        }
+
         // ---- scanned rock ----------------------------------------------------------------------------
 
         /// <summary>The first `ids` that were downloaded.</summary>
