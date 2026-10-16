@@ -154,7 +154,7 @@ namespace SniperDuel.Game.World
                     ("leafy_grass", "sparse_grass", 8f, new Color(0.4f, 0.5f, 0.28f)),
                     ("rocky_terrain_02", "rocky_terrain_02", 12f, new Color(0.9f, 0.9f, 0.92f)),
                     ("cliff_side", "aerial_rocks_02", 20f, new Color(0.85f, 0.86f, 0.9f)),
-                    ("snow_field_aerial", "snow_02", 14f, new Color(0.95f, 0.96f, 0.99f)),
+                    ("snow_field_aerial", "snow_02", 14f, new Color(0.8f, 0.82f, 0.86f)),
                 },
                 Mix = (x, s, y, slope, n1, n2, water, w) =>
                 {
@@ -256,7 +256,7 @@ namespace SniperDuel.Game.World
                 Resolution = 1024,
                 Layers = new[]
                 {
-                    ("brown_mud_leaves_01", "brown_mud_leaves_01", 6f, new Color(0.62f, 0.58f, 0.5f)),
+                    ("brown_mud_leaves_01", "brown_mud_leaves_01", 6f, new Color(0.42f, 0.38f, 0.31f)),
                     ("leafy_grass", "sparse_grass", 7f, new Color(0.36f, 0.5f, 0.24f)),
                     ("sparse_grass", "sparse_grass", 9f, new Color(0.62f, 0.7f, 0.44f)),
                     ("forest_ground_04", "brown_mud_leaves_01", 8f, new Color(0.8f, 0.8f, 0.72f)),
@@ -266,7 +266,7 @@ namespace SniperDuel.Game.World
                     float mud = Mathf.Clamp01(1 - (y - water - 0.6f) / 1.4f);
                     float r = new Vector2(x * 0.75f, s - 225).magnitude;
                     float wood = Mathf.Clamp01((r - 470) / 30) * Mathf.Clamp01((n1 - 0.38f) * 4) * (1 - mud);
-                    float dry = Mathf.Clamp01((n2 - 0.55f) * 3) * (1 - mud) * (1 - wood);
+                    float dry = Mathf.Clamp01((n2 - 0.62f) * 2) * 0.6f * (1 - mud) * (1 - wood);
                     w[0] = mud * 2;
                     w[1] = Mathf.Max(0, 1 - mud - wood - dry);
                     w[2] = dry;

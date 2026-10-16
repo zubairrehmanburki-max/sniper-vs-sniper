@@ -378,6 +378,46 @@ namespace SniperDuel.Game.World
             return go;
         }
 
+        /// <summary>
+        /// The separate things a model holds side by side, each a list of its renderers: the
+        /// children of the deepest node above every renderer, grouped. One part when the pieces
+        /// overlap (a tree's trunk and crown), several when they stand apart (a row of variants).
+        /// </summary>
+        public static List<List<Renderer>> Parts(GameObject go)
+        {
+            var rs = go.GetComponentsInChildren<Renderer>();
+            var whole = new List<List<Renderer>> { new List<Renderer>(rs) };
+            if (rs.Length < 2) return whole;
+            // The deepest common ancestor of all renderers.
+            var top = rs[0].transform;
+            foreach (var r in rs)
+                while (top != null && !r.transform.IsChildOf(top)) top = top.parent;
+            if (top == null) return whole;
+            var groups = new Dictionary<Transform, List<Renderer>>();
+            var order = new List<Transform>();
+            foreach (var r in rs)
+            {
+                var t = r.transform;
+                if (t == top) return whole;
+                while (t.parent != top) t = t.parent;
+                if (!groups.TryGetValue(t, out var list)) { groups[t] = list = new List<Renderer>(); order.Add(t); }
+                list.Add(r);
+            }
+            if (order.Count < 2) return whole;
+            // Only a row of things: the whole far wider than its widest part.
+            var all = BoundsOf(go);
+            float widest = 0;
+            var parts = new List<List<Renderer>>();
+            foreach (var t in order)
+            {
+                var b = groups[t][0].bounds;
+                foreach (var r in groups[t]) b.Encapsulate(r.bounds);
+                widest = Mathf.Max(widest, Mathf.Max(b.size.x, b.size.z));
+                parts.Add(groups[t]);
+            }
+            return Mathf.Max(all.size.x, all.size.z) > widest * 1.6f ? parts : whole;
+        }
+
         /// <summary>World-space bounds of everything rendered under an object.</summary>
         public static Bounds BoundsOf(GameObject go)
         {

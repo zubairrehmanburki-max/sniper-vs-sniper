@@ -9,8 +9,8 @@ namespace SniperDuel.Game.World
     /// a stone-and-steel viaduct downstream of Twin Bridges and old jetties on its banks; more
     /// watchtowers (steel and timber) standing in the marsh; two more production platforms in the
     /// oil field; rusted containers on the harbor quays; an abandoned position, trenches, cliffs, a
-    /// mesa and scanned rocks in the dry valley; spruce and rocks on the alpine flanks; sandbag
-    /// walls and rocks along the range. A piece the asset set lacks is simply left out.
+    /// mesa and scanned rocks in the dry valley; spruce and rocks on the alpine flanks; rocks
+    /// along the range. A piece the asset set lacks is simply left out.
     /// </summary>
     public static class Scenery
     {
@@ -68,14 +68,6 @@ namespace SniperDuel.Game.World
                     Rocks(root, rng, Y, lane, 24, 1.5f, 6, 32, 240);
                     break;
                 case "training-lane":
-                    // Sandbag walls out on the flanks, like a range's spare cover positions.
-                    var bags = new List<(float, float, float)>();
-                    for (int k = 1; k <= 4; k++)
-                    {
-                        bags.Add((-48, lane * k / 5, 90));
-                        bags.Add((48, lane * k / 5 + 30, 90));
-                    }
-                    Sandbags(root, Y, bags.ToArray());
                     Rocks(root, rng, Y, lane, 14, 1, 3.5f, 60, 160);
                     break;
             }

@@ -31,7 +31,7 @@ namespace SniperDuel.Game.World
             var cladMat = Library.Surface("corrugated_iron_02", 2, new Color(0.93f, 0.93f, 0.90f));
             var moduleMat = Library.Surface("corrugated_iron_02", 2, new Color(0.55f, 0.62f, 0.60f));
             var glassMat = Library.Plain(new Color(0.05f, 0.08f, 0.11f), 0.92f, 0.3f);
-            var heliMat = Library.Surface("metal_plate", 4, new Color(0.24f, 0.30f, 0.28f), 0.5f);
+            var heliMat = Library.Surface("metal_plate", 1.5f, new Color(0.2f, 0.29f, 0.24f), 0.35f);
             var yellowMat = Library.Plain(new Color(0.95f, 0.74f, 0.08f), 0.3f);
             var whiteMat = Library.Plain(new Color(0.92f, 0.92f, 0.88f), 0.3f);
             var netMat = Library.Plain(new Color(0.09f, 0.09f, 0.08f), 0.1f);

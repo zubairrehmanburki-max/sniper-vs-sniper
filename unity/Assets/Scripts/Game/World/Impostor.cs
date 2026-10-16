@@ -49,12 +49,50 @@ namespace SniperDuel.Game.World
             return card;
         }
 
+        static readonly Dictionary<string, int> VariantCounts = new Dictionary<string, int>();
+
+        /// <summary>
+        /// How many separate plants a model holds side by side (Poly Haven ships grass, shrubs and
+        /// saplings as a row of variants): 1 for a single plant, 0 when the model is missing. Each
+        /// is pictured on its own as "id#k".
+        /// </summary>
+        public static int Variants(string modelId)
+        {
+            if (VariantCounts.TryGetValue(modelId, out int n)) return n;
+            n = 0;
+            if (Library.Model(modelId) != null)
+            {
+                var probe = Library.Prop(modelId);
+                probe.transform.position = new Vector3(0, -3000, 0);
+                n = Mathf.Max(1, Library.Parts(probe).Count);
+                Object.DestroyImmediate(probe);
+            }
+            return VariantCounts[modelId] = n;
+        }
+
+        /// <summary>The model for a card id ("id" or "id#k"), placed and frozen, with only variant k left in it.</summary>
+        static GameObject Stage(string cardId, Vector3 at, Transform? parent = null)
+        {
+            int hash = cardId.IndexOf('#');
+            string id = hash < 0 ? cardId : cardId.Substring(0, hash);
+            var go = Library.Prop(id, parent);
+            go.transform.position = at;
+            if (hash >= 0 && int.TryParse(cardId.Substring(hash + 1), out int k))
+            {
+                var parts = Library.Parts(go);
+                for (int i = 0; i < parts.Count; i++)
+                    if (i != k) foreach (var r in parts[i]) if (r != null) Object.DestroyImmediate(r.gameObject);
+            }
+            return go;
+        }
+
         static Card? Prepare(string modelId)
         {
-            if (Library.Model(modelId) == null) return null;
-            var probe = Library.Place(modelId, new Vector3(0, -3000, 0));
+            string baseId = modelId.Contains("#") ? modelId.Substring(0, modelId.IndexOf('#')) : modelId;
+            if (Library.Model(baseId) == null) return null;
+            var probe = Stage(modelId, new Vector3(0, -3000, 0));
             var b = Library.BoundsOf(probe);
-            Object.Destroy(probe);
+            Object.DestroyImmediate(probe);
             if (b.size.y < 0.05f) return null;
             float half = Half(b);
             var tex = new Texture2D(Size, Size, TextureFormat.RGBA32, true) { name = "Impostor " + modelId, wrapMode = TextureWrapMode.Clamp };
@@ -137,7 +175,7 @@ namespace SniperDuel.Game.World
                 Attempt = attempt;
                 stage = new GameObject("Impostor stage " + id);
                 stage.transform.position = new Vector3(0, -3000, 0);
-                var model = Library.Place(id, Vector3.zero, 0, 1, stage.transform);
+                var model = Stage(id, stage.transform.position, stage.transform);
                 Library.SetLayer(model, Layer);
                 Relight(model);
                 bounds = Library.BoundsOf(model);

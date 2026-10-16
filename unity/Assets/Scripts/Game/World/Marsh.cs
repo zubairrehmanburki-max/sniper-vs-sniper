@@ -42,11 +42,11 @@ namespace SniperDuel.Game.World
 
             // ---- Reed beds and mud banks on the shallows ------------------------------------------
             int beds = 0;
-            for (int attempt = 0; attempt < 5000 && beds < 60; attempt++)
+            for (int attempt = 0; attempt < 9000 && beds < 170; attempt++)
             {
                 float cx = R(-420, 420), cs = R(-240, lane + 240);
                 float y = Y(cx, cs);
-                if (y < water - 1.7f || y > water + 0.8f || InCorridor(cx, cs, 4)) continue;
+                if (y < water - 3.4f || y > water + 0.8f || InCorridor(cx, cs, 4)) continue;
                 beds++;
                 float rx = R(4, 13), rz = R(4, 13);
                 if (rng.NextDouble() < 0.6)
@@ -217,22 +217,22 @@ namespace SniperDuel.Game.World
             var tussock = flora.Available("grass_medium_01", "grass_medium_02", "fern_02");
 
             // Woods: clumps on the shores beyond the waterline, a few strays on the meadow between them.
-            Wilds.Clumps(flora, rng, trees, 150, 14, 40, () =>
+            Wilds.Clumps(flora, rng, trees, 420, 22, 50, () =>
             {
                 float a = R(0, 2 * Mathf.PI), r = R(480, 1500);
                 float x = Mathf.Cos(a) * r / 0.75f, s = 225 + Mathf.Sin(a) * r;
-                if (Mathf.PerlinNoise(x * 0.004f + 3.3f, s * 0.004f + 8.1f) < 0.4f) return null;
+                if (Mathf.PerlinNoise(x * 0.004f + 3.3f, s * 0.004f + 8.1f) < 0.3f) return null;
                 return new Vector2(x, s);
             }, (x, s) => Ring(x, s) > 470 && Y(x, s) > water + 1.2f, Y, 0.75f, 1.25f, 0.3f);
             // The wood edge on the shore: shrubs and tussocks in a ragged band where mud meets meadow.
-            Wilds.Clumps(flora, rng, shrubs, 160, 7, 9, () =>
+            Wilds.Clumps(flora, rng, shrubs, 260, 9, 10, () =>
             {
                 float a = R(0, 2 * Mathf.PI), r = R(430, 520);
                 float x = Mathf.Cos(a) * r / 0.75f, s = 225 + Mathf.Sin(a) * r;
                 return Y(x, s) > water + 0.3f && !inCorridor(x, s, 8) ? new Vector2(x, s) : (Vector2?)null;
             }, (x, s) => Y(x, s) > water + 0.2f && !inCorridor(x, s, 4), Y, 0.6f, 1.3f);
             // Tussocks and ferns along the waterline and on the mud islets out in the marsh.
-            Wilds.Clumps(flora, rng, tussock, 320, 9, 6, () =>
+            Wilds.Clumps(flora, rng, tussock, 520, 12, 7, () =>
             {
                 float x = R(-560, 560), s = R(-260, lane + 260);
                 float y = Y(x, s);

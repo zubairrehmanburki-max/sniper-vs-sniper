@@ -17,50 +17,67 @@ namespace SniperDuel.Game.World
         /// </summary>
         public sealed class Flora
         {
-            readonly Dictionary<string, Impostor.Field?> fields = new Dictionary<string, Impostor.Field?>();
+            readonly Dictionary<string, List<Impostor.Field>> fields = new Dictionary<string, List<Impostor.Field>>();
             readonly Dictionary<string, (float? height, Color? tint)> looks = new Dictionary<string, (float?, Color?)>();
+            readonly System.Random pick = new System.Random(7);
             public int Count { get; private set; }
 
-            /// <summary>Sets a kind's height at scale 1 (null: as scanned) and a colour wash over its picture.</summary>
+            /// <summary>
+            /// Sets a kind's height at scale 1 (null: as scanned; given, it is the tallest variant's
+            /// height and the others keep their proportion to it) and a colour wash over its picture.
+            /// </summary>
             public Flora Kind(string id, float? height = null, Color? tint = null)
             {
                 looks[id] = (height, tint);
                 return this;
             }
 
-            Impostor.Field? Field(string id)
+            /// <summary>One field per variant of a kind (a model holding a row of plants gives several); empty when missing.</summary>
+            List<Impostor.Field> Fields(string id)
             {
-                if (fields.TryGetValue(id, out var f)) return f;
-                var card = Impostor.Of(id);
+                if (fields.TryGetValue(id, out var list)) return list;
+                list = new List<Impostor.Field>();
                 looks.TryGetValue(id, out var look);
-                f = card == null ? null : new Impostor.Field(card, look.height ?? card.Height, look.tint);
-                fields[id] = f;
-                return f;
+                int n = Impostor.Variants(id);
+                var cards = new List<Impostor.Card>();
+                for (int k = 0; k < n; k++)
+                {
+                    var card = Impostor.Of(n > 1 ? $"{id}#{k}" : id);
+                    if (card != null) cards.Add(card);
+                }
+                float tallest = 0.01f;
+                foreach (var c in cards) tallest = Mathf.Max(tallest, c.Height);
+                float scale = look.height.HasValue ? look.height.Value / tallest : 1;
+                foreach (var c in cards) list.Add(new Impostor.Field(c, c.Height * scale, look.tint));
+                fields[id] = list;
+                return list;
             }
 
             /// <summary>True when the kind's model was downloaded.</summary>
-            public bool Has(string id) => Field(id) != null;
+            public bool Has(string id) => Fields(id).Count > 0;
 
             /// <summary>The kinds in `ids` that exist.</summary>
             public string[] Available(params string[] ids) => System.Array.FindAll(ids, Has);
 
-            /// <summary>Plants one with its foot at `foot`; false when the kind is missing.</summary>
+            /// <summary>Plants one (a random variant) with its foot at `foot`; false when the kind is missing.</summary>
             public bool Plant(string id, Vector3 foot, float yawDeg, float scale, bool mirror = false)
             {
-                var f = Field(id);
-                if (f == null) return false;
-                f.Add(foot, yawDeg, scale, mirror);
+                var list = Fields(id);
+                if (list.Count == 0) return false;
+                list[pick.Next(list.Count)].Add(foot, yawDeg, scale, mirror);
                 Count++;
                 return true;
             }
 
-            /// <summary>Merges each kind into its mesh under `parent`.</summary>
+            /// <summary>Merges each variant of each kind into its mesh under `parent`.</summary>
             public void Build(Transform parent, string name)
             {
                 var root = new GameObject(name).transform;
                 root.SetParent(parent, false);
-                foreach (var kv in fields) kv.Value?.Build(kv.Key, root);
-                Debug.Log($"[Wilds] {name}: {Count} plants of {fields.Count} kinds");
+                int kinds = 0;
+                foreach (var kv in fields)
+                    for (int k = 0; k < kv.Value.Count; k++, kinds++) kv.Value[k].Build(kv.Key + "#" + k, root);
+                Debug.Log($"[Wilds] {name}: {Count} plants, {kinds} pictures");
             }
         }
 
@@ -137,6 +154,29 @@ namespace SniperDuel.Game.World
             float h = Library.BoundsOf(m).size.y;
             holder.localPosition = foot - Vector3.up * h * sink;
             return holder;
+        }
+
+        /// <summary>The heaviest meshes under an object, by total triangles drawn (name × instances), for the budget log.</summary>
+        public static string Heaviest(GameObject go, int top = 15)
+        {
+            var sum = new Dictionary<string, (long tris, int n)>();
+            foreach (var f in go.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (f.sharedMesh == null) continue;
+                long t = 0;
+                for (int i = 0; i < f.sharedMesh.subMeshCount; i++) t += f.sharedMesh.GetIndexCount(i) / 3;
+                // Group by the placed model (the nearest ancestor under a group) rather than the part.
+                var owner = f.transform;
+                while (owner.parent != null && owner.parent.parent != null && owner.parent.parent.parent != null && owner.parent.name.IndexOf("(fitted)") < 0 && owner.parent.name.IndexOf("(cover)") < 0) owner = owner.parent;
+                string key = owner.name;
+                sum.TryGetValue(key, out var v);
+                sum[key] = (v.tris + t, v.n + 1);
+            }
+            var list = new List<KeyValuePair<string, (long tris, int n)>>(sum);
+            list.Sort((a, b) => b.Value.tris.CompareTo(a.Value.tris));
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < Mathf.Min(top, list.Count); i++) sb.Append($"\n  {list[i].Value.tris:N0} {list[i].Key} ({list[i].Value.n} meshes)");
+            return sb.ToString();
         }
 
         /// <summary>Triangles under an object (for the per-map budget log).</summary>

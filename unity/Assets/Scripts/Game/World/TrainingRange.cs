@@ -73,9 +73,9 @@ namespace SniperDuel.Game.World
             var trees = flora.Available("island_tree_02", "island_tree_03", "spruce", "island_tree_01", "spruce", "tree_small_02");
             var shrubs = flora.Available("shrub_01", "shrub_02", "shrub_03", "shrub_04");
             var grass = flora.Available("grass_medium_01", "grass_medium_02", "grass_bermuda_01");
-            Wilds.Clumps(flora, rng, trees, 120, 16, 45, () =>
+            Wilds.Clumps(flora, rng, trees, 280, 18, 45, () =>
             {
-                float x = (rng.Next(2) == 0 ? -1 : 1) * R(150, 1300), s = R(-900, length + 900);
+                float x = (rng.Next(2) == 0 ? -1 : 1) * R(125, 1300), s = R(-900, length + 900);
                 return Mathf.PerlinNoise(x * 0.006f + 1.7f, s * 0.006f + 4.2f) > 0.42f ? new Vector2(x, s) : (Vector2?)null;
             }, (x, s) => !lane.Contains(x, s, 70) && Mathf.Abs(x - RoadX) > 8, Y, 0.75f, 1.3f, 0.3f);
             // A hedge line along the outside foot of each side berm.
@@ -229,7 +229,7 @@ namespace SniperDuel.Game.World
             Berm(earth, Y, false, length + 32, -130, 130, 30, 7, 9);
             Berm(earth, Y, false, -46, -130, 130, 28, 6, 7);
             grass.Object("Side berms", Library.Surface("sparse_grass", 8, new Color(0.9f, 1f, 0.82f)), root);
-            earth.Object("Backstops", Library.Surface("brown_mud_leaves_01", 7, new Color(0.95f, 0.85f, 0.75f)), root);
+            earth.Object("Backstops", Library.Surface("brown_mud_leaves_01", 7, new Color(0.6f, 0.52f, 0.44f)), root);
         }
 
         /// <summary>

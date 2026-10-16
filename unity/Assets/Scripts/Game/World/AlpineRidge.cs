@@ -23,7 +23,7 @@ namespace SniperDuel.Game.World
             var rng = new System.Random(2400);
             var lane = Biomes.LaneOf(map);
             float length = (float)map.LaneLength;
-            var snow = Snow(4, new Color(0.95f, 0.96f, 0.99f), 0.7f);
+            var snow = Snow(4, new Color(0.82f, 0.84f, 0.88f), 0.7f);
             var rock = Library.Rock(3, new Color(0.84f, 0.86f, 0.9f));
 
             Biomes.Cover(map, root, new Biomes.CoverKit
@@ -267,7 +267,7 @@ namespace SniperDuel.Game.World
             // Stumps and a fallen trunk or two where the forest meets the meadow.
             var tinted = new Dictionary<Material, Material>();
             var logs = Wilds.Present("tree_stump_01", "dead_tree_trunk_02");
-            for (int i = 0, n = 0; logs.Length > 0 && i < 600 && n < 18; i++)
+            for (int i = 0, n = 0; logs.Length > 0 && i < 600 && n < 8; i++)
             {
                 float x = (rng.Next(2) == 0 ? -1 : 1) * R(lane.HalfWidth + 8, 300), s = R(-200, length + 200);
                 if (Y(x, s) > SnowLine - 4 || !ClearOfHuts(x, s)) continue;

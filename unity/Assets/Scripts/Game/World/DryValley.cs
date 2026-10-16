@@ -56,8 +56,9 @@ namespace SniperDuel.Game.World
 
             Biomes.Horizon(root, length / 2, new Biomes.Hills
             {
-                MinHeight = 90,
-                MaxHeight = 280,
+                // Low enough that the 12x scope shows sky over the far mesas behind B.
+                MinHeight = 50,
+                MaxHeight = 150,
                 Mesa = true,
                 // Darker and warmer than the floor, so the mesas stand out of the haze instead of fading white.
                 Rock = Library.Rock(60, new Color(0.86f, 0.64f, 0.48f)),
@@ -145,7 +146,7 @@ namespace SniperDuel.Game.World
             bool Off(float x, float s, float margin) => !lane.Contains(x, s, margin) && Mathf.Abs(x - TrackX(s)) > 4 && Biomes.NearestSpot(map, x, s) > 12 + margin;
 
             // Bushes in clumps: thickest in the wash, along the track and where the ridges begin.
-            Wilds.Clumps(flora, rng, bushes, 170, 6, 10, () =>
+            Wilds.Clumps(flora, rng, bushes, 300, 8, 10, () =>
             {
                 float x = R(-650, 650), s = R(-500, length + 600);
                 float q = (s - 430) / 70;
@@ -154,7 +155,7 @@ namespace SniperDuel.Game.World
                 return Off(x, s, 6) ? new Vector2(x, s) : (Vector2?)null;
             }, (x, s) => Off(x, s, 3), Y, 0.6f, 1.25f, 0.08f);
             // Bunch grass everywhere off the lane, and a margin of it up to the lane's edges.
-            Wilds.Clumps(flora, rng, grass, 420, 10, 7, () =>
+            Wilds.Clumps(flora, rng, grass, 700, 12, 7, () =>
             {
                 float x = R(-560, 560), s = R(-400, length + 500);
                 return Off(x, s, 2) ? new Vector2(x, s) : (Vector2?)null;
@@ -179,7 +180,7 @@ namespace SniperDuel.Game.World
             // Granite: single boulders along the lane's edges and over the flats, piles and cliffs on the ridges.
             var tinted = new Dictionary<Material, Material>();
             var single = Wilds.Present("namaqualand_boulder_02", "namaqualand_boulder_03", "namaqualand_boulder_04", "namaqualand_boulder_05");
-            for (int i = 0, n = 0; single.Length > 0 && i < 800 && n < 44; i++)
+            for (int i = 0, n = 0; single.Length > 0 && i < 800 && n < 26; i++)
             {
                 bool edge = n % 3 == 0;
                 float x = (rng.Next(2) == 0 ? -1 : 1) * (edge ? R(lane.HalfWidth + 6, lane.HalfWidth + 40) : R(lane.HalfWidth + 20, 420));
@@ -189,7 +190,7 @@ namespace SniperDuel.Game.World
                 Wilds.Rock(single[n % single.Length], new Vector3(x, Y(x, s), s), R(0, 360), edge ? R(1.4f, 3.2f) : R(2, 6), root, Bleached, tinted, 0.22f);
             }
             var piles = Wilds.Present("namaqualand_boulders_01", "namaqualand_cliff_01");
-            for (int i = 0, n = 0; piles.Length > 0 && i < 600 && n < 16; i++)
+            for (int i = 0, n = 0; piles.Length > 0 && i < 600 && n < 8; i++)
             {
                 float x = (rng.Next(2) == 0 ? -1 : 1) * R(130, 650), s = R(-500, length + 600);
                 if (!Off(x, s, 30)) continue;
@@ -198,7 +199,7 @@ namespace SniperDuel.Game.World
                 Wilds.Rock(id, new Vector3(x, Y(x, s), s), R(0, 360), id.Contains("cliff") ? R(18, 34) : R(8, 16), root, Bleached, tinted, 0.25f);
             }
             var deadwood = Wilds.Present("dry_branches_medium_01");
-            for (int i = 0, n = 0; deadwood.Length > 0 && i < 300 && n < 30; i++)
+            for (int i = 0, n = 0; deadwood.Length > 0 && i < 300 && n < 8; i++)
             {
                 float x = (rng.Next(2) == 0 ? -1 : 1) * R(lane.HalfWidth + 4, 260), s = R(-200, length + 200);
                 if (!Off(x, s, 4)) continue;
