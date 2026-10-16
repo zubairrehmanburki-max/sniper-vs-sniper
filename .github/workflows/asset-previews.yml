@@ -1,0 +1,37 @@
+name: Asset previews
+
+# Downloads preview images for candidate free assets (tools/asset-previews/urls.json: {"key": "url"})
+# and publishes them, resized, to the `screens` branch under asset-previews/ for review.
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/project-thread-e5f8vx]
+    paths: [tools/asset-previews/**, .github/workflows/asset-previews.yml]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: asset-previews
+  cancel-in-progress: true
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download previews
+        env:
+          SKETCHFAB_API_TOKEN: ${{ secrets.SKETCHFAB_API_TOKEN }}
+        run: |
+          pip install -q pillow
+          python3 tools/asset-previews/fetch.py tools/asset-previews/urls.json "$RUNNER_TEMP/previews"
+      - name: Publish to the screens branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin screens
+          git worktree add -B screens ../screens origin/screens
+          rm -rf ../screens/asset-previews && mkdir -p ../screens/asset-previews
+          cp -r "$RUNNER_TEMP/previews/." ../screens/asset-previews/
+          cd ../screens && git add -A && git commit -qm "Asset previews for $GITHUB_SHA" && git push -q origin screens

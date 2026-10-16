@@ -1,0 +1,22 @@
+[
+ {"label":"rifle","q":"sniper rifle pbr","max_faces":60000},
+ {"label":"rifle","q":"bolt action sniper","max_faces":60000},
+ {"label":"rifle","q":"AWM","max_faces":60000,"keep":5},
+ {"label":"fps_arms","q":"fps arms sniper","max_faces":80000,"animated":true},
+ {"label":"fps_arms","q":"fps hands rifle","max_faces":80000,"animated":true},
+ {"label":"character","q":"ghillie sniper","max_faces":150000},
+ {"label":"character","q":"sniper soldier","max_faces":120000,"rigged":true},
+ {"label":"character","q":"soldier game ready","max_faces":80000,"rigged":true},
+ {"label":"structure","q":"steel truss bridge","max_faces":150000},
+ {"label":"structure","q":"bridge game ready","max_faces":150000},
+ {"label":"structure","q":"watchtower","max_faces":80000},
+ {"label":"structure","q":"oil rig platform","max_faces":200000},
+ {"label":"structure","q":"military bunker","max_faces":80000},
+ {"label":"structure","q":"sandbags","max_faces":30000,"keep":5},
+ {"label":"structure","q":"shipping container","max_faces":30000,"keep":5},
+ {"label":"structure","q":"harbor warehouse","max_faces":100000,"keep":6},
+ {"label":"nature","q":"low poly realistic tree game ready","max_faces":30000},
+ {"label":"nature","q":"pine tree game ready","max_faces":30000},
+ {"label":"nature","q":"cliff game ready","max_faces":60000},
+ {"label":"nature","q":"rock pack game ready","max_faces":60000}
+]
