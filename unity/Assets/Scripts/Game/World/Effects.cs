@@ -339,14 +339,14 @@ namespace SniperDuel.Game.World
             line.SetPositions(pts);
             if (shimmer != null)
             {
-                shimmer.widthMultiplier = Mathf.Max(0.03f, range * pixel * 8);
+                shimmer.widthMultiplier = Mathf.Max(0.03f, range * pixel * 11);
                 var back = At(System.Math.Max(0, head - 0.006));
                 // Long enough along the path to stay a soft round smudge even end-on.
                 var along = (at - back).normalized * shimmer.widthMultiplier * 0.6f;
                 shimmer.SetPosition(0, back - along);
                 shimmer.SetPosition(1, at + along);
                 shimmer.enabled = alpha > 0.01f && t < end;
-                shimmer.startColor = shimmer.endColor = new Color(0.9f, 0.92f, 0.94f, 0.42f * alpha);
+                shimmer.startColor = shimmer.endColor = new Color(0.9f, 0.92f, 0.94f, 0.5f * alpha);
             }
             line.enabled = alpha > 0.01f && t < end;
             var gr = line.colorGradient;
