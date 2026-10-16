@@ -25,13 +25,13 @@ jobs:
           SKETCHFAB_API_TOKEN: ${{ secrets.SKETCHFAB_API_TOKEN }}
         run: |
           pip install -q pillow
-          python3 tools/asset-previews/fetch.py tools/asset-previews/urls.json "$RUNNER_TEMP/previews"
+          python3 tools/asset-previews/fetch.py tools/asset-previews/urls2.json "$RUNNER_TEMP/previews"
       - name: Publish to the screens branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin screens
           git worktree add -B screens ../screens origin/screens
-          rm -rf ../screens/asset-previews && mkdir -p ../screens/asset-previews
+          mkdir -p ../screens/asset-previews
           cp -r "$RUNNER_TEMP/previews/." ../screens/asset-previews/
           cd ../screens && git add -A && git commit -qm "Asset previews for $GITHUB_SHA" && git push -q origin screens

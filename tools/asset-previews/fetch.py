@@ -2,7 +2,7 @@
 640 px wide JPEGs named <key>.jpg, plus report.json with each key's status. A URL that returns
 an HTML page is followed to its og:image. A value "sketchfab:<uid>" is looked up through the
 Sketchfab API (SKETCHFAB_API_TOKEN), and its licence, face count and downloadability are reported."""
-import html, io, json, os, re, sys, urllib.request
+import html, io, json, os, re, sys, urllib.parse, urllib.request
 from PIL import Image
 
 src, out = sys.argv[1], sys.argv[2]
@@ -41,7 +41,7 @@ for key, url in urls.items():
                 re.search(rb'content=["\']([^"\']+)["\'][^>]*property=["\']og:image', data)
             if not m:
                 raise ValueError("page has no og:image")
-            data = get(html.unescape(m.group(1).decode()))
+            data = get(urllib.parse.urljoin(url, html.unescape(m.group(1).decode())))
         img = Image.open(io.BytesIO(data)).convert("RGB")
         if img.width > 640:
             img = img.resize((640, round(img.height * 640 / img.width)), Image.LANCZOS)
@@ -50,7 +50,7 @@ for key, url in urls.items():
     except Exception as e:  # keep going; the report says which failed
         report[key] = f"error: {e}"
     print(key, report[key])
-json.dump({"status": report, "sketchfab": meta}, open(os.path.join(out, "report.json"), "w"), indent=1)
+json.dump({"status": report, "sketchfab": meta}, open(os.path.join(out, os.path.basename(src).replace(".json", "-report.json")), "w"), indent=1)
 
 
 # Optional Sketchfab searches (searches.json next to the URL list): downloadable CC-BY / CC0 hits
