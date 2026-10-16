@@ -89,7 +89,7 @@ namespace SniperDuel.Game.World
             var up = Vector3.Cross(dir, side);
             var rng = new System.Random(at.GetHashCode());
             float R() => (float)rng.NextDouble();
-            int n = mine ? 14 : 26;
+            int n = mine ? 14 : 34;
             for (int i = 0; i < n; i++)
             {
                 // Round the barrel, flattened toward the ground; a little forward.
@@ -100,7 +100,7 @@ namespace SniperDuel.Game.World
                 {
                     position = at + dir * 0.35f + ring * (mine ? 0.25f : 0.05f) + Vector3.down * (mine ? 0 : 0.15f),
                     velocity = v,
-                    startSize = (mine ? 0.3f : 0.6f) + R() * (mine ? 0.3f : 1.0f),
+                    startSize = (mine ? 0.3f : 0.8f) + R() * (mine ? 0.3f : 1.2f),
                     startLifetime = 1.2f + R() * 1.4f,
                     rotation = R() * 360,
                     startColor = Color.Lerp(new Color(0.62f, 0.57f, 0.49f, 0.42f), new Color(0.8f, 0.79f, 0.76f, 0.3f), R()),
@@ -190,6 +190,8 @@ namespace SniperDuel.Game.World
             return puff;
         }
 
+        public static Material SmokeMaterial => Smoke();
+
         static Material Smoke()
         {
             if (smoke != null) return smoke;
@@ -223,7 +225,7 @@ namespace SniperDuel.Game.World
         const float TraceSeconds = 0.05f;
 
         ShotOutcome o = null!;
-        LineRenderer? line;
+        LineRenderer? line, shimmer;
         Transform? bullet;
         float t;
         bool landed, impact;
@@ -252,6 +254,19 @@ namespace SniperDuel.Game.World
             line.colorGradient = g;
             // Thin at the round, wider where the disturbed air has spread.
             line.widthCurve = new AnimationCurve(new Keyframe(0, 1.6f), new Keyframe(0.7f, 1.1f), new Keyframe(1, 0.6f));
+
+            // The shimmer round the round itself: the knot of disturbed air a spotter actually picks
+            // out, a soft smudge several pixels across that reads even seen from straight behind.
+            var sg = new GameObject("Shimmer");
+            sg.transform.SetParent(transform, false);
+            shimmer = sg.AddComponent<LineRenderer>();
+            shimmer.positionCount = 2;
+            shimmer.useWorldSpace = true;
+            shimmer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            shimmer.receiveShadows = false;
+            shimmer.sharedMaterial = Effects.SmokeMaterial;
+            shimmer.textureMode = LineTextureMode.Stretch;
+            shimmer.startColor = shimmer.endColor = new Color(0.9f, 0.92f, 0.94f, 0.4f);
 
             var b = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             b.name = "Bullet";
@@ -322,6 +337,17 @@ namespace SniperDuel.Game.World
                 pts[k] = p + new Vector3(Mathf.Sin(ph) * wob, Mathf.Cos(ph * 1.3f) * wob, 0) * (1 - f);
             }
             line.SetPositions(pts);
+            if (shimmer != null)
+            {
+                shimmer.widthMultiplier = Mathf.Max(0.03f, range * pixel * 8);
+                var back = At(System.Math.Max(0, head - 0.006));
+                // Long enough along the path to stay a soft round smudge even end-on.
+                var along = (at - back).normalized * shimmer.widthMultiplier * 0.6f;
+                shimmer.SetPosition(0, back - along);
+                shimmer.SetPosition(1, at + along);
+                shimmer.enabled = alpha > 0.01f && t < end;
+                shimmer.startColor = shimmer.endColor = new Color(0.9f, 0.92f, 0.94f, 0.42f * alpha);
+            }
             line.enabled = alpha > 0.01f && t < end;
             var gr = line.colorGradient;
             var keys = gr.alphaKeys;
@@ -340,6 +366,7 @@ namespace SniperDuel.Game.World
             {
                 landed = true;
                 if (line != null) line.enabled = false;
+                if (shimmer != null) shimmer.enabled = false;
                 if (!impact) return;
                 var p = Library.ToUnity(o.Impact.Point);
                 bool splash = o.Verdict == Verdict.Miss && o.Impact.Kind != ImpactKind.Target && p.y <= water + 0.3f;
