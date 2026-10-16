@@ -126,6 +126,7 @@ namespace SniperDuel.Game.World
                 foreach (AnimationState st in a)
                     if (st.clip != null && (idle == null || st.clip.name.Contains("Idle"))) idle = st.clip;
                 if (idle != null) idle.SampleAnimation(model, idle.length * 0.25f);
+                Debug.Log($"[Viewmodel] gloved arms posed by {(idle != null ? idle.name : "nothing")}");
                 DestroyImmediate(a);
             }
             foreach (var a in model.GetComponentsInChildren<Animator>(true)) DestroyImmediate(a);
@@ -173,6 +174,7 @@ namespace SniperDuel.Game.World
             float gunBore = Bore(rs, gb);
             gun.position += new Vector3(cb.center.x - gb.center.x, bore - gunBore, cb.min.z - gb.min.z);
             loadout = gun;
+            Debug.Log($"[Viewmodel] gloved: arms {arms.bounds.center} size {arms.bounds.size}, carbine {cb.center} size {cb.size}, rifle {Library.BoundsOf(gun.gameObject).center} size {Library.BoundsOf(gun.gameObject).size}");
             return inner;
         }
 
