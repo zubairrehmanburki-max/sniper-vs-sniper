@@ -29,7 +29,9 @@ namespace SniperDuel.Game
                 more = $", {meshes.Length} meshes with {verts:N0} vertices, {sized.Count} textures ({total / MB:0} MB by size), " +
                     $"{Resources.FindObjectsOfTypeAll<Material>().Length} materials; textures by kind: " +
                     string.Join(", ", kinds.Select(g => $"{g.kind} {g.n}x {g.bytes / MB:0} MB")) + "; biggest textures: " +
-                    string.Join(", ", sized.OrderByDescending(t => t.bytes).Take(12).Select(t => $"{t.name} {t.bytes / MB:0.0}"));
+                    string.Join(", ", sized.OrderByDescending(t => t.bytes).Take(12).Select(t => $"{t.name} {t.bytes / MB:0.0}")) + "; biggest model textures: " +
+                    string.Join(", ", Resources.FindObjectsOfTypeAll<Texture>().Where(t => Kind(t.name) == "model textures").OrderByDescending(Bytes).Take(40)
+                        .Select(t => $"{t.name} {t.width}x{t.height} {t.graphicsFormat} {Bytes(t) / MB:0.0}"));
             }
             Debug.Log($"[Memory] {what}: reserved {Profiler.GetTotalReservedMemoryLong() / MB:0} MB, allocated {Profiler.GetTotalAllocatedMemoryLong() / MB:0} MB, " +
                 $"managed {Profiler.GetMonoHeapSizeLong() / MB:0} MB, textures {Texture.currentTextureMemory / MB:0} MB{more}");
