@@ -369,7 +369,7 @@ namespace SniperDuel.Game
             var v = ui.Get("Versus");
             string botRifle = Duel.BotRifle(cfg, matchBot, matchRifle);
             var preview = Match.CreateMatch(seed, map.Id, new PerSide<PlayerSetup>(
-                new PlayerSetup(PlayerName, matchRifle), new PlayerSetup(Catalog.BotName(matchBot), botRifle, matchBot)), 0, cfg);
+                new PlayerSetup(PlayerName, matchRifle), new PlayerSetup(Catalog.BotName(matchBot), botRifle, matchBot)), 0, cfg, turnLock: true);
             string RifleName(string id) => cfg.Rifles.Find(r => r.Id == id)?.Name.Replace("Bolt-action 6.5", "6.5") ?? id;
 
             string spot = Catalog.MapInfo(map.Id).spot;

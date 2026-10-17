@@ -30,10 +30,22 @@ namespace SniperDuel.Rules
         /// <summary>Where the bot goes in a setup or move phase.</summary>
         public static List<BotAction> Move(MatchState state, Side side, GameConfig cfg)
         {
+            var rng = RngFor(state, side, 1);
+            var (target, stance) = Choose(state, side, cfg, rng);
+            double at = state.Phase == PhaseKind.Setup ? 1 + rng.Next() * 3 : 3 + rng.Next() * 8;
+            return new List<BotAction>
+            {
+                new BotAction(at, MatchInput.PlaceAt(side, target, stance, 0)),
+                new BotAction(at + 1 + rng.Next() * 4, MatchInput.ReadyUp(side, 0)),
+            };
+        }
+
+        /// <summary>The spot and stance the bot wants next: one of its firing spots, as low as still sees out.</summary>
+        static (Vec3 target, Stance stance) Choose(MatchState state, Side side, GameConfig cfg, Rng rng)
+        {
             var me = state.Players[side];
             var profile = cfg.Bot[me.Bot ?? BotDifficulty.Medium];
             var map = Maps.ById(state.MapId);
-            var rng = RngFor(state, side, 1);
             var spots = map.Spots[side];
             var pool = profile.Positions > 0 ? spots.GetRange(0, Math.Min(profile.Positions, spots.Count)) : spots;
             Vec3 target;
@@ -74,13 +86,7 @@ namespace SniperDuel.Rules
                     break;
                 }
             }
-            var stance = Match.ClampStance(state, sees ?? Stance.Prone, cfg);
-            double at = state.Phase == PhaseKind.Setup ? 1 + rng.Next() * 3 : 3 + rng.Next() * 8;
-            return new List<BotAction>
-            {
-                new BotAction(at, MatchInput.PlaceAt(side, target, stance, 0)),
-                new BotAction(at + 1 + rng.Next() * 4, MatchInput.ReadyUp(side, 0)),
-            };
+            return (target, Match.ClampStance(state, sees ?? Stance.Prone, cfg));
         }
 
         /// <summary>Does the bot see its target this phase? Line of sight plus a stance-based spotting roll.</summary>
@@ -177,13 +183,35 @@ namespace SniperDuel.Rules
             return new List<BotAction> { new BotAction(think, MatchInput.FireShot(side, input, 0)) };
         }
 
+        /// <summary>
+        /// The bot's shot phase. Under the turn lock its move phases come straight after it fires,
+        /// so it relocates at the start of its own turn instead (when it isn't held and the map
+        /// has more than one spot), then aims from there.
+        /// </summary>
+        static List<BotAction> Turn(MatchState state, Side side, GameConfig cfg)
+        {
+            var map = Maps.ById(state.MapId);
+            if (!state.TurnLock || map.Spots[side].Count < 2 || !Match.CanMove(state, side)) return Shot(state, side, cfg);
+            var rng = RngFor(state, side, 4);
+            var (target, stance) = Choose(state, side, cfg, rng);
+            var shift = new BotAction(1 + rng.Next() * 2, MatchInput.ShiftTo(side, target, stance, 0));
+            var moved = state.Clone();
+            moved.Players[side].Position = Maps.ClampToZone(map, Maps.RoamZone(map, side), target);
+            moved.Players[side].Stance = stance;
+            var actions = Shot(moved, side, cfg);
+            actions.Insert(0, shift);
+            return actions;
+        }
+
         /// <summary>All bot actions for the current phase, with absolute times filled in.</summary>
         public static List<MatchInput> Plan(MatchState state, Side side, GameConfig cfg)
         {
             var actions = new List<BotAction>();
             if (state.Phase == PhaseKind.Setup) actions = Move(state, side, cfg);
-            else if (state.Phase == PhaseKind.Move && state.Actor == side) actions = Move(state, side, cfg);
-            else if (state.Phase == PhaseKind.Shot && state.Actor == side) actions = Shot(state, side, cfg);
+            else if (state.Phase == PhaseKind.Move && state.Actor == side)
+                // Held where it fired: nothing to do in its move phase but pass.
+                actions = Match.CanMove(state, side) ? Move(state, side, cfg) : new List<BotAction> { new BotAction(1, MatchInput.ReadyUp(side, 0)) };
+            else if (state.Phase == PhaseKind.Shot && state.Actor == side) actions = Turn(state, side, cfg);
             var plan = new List<MatchInput>();
             foreach (var a in actions) plan.Add(a.Input.At(state.PhaseStart + a.At));
             return plan;

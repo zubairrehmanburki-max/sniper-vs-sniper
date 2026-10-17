@@ -282,9 +282,9 @@ namespace SniperDuel.Tests
         static string PhaseId(MatchState s) => $"{s.Round}:{s.Pair}:{s.Step}:{s.Phase}";
 
         /// <summary>The hotseat/bot driver from match.test.ts, recording every input it applies.</summary>
-        public static (MatchState state, JArray steps) PlayBots(uint seed, BotDifficulty a, BotDifficulty b, string mapId)
+        public static (MatchState state, JArray steps) PlayBots(uint seed, BotDifficulty a, BotDifficulty b, string mapId, bool turnLock = false)
         {
-            var s = Match.CreateMatch(seed, mapId, new PerSide<PlayerSetup>(new PlayerSetup("BotA", "bolt65cm", a), new PlayerSetup("BotB", "mag338", b)), 0, Cfg);
+            var s = Match.CreateMatch(seed, mapId, new PerSide<PlayerSetup>(new PlayerSetup("BotA", "bolt65cm", a), new PlayerSetup("BotB", "mag338", b)), 0, Cfg, turnLock: turnLock);
             var steps = new JArray();
             void Apply(MatchInput input)
             {

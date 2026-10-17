@@ -554,6 +554,66 @@ namespace SniperDuel.Tests
         }
 
         [Test]
+        public void TurnLockMovesOnlyInYourOwnTurnAndHoldsYouAfterFiring()
+        {
+            var s = Match.CreateMatch(3, "twin-bridges", new PerSide<PlayerSetup>(new PlayerSetup("A", "bolt308"), new PlayerSetup("B", "bolt308")), 0, Cfg, turnLock: true);
+            var map = Maps.ById("twin-bridges");
+            s = Step(s, MatchInput.PlaceAt(Side.A, map.Spots.A[0], Stance.Prone, 1)).State;
+            s = Step(s, MatchInput.ReadyUp(Side.A, 1)).State;
+            s = Step(s, MatchInput.ReadyUp(Side.B, 1)).State;
+            Assert.That(s.Phase, Is.EqualTo(PhaseKind.Shot));
+            var first = s.Actor!.Value;
+            var second = Match.Other(first);
+            var wide = new FireInput { Yaw = 1.2, Pitch = 0.2 };
+            Vec3 Spot(Side side, double dx) => new Vec3(map.Spots[side][0].X + dx, 0, map.Spots[side][0].Z);
+
+            // Not your turn: no walking, no standing up.
+            Assert.That(Match.ApplyInput(s, MatchInput.ShiftTo(second, Spot(second, 2), Stance.Standing, 2), Cfg).Error, Is.Not.Null);
+            // Your turn: any stance, whatever the enemy is doing.
+            s = Step(s, MatchInput.ShiftTo(first, Spot(first, 2), Stance.Crouch, 2)).State;
+            Assert.That(s.Players[first].Stance, Is.EqualTo(Stance.Crouch));
+            s = Step(s, MatchInput.FireShot(first, wide, 3)).State;
+            Assert.That(s.Actor, Is.EqualTo(second));
+            Assert.That(s.Players[first].Locked, Is.True);
+            var held = s.Players[first].Position;
+
+            // The shooter stays put through the enemy's turn; the enemy moves freely.
+            Assert.That(Match.ApplyInput(s, MatchInput.ShiftTo(first, Spot(first, -2), Stance.Prone, 4), Cfg).Error, Is.Not.Null);
+            s = Step(s, MatchInput.ShiftTo(second, Spot(second, 1), Stance.Standing, 4)).State;
+            Assert.That(s.Players[second].Stance, Is.EqualTo(Stance.Standing));
+            Assert.That(s.Players[first].Stance, Is.EqualTo(Stance.Crouch));
+
+            // Holding fire doesn't free them: still held in their own next turn.
+            s = Step(s, MatchInput.ReadyUp(second, 5)).State;
+            Assert.That(s.Actor, Is.EqualTo(first));
+            Assert.That(Match.CanMove(s, first), Is.False);
+            s = Step(s, MatchInput.FireShot(first, wide, 6)).State;
+            Assert.That(s.Players[first].Position, Is.EqualTo(held));
+
+            // The enemy fires: the first shooter is free again in their turn, the enemy is now held.
+            s = Step(s, MatchInput.FireShot(second, wide, 7)).State;
+            Assert.That(s.Actor, Is.EqualTo(first));
+            Assert.That(s.Players[first].Locked, Is.False);
+            Assert.That(s.Players[second].Locked, Is.True);
+            s = Step(s, MatchInput.ShiftTo(first, Spot(first, -2), Stance.Prone, 8)).State;
+            Assert.That(s.Players[first].Stance, Is.EqualTo(Stance.Prone));
+        }
+
+        [Test]
+        public void TurnLockNeverForcesAStance()
+        {
+            var s = Match.CreateMatch(5, "training-lane", new PerSide<PlayerSetup>(new PlayerSetup("A", "bolt308"), new PlayerSetup("B", "mag338")), 0, Cfg, turnLock: true);
+            s = OpenField(s);
+            s = Step(s, MatchInput.ShiftTo(Side.A, s.Players.A.Position, Stance.Prone, 2)).State;
+            int guard = 0;
+            while (s.Pair < R.SuddenDeathAfterPairs + R.SuddenDeathStandingAfterPairs + 2 && guard++ < 400)
+                s = Step(s, MatchInput.ReadyUp(s.Actor!.Value, s.PhaseStart + 0.5)).State;
+            Assert.That(Match.IsSuddenDeath(s, Cfg), Is.True);
+            Assert.That(Match.MinStance(s, Cfg), Is.EqualTo(Stance.Prone));
+            Assert.That(s.Players.A.Stance, Is.EqualTo(Stance.Prone));
+        }
+
+        [Test]
         public void TwoIdlePhasesForfeitWhenEnabled()
         {
             var s = Match.CreateMatch(1, "training-lane", new PerSide<PlayerSetup>(new PlayerSetup("A", "bolt308"), new PlayerSetup("B", "bolt308")), 0, Cfg, forfeitOnIdle: true);
@@ -581,6 +641,19 @@ namespace SniperDuel.Tests
                 var (s, _) = RulesParityTests.PlayBots(77, BotDifficulty.Medium, BotDifficulty.Medium, mapId);
                 Assert.That(s.Phase, Is.EqualTo(PhaseKind.MatchOver), mapId);
                 Assert.That(s.Forfeit, Is.False, mapId);
+            }
+        }
+
+        [Test]
+        public void BotsFinishATurnLockedMatchOnEveryMapWithoutMovingWhileHeld()
+        {
+            foreach (var mapId in Maps.Ids)
+            {
+                var (s, steps) = RulesParityTests.PlayBots(77, BotDifficulty.Medium, BotDifficulty.Medium, mapId, turnLock: true);
+                Assert.That(s.Phase, Is.EqualTo(PhaseKind.MatchOver), mapId);
+                Assert.That(s.Forfeit, Is.False, mapId);
+                foreach (var step in steps)
+                    Assert.That((string?)step["error"], Is.Null, $"{mapId}: {step["input"]}");
             }
         }
 

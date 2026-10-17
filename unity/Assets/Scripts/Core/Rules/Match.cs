@@ -5,6 +5,10 @@
  * Round: setup (both place) → move(first) → shot(second) → move(second) → shot(first) → repeat.
  * On a fixed-position map there are no move phases: shot(second) → shot(first) → repeat.
  * Every shot is taken at a frozen target. First to `KillsToWin` kills takes the match.
+ *
+ * Turn lock (the game's rules; off for the TypeScript parity matches): you walk and change stance
+ * only in your own turn, and once you fire you stay on that spot in that stance until the enemy
+ * fires. Stance is always your own choice: sudden death never forces anyone up.
  */
 using System;
 using System.Collections.Generic;
@@ -40,6 +44,8 @@ namespace SniperDuel.Rules
         public Vec3? HeardSnapFrom;
         public bool Ready;
         public int IdlePhases;
+        /// <summary>Turn lock: fired, and held on that spot in that stance until the enemy fires.</summary>
+        public bool Locked;
 
         public PlayerState Clone() => (PlayerState)MemberwiseClone();
     }
@@ -90,6 +96,8 @@ namespace SniperDuel.Rules
         public Side? Winner;
         public bool Forfeit;
         public bool ForfeitOnIdle;
+        /// <summary>Movement only in your own turn, held where you fired until the enemy fires; no forced stance.</summary>
+        public bool TurnLock;
 
         /// <summary>Shallow copy with fresh player records and shot list, like the TS reducer's clone.</summary>
         public MatchState Clone()
@@ -112,7 +120,8 @@ namespace SniperDuel.Rules
         Forfeit,
         /// <summary>
         /// A player walks, crouches or lies down within their own roaming area. Free at any time
-        /// before the match ends; it doesn't count as acting and never ends a phase.
+        /// before the match ends unless the turn lock holds them (CanMove); it doesn't count as
+        /// acting and never ends a phase.
         /// </summary>
         Shift,
     }
@@ -237,7 +246,7 @@ namespace SniperDuel.Rules
 
         static Vec3 DefaultPosition(DuelMap map, Side side) => map.Spots[side][0];
 
-        public static MatchState CreateMatch(uint seed, string mapId, PerSide<PlayerSetup> players, double time, GameConfig cfg, bool forfeitOnIdle = false)
+        public static MatchState CreateMatch(uint seed, string mapId, PerSide<PlayerSetup> players, double time, GameConfig cfg, bool forfeitOnIdle = false, bool turnLock = false)
         {
             var map = Maps.ById(mapId);
             PlayerState Player(Side side) => new PlayerState
@@ -280,6 +289,7 @@ namespace SniperDuel.Rules
                 Winner = null,
                 Forfeit = false,
                 ForfeitOnIdle = forfeitOnIdle,
+                TurnLock = turnLock,
             };
         }
 
@@ -295,6 +305,7 @@ namespace SniperDuel.Rules
         /// <summary>Lowest stance allowed now: deep into sudden death you can no longer hide by lying flat.</summary>
         public static Stance MinStance(MatchState state, GameConfig cfg)
         {
+            if (state.TurnLock) return Stance.Prone;
             int over = state.Pair - cfg.Rules.SuddenDeathAfterPairs;
             if (over >= cfg.Rules.SuddenDeathStandingAfterPairs) return Stance.Standing;
             if (over >= cfg.Rules.SuddenDeathNoProneAfterPairs) return Stance.Crouch;
@@ -306,6 +317,17 @@ namespace SniperDuel.Rules
         {
             var min = MinStance(state, cfg);
             return (int)stance < (int)min ? min : stance;
+        }
+
+        /// <summary>
+        /// May this side walk or change stance now? Always without the turn lock; with it, during
+        /// setup or in their own turn before they fire, and not while held where they last fired.
+        /// </summary>
+        public static bool CanMove(MatchState state, Side side)
+        {
+            if (!state.TurnLock || state.Phase == PhaseKind.Setup) return true;
+            if (state.Phase != PhaseKind.Move && state.Phase != PhaseKind.Shot) return false;
+            return state.Actor == side && !state.Players[side].Locked;
         }
 
         /// <summary>Furthest a mover may end up from where their move phase started, m.</summary>
@@ -433,6 +455,7 @@ namespace SniperDuel.Rules
                 p.Revealed = null;
                 p.HeardSnapFrom = null;
                 p.Ready = false;
+                p.Locked = false;
                 p.Stance = Stance.Prone;
                 p.Position = DefaultPosition(map, p.Side);
             }
@@ -491,6 +514,7 @@ namespace SniperDuel.Rules
                         return new StepResult(state);
                     }
                     if (state.Phase != PhaseKind.Move || state.Actor != input.Side) return Fail("Not your move phase");
+                    if (!CanMove(state, input.Side)) return Fail("Held where you fired until the enemy fires");
                     var zone = Maps.UsableZone(map, input.Side, ZoneShrink(state, cfg), cfg.Rules.MinZoneDepthM);
                     var target = Maps.ClampToZone(map, zone, input.Position);
                     var from = state.MoveFrom!.Value;
@@ -510,6 +534,8 @@ namespace SniperDuel.Rules
 
                 case MatchInputType.Shift:
                 {
+                    if (!CanMove(state, input.Side))
+                        return Fail(state.Players[input.Side].Locked ? "Held where you fired until the enemy fires" : "Not your turn");
                     var p = state.Players[input.Side];
                     var target = Maps.ClampToZone(map, Maps.RoamZone(map, input.Side), input.Position);
                     // Walking away from where they last fired: the enemy loses the flash and dust.
@@ -559,6 +585,11 @@ namespace SniperDuel.Rules
                         },
                         cfg);
                     shooter.ColdBore = false;
+                    if (state.TurnLock)
+                    {
+                        shooter.Locked = true;
+                        target.Locked = false;
+                    }
                     if (!shooter.Suppressed) shooter.Revealed = shooter.Position;
                     state.Acted = true;
                     state.Shots.Add(new ShotRecord

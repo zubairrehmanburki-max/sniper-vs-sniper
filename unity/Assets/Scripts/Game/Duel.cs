@@ -164,7 +164,7 @@ namespace SniperDuel.Game
             var botRifle = BotRifle(cfg, bot, baseRifle);
             d.State = Match.CreateMatch(seed, arena.Map.Id, new PerSide<PlayerSetup>(
                 new PlayerSetup(playerName, kit.RifleId) { Suppressed = kit.Suppressed },
-                new PlayerSetup(Catalog.BotName(bot), botRifle, bot)), 0, cfg);
+                new PlayerSetup(Catalog.BotName(bot), botRifle, bot)), 0, cfg, turnLock: true);
             d.zoom = (int)Math.Round((cfg.Scope.MinZoom + cfg.Scope.MaxZoom) / 2);
             d.BindScreens();
             d.EnterPhase();
@@ -390,19 +390,35 @@ namespace SniperDuel.Game
             if (stickKnob != null) stickKnob.style.translate = new Translate(0, 0);
         }
 
-        /// <summary>Stand, crouch or lie down where you are (deep into sudden death you can't lie flat).</summary>
+        /// <summary>Stand, crouch or lie down where you are, in your own turn before you fire.</summary>
         void SetStance(Stance stance)
         {
             if (State.Phase == PhaseKind.MatchOver) return;
             var me = State.Players[Me];
-            var allowed = Match.ClampStance(State, stance, cfg);
-            if (allowed != stance) Call(allowed == Stance.Standing ? "Sudden death: stay on your feet." : "Sudden death: no lying flat.");
-            if (allowed == me.Stance) return;
-            var r = Match.ApplyInput(State, MatchInput.ShiftTo(Me, me.Position, allowed, time), cfg);
+            if (stance == me.Stance) return;
+            if (!MayMove())
+            {
+                Held();
+                return;
+            }
+            var r = Match.ApplyInput(State, MatchInput.ShiftTo(Me, me.Position, stance, time), cfg);
             if (r.Error != null) return;
             State = r.State;
             Haptics.Click();
         }
+
+        /// <summary>Solo practice has no turns; in a duel you move only in your own turn, and not after you fire.</summary>
+        bool MayMove() => solo || Match.CanMove(State, Me);
+
+        /// <summary>Says why the stick and stance buttons do nothing right now.</summary>
+        void Held()
+        {
+            if (hintTimer > 0 && (hint == HeldText || hint == WaitText)) return;
+            Call(State.Players[Me].Locked ? HeldText : WaitText);
+        }
+
+        const string HeldText = "You fired: holding here until the enemy fires.";
+        const string WaitText = "Enemy's turn: you move in your own turn.";
 
         /// <summary>
         /// Walks the player with the stick, at their stance's pace (slower when wounded), relative
@@ -413,6 +429,11 @@ namespace SniperDuel.Game
         {
             var me = State.Players[Me];
             bool free = !scoped && raising == 0 && !director && State.Phase != PhaseKind.MatchOver;
+            if (free && !MayMove())
+            {
+                if (stick.magnitude > 0.12f && resume == null) Held();
+                free = false;
+            }
             var s = free ? stick : Vector2.zero;
             float mag = s.magnitude;
             float went = 0;
@@ -1243,11 +1264,13 @@ namespace SniperDuel.Game
             hud.Text("hint", hint);
             hud.Show("hintBox", hintTimer > 0);
             var stance = State.Players[Me].Stance;
+            bool mayMove = MayMove();
+            if (hud.Has("stick")) hud["stick"].style.opacity = mayMove ? 1 : 0.35f;
             foreach (var (id, st) in new[] { ("standBtn", Stance.Standing), ("crouchBtn", Stance.Crouch), ("proneBtn", Stance.Prone) })
             {
                 if (!hud.Has(id)) continue;
                 var b = hud[id];
-                bool on = st == stance, open = Match.ClampStance(s, st, cfg) == st;
+                bool on = st == stance, open = mayMove || on;
                 b.style.backgroundColor = on ? new Color(Skin.Amber.r, Skin.Amber.g, Skin.Amber.b, 0.92f) : new Color(0.04f, 0.05f, 0.04f, 0.55f);
                 Skin.Text(b, on ? Skin.Ink : Skin.Paper);
                 b.style.opacity = open ? 1 : 0.35f;
