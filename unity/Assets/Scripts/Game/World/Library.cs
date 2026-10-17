@@ -65,20 +65,9 @@ namespace SniperDuel.Game.World
             RenderTexture.ReleaseTemporary(rt);
             Pack(tex);
             Leaned[src] = tex;
-            Release(src);
             LeanCount++;
             LeanMs += clock.Elapsed.TotalMilliseconds;
             return tex;
-        }
-
-        /// <summary>
-        /// Unloads an imported texture now that a light copy replaces it, so a map's originals
-        /// never pile up while it is built (anything that still draws with one loads it again).
-        /// Textures made at runtime are left alone.
-        /// </summary>
-        static void Release(Texture? src)
-        {
-            if (src != null && src.GetInstanceID() > 0) Resources.UnloadAsset(src);
         }
 
         /// <summary>Builds a readable texture's mips, compresses it and lets go of its CPU copy.</summary>
@@ -347,8 +336,6 @@ namespace SniperDuel.Game.World
             tex.SetPixels32(px);
             Pack(tex);
             Repacked[key] = tex;
-            Release(orm);
-            if (occlusion != orm) Release(occlusion);
             return tex;
         }
 

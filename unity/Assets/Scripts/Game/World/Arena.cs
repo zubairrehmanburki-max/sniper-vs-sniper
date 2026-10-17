@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using SniperDuel.Ballistics;
 using SniperDuel.Rules;
@@ -28,6 +29,18 @@ namespace SniperDuel.Game.World
 
         public static Arena Build(DuelMap map)
         {
+            Arena? built = null;
+            var steps = Building(map, a => built = a, trim: false);
+            while (steps.MoveNext()) { }
+            return built!;
+        }
+
+        /// <summary>
+        /// Builds a map over several frames: with `trim`, the imported originals are let go after
+        /// the heavy steps, so a big map's models never all sit in memory at full size at once.
+        /// </summary>
+        public static IEnumerator Building(DuelMap map, System.Action<Arena> done, bool trim = true)
+        {
             var arena = new Arena { Map = map };
             void Step(string what) => Trail.Mark($"map {map.Id}: {what}");
             Step("sound");
@@ -45,6 +58,11 @@ namespace SniperDuel.Game.World
             Step("dressing");
             Dressing.Build(map, root);
             // Desert, harbor, alpine and range maps get their own terrain dressing.
+            if (trim)
+            {
+                yield return Trim();
+                Mem.Log($"map {map.Id} before biome");
+            }
             Step("biome");
             Biomes.Build(map, root, arena.Flags);
             // The estuary maps get a city on the banks so the far horizon isn't empty water.
@@ -69,6 +87,11 @@ namespace SniperDuel.Game.World
             if (map.Id == "watchtowers") Marsh.Build(map, root);
             if (map.Id == "oil-rigs") Offshore.Build(map, root);
             // The downloaded set pieces: viaduct, towers, rigs, containers, cover, cliffs, trees, rocks.
+            if (trim)
+            {
+                yield return Trim();
+                Mem.Log($"map {map.Id} before scenery");
+            }
             Step("scenery");
             Scenery.Build(map, root);
             Step("flags");
@@ -112,7 +135,7 @@ namespace SniperDuel.Game.World
             arena.Sky.Probe.RenderProbe();
             Step("built");
             Debug.Log($"[Arena] {map.Id}: {Wilds.Triangles(root.gameObject):N0} triangles; heaviest:{Wilds.Heaviest(root.gameObject)}");
-            return arena;
+            done(arena);
         }
 
         /// <summary>
