@@ -79,6 +79,7 @@ namespace SniperDuel.Game.World
         /// </summary>
         static Transform? Put(string id, Transform root, Vector3 at, float yaw, float size, bool byHeight = false, Color? tint = null, params string[] drop)
         {
+            Trail.Mark("scenery: " + id);
             if (Library.Model(id) == null) return null;
             var m = Library.Prop(id);
             Drop(m, drop);

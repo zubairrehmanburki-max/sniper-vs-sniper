@@ -717,6 +717,16 @@ namespace SniperDuel.Game
             else CheckPhase();
         }
 
+        bool finished;
+
+        /// <summary>Hands the finished match on to the results, once.</summary>
+        void Finish()
+        {
+            if (finished) return;
+            finished = true;
+            Finished?.Invoke(State);
+        }
+
         void CheckPhase()
         {
             if (resume != null) return;
@@ -733,7 +743,13 @@ namespace SniperDuel.Game
             botQueue.Sort((a, b) => a.Time.CompareTo(b.Time));
             NotePlan();
             botDelays = 0;
-            if (s.Phase == PhaseKind.Setup)
+            if (s.Phase == PhaseKind.MatchOver)
+            {
+                // Ended without a shot (forfeit, or idle too long): the results come up after a beat.
+                Call(s.Forfeit ? (s.Winner == Me ? "The enemy forfeited." : "You forfeited.") : "Match over.");
+                Pause(1.2, Finish);
+            }
+            else if (s.Phase == PhaseKind.Setup)
             {
                 // Fixed spots: take ours, prone, and get on with it.
                 // Practice starts from the middle of the line.
@@ -787,7 +803,7 @@ namespace SniperDuel.Game
             {
                 Call(text);
                 if (State.Phase == PhaseKind.RoundOver) Pause(3, () => Apply(MatchInput.NextRound(time)));
-                else if (State.Phase == PhaseKind.MatchOver) Pause(2.5, () => Finished?.Invoke(State));
+                else if (State.Phase == PhaseKind.MatchOver) Pause(2.5, Finish);
                 else CheckPhase();
             };
             resumeAt = time + (mine ? tof + 0.6 : 0.4);
