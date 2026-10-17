@@ -279,10 +279,10 @@ namespace SniperDuel.Game.World
                     continue;
                 }
                 var m = new Material(Library.Template("Lit")) { name = "Viewmodel " + (s != null ? s.name : r.name) };
-                var tex = Tex(s, "baseColorTexture");
+                var tex = Library.Lean(Tex(s, "baseColorTexture"), 2048);
                 if (tex != null) m.SetTexture("_BaseMap", tex);
                 m.SetColor("_BaseColor", s != null && s.HasProperty("baseColorFactor") ? s.GetColor("baseColorFactor") : Color.white);
-                var nor = Tex(s, "normalTexture");
+                var nor = Library.Lean(Tex(s, "normalTexture"), 2048);
                 if (nor != null) m.SetTexture("_BumpMap", nor);
                 var mask = Repack(Tex(s, "metallicRoughnessTexture"));
                 if (mask != null)

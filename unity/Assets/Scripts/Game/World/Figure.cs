@@ -175,7 +175,7 @@ namespace SniperDuel.Game.World
                 for (int i = 0; i < mats.Length; i++)
                 {
                     var src = r.sharedMaterials[i];
-                    var tex = src == null ? null : src.HasProperty("baseColorTexture") ? src.GetTexture("baseColorTexture") : src.mainTexture;
+                    var tex = Library.Lean(src == null ? null : src.HasProperty("baseColorTexture") ? src.GetTexture("baseColorTexture") : src.mainTexture);
                     var mat = new Material(Library.Template("Lit")) { name = "Soldier " + r.name };
                     mat.SetTexture("_BaseMap", tex);
                     mat.SetFloat("_Metallic", 0);
@@ -751,7 +751,7 @@ namespace SniperDuel.Game.World
         /// <summary>The finish for one part, keeping the model's normal map if it has one.</summary>
         static Material RifleMaterial(Part part, Material? src)
         {
-            var nor = src != null && src.HasProperty("normalTexture") ? src.GetTexture("normalTexture") : null;
+            var nor = Library.Lean(src != null && src.HasProperty("normalTexture") ? src.GetTexture("normalTexture") : null);
             if (nor == null && RifleMats.TryGetValue(part, out var shared) && shared != null) return shared;
             var m = new Material(Library.Template("Lit")) { name = "Rifle " + part };
             // Every Lit material needs a mask map, or the template's metallic map reads as chrome.
