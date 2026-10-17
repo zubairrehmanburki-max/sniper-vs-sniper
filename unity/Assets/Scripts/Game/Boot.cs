@@ -83,6 +83,8 @@ namespace SniperDuel.Game
             ui.Show("Title");
             // The flow owns the map from here; holding it too would keep it in memory after a switch.
             arena = null;
+            yield return Arena.Trim();
+            Mem.Log("menu, twin-bridges");
         }
 
         void BuildArena(string mapId)
@@ -149,6 +151,7 @@ namespace SniperDuel.Game
         {
             Directory.CreateDirectory(dir);
             int n = 0;
+            yield return Arena.Trim();
             Mem.Log("menu, twin-bridges", true);
             foreach (var name in AllScreens)
             {
@@ -346,6 +349,7 @@ namespace SniperDuel.Game
                 }
                 try { BuildArena(id); }
                 catch (Exception e) { Debug.LogException(e); continue; }
+                yield return Arena.Trim();
                 Mem.Log("map " + id, true);
                 foreach (var (label, screen) in new[] { ("Menu", "Title"), ("Eye", "Hud"), ("Scope", "Scope") })
                 {

@@ -332,7 +332,7 @@ namespace SniperDuel.Game.World
                 px[i] = new Color32((byte)(p.b * 0.6f), p.r, 0, (byte)(255 - p.g));
             }
             tex.SetPixels32(px);
-            tex.Apply(true, true);
+            Library.Pack(tex);
             Repacked[orm] = tex;
             return tex;
         }

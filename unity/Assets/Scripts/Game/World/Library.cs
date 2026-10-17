@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using SniperDuel.Ballistics;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 
 namespace SniperDuel.Game.World
 {
@@ -25,6 +26,54 @@ namespace SniperDuel.Game.World
             StreakedMaps.Clear();
             Converted.Clear();
             Repacked.Clear();
+            Leaned.Clear();
+        }
+
+        static readonly Dictionary<Texture, Texture> Leaned = new Dictionary<Texture, Texture>();
+
+        /// <summary>Textures made lighter by <see cref="Lean"/> since start-up, and the time it took.</summary>
+        public static int LeanCount;
+        public static double LeanMs;
+
+        /// <summary>
+        /// A model's picture made light on memory: the glTF import keeps them uncompressed (four
+        /// bytes a pixel), so each is copied through the GPU at most `max` pixels a side and
+        /// compressed to the GPU's block format, a quarter of the size or less. Already compressed
+        /// textures are used as they are.
+        /// </summary>
+        public static Texture? Lean(Texture? src, int max = 1024)
+        {
+            if (src == null || !(src is Texture2D) || GraphicsFormatUtility.IsCompressedFormat(src.graphicsFormat) || src.width < 64 || src.height < 64) return src;
+            if (Leaned.TryGetValue(src, out var done) && done != null) return done;
+            var clock = System.Diagnostics.Stopwatch.StartNew();
+            bool srgb = GraphicsFormatUtility.IsSRGBFormat(src.graphicsFormat);
+            float scale = Mathf.Min(1, (float)max / Mathf.Max(src.width, src.height));
+            // Block compression wants sides in multiples of four.
+            int w = Mathf.Max(4, Mathf.RoundToInt(src.width * scale / 4) * 4), h = Mathf.Max(4, Mathf.RoundToInt(src.height * scale / 4) * 4);
+            var rt = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32, srgb ? RenderTextureReadWrite.sRGB : RenderTextureReadWrite.Linear);
+            Graphics.Blit(src, rt);
+            var was = RenderTexture.active;
+            RenderTexture.active = rt;
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, true, !srgb)
+            {
+                name = src.name + " (lean)", wrapMode = src.wrapMode, filterMode = src.filterMode, anisoLevel = Mathf.Max(src.anisoLevel, 2),
+            };
+            tex.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+            RenderTexture.active = was;
+            RenderTexture.ReleaseTemporary(rt);
+            Pack(tex);
+            Leaned[src] = tex;
+            LeanCount++;
+            LeanMs += clock.Elapsed.TotalMilliseconds;
+            return tex;
+        }
+
+        /// <summary>Builds a readable texture's mips, compresses it and lets go of its CPU copy.</summary>
+        public static void Pack(Texture2D tex)
+        {
+            tex.Apply(true, false);
+            tex.Compress(false);
+            tex.Apply(false, true);
         }
 
         /// <summary>Rules coordinates (z = −lane distance) to Unity (z = lane distance).</summary>
@@ -160,7 +209,7 @@ namespace SniperDuel.Game.World
                 }
             }
             tex.SetPixels32(px);
-            tex.Apply(true, true);
+            Pack(tex);
             StreakedMaps[key] = tex;
             return tex;
         }
@@ -211,11 +260,11 @@ namespace SniperDuel.Game.World
             if (src != null && Converted.TryGetValue(src, out var done) && done != null && metal == 1 && smoothness == null) return done;
             bool cut = src != null && (src.IsKeywordEnabled("_ALPHATEST_ON") || src.HasProperty("alphaCutoff") && src.renderQueue >= 2450 && src.renderQueue < 3000);
             var m = new Material(Template(cut ? "LitCutoutMapped" : "Lit")) { name = "Pbr " + (src != null ? src.name : "") };
-            var tex = Tex(src, "baseColorTexture") ?? Tex(src, "_BaseMap") ?? (src != null && src.HasProperty("_MainTex") ? src.mainTexture : null);
+            var tex = Lean(Tex(src, "baseColorTexture") ?? Tex(src, "_BaseMap") ?? (src != null && src.HasProperty("_MainTex") ? src.mainTexture : null));
             m.SetTexture("_BaseMap", tex != null ? tex : Texture2D.whiteTexture);
             var factor = src != null && src.HasProperty("baseColorFactor") ? src.GetColor("baseColorFactor") : src != null && src.HasProperty("_BaseColor") ? src.GetColor("_BaseColor") : Color.white;
             m.SetColor("_BaseColor", factor);
-            var nor = Tex(src, "normalTexture") ?? Tex(src, "_BumpMap");
+            var nor = Lean(Tex(src, "normalTexture") ?? Tex(src, "_BumpMap"));
             if (nor != null) m.SetTexture("_BumpMap", nor);
             float rough = src != null && src.HasProperty("roughnessFactor") ? src.GetFloat("roughnessFactor") : 0.7f;
             float metalFactor = src != null && src.HasProperty("metallicFactor") ? src.GetFloat("metallicFactor") : Tex(src, "metallicRoughnessTexture") != null ? 1 : 0;
@@ -283,7 +332,7 @@ namespace SniperDuel.Game.World
             }
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, true, true) { name = orm.name + " (mask)", wrapMode = orm.wrapMode };
             tex.SetPixels32(px);
-            tex.Apply(true, true);
+            Pack(tex);
             Repacked[key] = tex;
             return tex;
         }

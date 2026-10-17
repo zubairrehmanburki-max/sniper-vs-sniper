@@ -372,6 +372,8 @@ namespace SniperDuel.Game
             Trail.Mark("building " + id);
             arena = Arena.Build(Maps.ById(id));
             rig.MenuFocus = Library.ToUnity(arena.Map.Spots.A[0]);
+            Trail.Mark("trimming " + id);
+            yield return Arena.Trim();
             Mem.Log("map " + id);
         }
 

@@ -137,6 +137,21 @@ namespace SniperDuel.Game.World
             return Resources.UnloadUnusedAssets();
         }
 
+        /// <summary>
+        /// After a map is built: lets go of the models and pictures it was built from. The scene keeps
+        /// its own converted copies, so the imported originals (uncompressed glTF textures among
+        /// them) can be unloaded. Yield the result.
+        /// </summary>
+        public static AsyncOperation Trim()
+        {
+            Library.Forget();
+            Figure.Forget();
+            Scenery.Forget();
+            Debug.Log($"[Memory] {Library.LeanCount} model textures made lean in {Library.LeanMs:0} ms");
+            System.GC.Collect();
+            return Resources.UnloadUnusedAssets();
+        }
+
         /// <summary>True when a spot is on a tower roof too small for the kit's road barriers.</summary>
         static bool OnSmallTower(DuelMap map, Vec3 spot)
         {
