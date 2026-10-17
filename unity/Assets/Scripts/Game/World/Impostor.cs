@@ -164,6 +164,12 @@ namespace SniperDuel.Game.World
                 if (!ok && shot.Attempt < 2) Pending.Add((shot.Id, null!, shot.Into, shot.Attempt + 1));
                 shot.Dispose();
                 shot = null;
+                // The last picture is in: the plant models it loaded can go again.
+                if (Pending.Count == 0)
+                {
+                    Trail.Mark("pictures done");
+                    Arena.Trim();
+                }
             }
         }
 
