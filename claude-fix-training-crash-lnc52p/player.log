@@ -1,0 +1,603 @@
+Processor: AMD EPYC 9V45 96-Core Processor, 4 core(s) @ 4519 MHz 
+Available Memory: 15989 MB 
+Linux Kernel and distribution: Linux 6.17 Ubuntu 24.04 64bit
+System Language: C
+Keyboard Layout: us
+Selected window backend: x11 
+Mono path[0] = '/home/runner/work/sniper-vs-sniper/sniper-vs-sniper/build/StandaloneLinux64/SniperDuel_Data/Managed'
+Mono config path = '/home/runner/work/sniper-vs-sniper/sniper-vs-sniper/build/StandaloneLinux64/SniperDuel_Data/MonoBleedingEdge/etc'
+Input System module state changed to: Initialized.
+Display 0 'screen': 1864x860 (primary device).
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+Desktop is 1864 x 860 @ 0 Hz
+Initialize engine version: 6000.3.26f1 (de8167e7440c)
+[Subsystems] Discovering subsystems at path /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/build/StandaloneLinux64/SniperDuel_Data/UnitySubsystems
+Forcing GfxDevice: OpenGL Core
+kGfxThreadingModeClientWorkerNativeJobs is not supported on OpenGL Core. Reverting to kGfxThreadingModeClientWorkerJobs instead.
+GfxDevice: creating device client; kGfxThreadingModeClientWorkerJobs
+Renderer: llvmpipe (LLVM 20.1.2, 256 bits)
+Vendor:   Mesa
+Version:  4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4
+GLES:     0
+ GL_3DFX_texture_compression_FXT1 GL_AMD_conservative_depth GL_AMD_draw_buffers_blend GL_AMD_gpu_shader_int64 GL_AMD_multi_draw_indirect GL_AMD_pinned_memory GL_AMD_query_buffer_object GL_AMD_seamless_cubemap_per_texture GL_AMD_shader_stencil_export GL_AMD_shader_trinary_minmax GL_AMD_texture_texture4 GL_AMD_vertex_shader_layer GL_AMD_vertex_shader_viewport_index GL_ANGLE_texture_compression_dxt3 GL_ANGLE_texture_compression_dxt5 GL_ARB_ES2_compatibility GL_ARB_ES3_1_compatibility GL_ARB_ES3_2_compatibility GL_ARB_ES3_compatibility GL_ARB_arrays_of_arrays GL_ARB_base_instance GL_ARB_blend_func_extended GL_ARB_buffer_storage GL_ARB_clear_buffer_object GL_ARB_clear_texture GL_ARB_clip_control GL_ARB_compressed_texture_pixel_storage GL_ARB_compute_shader GL_ARB_conditional_render_inverted GL_ARB_conservative_depth GL_ARB_copy_buffer GL_ARB_copy_image GL_ARB_cull_distance GL_ARB_debug_output GL_ARB_depth_buffer_float GL_ARB_depth_clamp GL_ARB_derivative_control GL_ARB_direct_state_access GL_ARB_draw_buffers GL_A
+RB_draw_buffers_blend GL_ARB_draw_elements_base_vertex GL_ARB_draw_indirect GL_ARB_draw_instanced GL_ARB_enhanced_layouts GL_ARB_explicit_attrib_location GL_ARB_explicit_uniform_location GL_ARB_fragment_coord_conventions GL_ARB_fragment_layer_viewport GL_ARB_fragment_shader GL_ARB_framebuffer_no_attachments GL_ARB_framebuffer_object GL_ARB_framebuffer_sRGB GL_ARB_get_program_binary GL_ARB_get_texture_sub_image GL_ARB_gl_spirv GL_ARB_gpu_shader5 GL_ARB_gpu_shader_fp64 GL_ARB_gpu_shader_int64 GL_ARB_half_float_pixel GL_ARB_half_float_vertex GL_ARB_indirect_parameters GL_ARB_instanced_arrays GL_ARB_internalformat_query GL_ARB_internalformat_query2 GL_ARB_invalidate_subdata GL_ARB_map_buffer_alignment GL_ARB_map_buffer_range GL_ARB_multi_bind GL_ARB_multi_draw_indirect GL_ARB_occlusion_query2 GL_ARB_parallel_shader_compile GL_ARB_pipeline_statistics_query GL_ARB_pixel_buffer_object GL_ARB_point_sprite GL_ARB_polygon_offset_clamp GL_ARB_post_depth_coverage GL_ARB_program_interface_query GL_ARB_provoking_vertex GL
+_ARB_query_buffer_object GL_ARB_robust_buffer_access_behavior GL_ARB_robustness GL_ARB_sample_shading GL_ARB_sampler_objects GL_ARB_seamless_cube_map GL_ARB_seamless_cubemap_per_texture GL_ARB_separate_shader_objects GL_ARB_shader_atomic_counter_ops GL_ARB_shader_atomic_counters GL_ARB_shader_ballot GL_ARB_shader_bit_encoding GL_ARB_shader_clock GL_ARB_shader_draw_parameters GL_ARB_shader_group_vote GL_ARB_shader_image_load_store GL_ARB_shader_image_size GL_ARB_shader_objects GL_ARB_shader_precision GL_ARB_shader_stencil_export GL_ARB_shader_storage_buffer_object GL_ARB_shader_subroutine GL_ARB_shader_texture_image_samples GL_ARB_shader_texture_lod GL_ARB_shader_viewport_layer_array GL_ARB_shading_language_420pack GL_ARB_shading_language_include GL_ARB_shading_language_packing GL_ARB_spirv_extensions GL_ARB_stencil_texturing GL_ARB_sync GL_ARB_tessellation_shader GL_ARB_texture_barrier GL_ARB_texture_border_clamp GL_ARB_texture_buffer_object GL_ARB_texture_buffer_object_rgb32 GL_ARB_texture_buffer_range GL_A
+RB_texture_compression_bptc GL_ARB_texture_compression_rgtc GL_ARB_texture_cube_map_array GL_ARB_texture_filter_anisotropic GL_ARB_texture_filter_minmax GL_ARB_texture_float GL_ARB_texture_gather GL_ARB_texture_mirror_clamp_to_edge GL_ARB_texture_multisample GL_ARB_texture_non_power_of_two GL_ARB_texture_query_levels GL_ARB_texture_query_lod GL_ARB_texture_rectangle GL_ARB_texture_rg GL_ARB_texture_rgb10_a2ui GL_ARB_texture_stencil8 GL_ARB_texture_storage GL_ARB_texture_storage_multisample GL_ARB_texture_swizzle GL_ARB_texture_view GL_ARB_timer_query GL_ARB_transform_feedback2 GL_ARB_transform_feedback3 GL_ARB_transform_feedback_instanced GL_ARB_transform_feedback_overflow_query GL_ARB_uniform_buffer_object GL_ARB_vertex_array_bgra GL_ARB_vertex_array_object GL_ARB_vertex_attrib_64bit GL_ARB_vertex_attrib_binding GL_ARB_vertex_buffer_object GL_ARB_vertex_shader GL_ARB_vertex_type_10f_11f_11f_rev GL_ARB_vertex_type_2_10_10_10_rev GL_ARB_viewport_array GL_ARM_shader_framebuffer_fetch_depth_stencil GL_ATI_blend
+_equation_separate GL_ATI_meminfo GL_ATI_texture_float GL_ATI_texture_mirror_once GL_EXT_EGL_image_storage GL_EXT_EGL_image_storage_compression GL_EXT_EGL_sync GL_EXT_abgr GL_EXT_blend_equation_separate GL_EXT_debug_label GL_EXT_draw_buffers2 GL_EXT_draw_instanced GL_EXT_framebuffer_blit GL_EXT_framebuffer_multisample GL_EXT_framebuffer_multisample_blit_scaled GL_EXT_framebuffer_object GL_EXT_framebuffer_sRGB GL_EXT_memory_object GL_EXT_memory_object_fd GL_EXT_packed_depth_stencil GL_EXT_packed_float GL_EXT_pixel_buffer_object GL_EXT_polygon_offset_clamp GL_EXT_provoking_vertex GL_EXT_shader_clock GL_EXT_shader_framebuffer_fetch GL_EXT_shader_framebuffer_fetch_non_coherent GL_EXT_shader_image_load_formatted GL_EXT_shader_integer_mix GL_EXT_texture_array GL_EXT_texture_compression_dxt1 GL_EXT_texture_compression_rgtc GL_EXT_texture_compression_s3tc GL_EXT_texture_filter_anisotropic GL_EXT_texture_filter_minmax GL_EXT_texture_integer GL_EXT_texture_mirror_clamp GL_EXT_texture_sRGB GL_EXT_texture_sRGB_R8 GL_EXT
+_texture_sRGB_RG8 GL_EXT_texture_sRGB_decode GL_EXT_texture_shadow_lod GL_EXT_texture_shared_exponent GL_EXT_texture_snorm GL_EXT_texture_storage GL_EXT_texture_swizzle GL_EXT_timer_query GL_EXT_transform_feedback GL_EXT_vertex_array_bgra GL_EXT_vertex_attrib_64bit GL_IBM_multimode_draw_arrays GL_INTEL_shader_atomic_float_minmax GL_KHR_blend_equation_advanced GL_KHR_blend_equation_advanced_coherent GL_KHR_context_flush_control GL_KHR_debug GL_KHR_no_error GL_KHR_parallel_shader_compile GL_KHR_robust_buffer_access_behavior GL_KHR_robustness GL_KHR_texture_compression_astc_ldr GL_KHR_texture_compression_astc_sliced_3d GL_MESA_framebuffer_flip_y GL_MESA_pack_invert GL_MESA_shader_integer_functions GL_MESA_texture_signed_rgba GL_NVX_gpu_memory_info GL_NV_alpha_to_coverage_dither_control GL_NV_conditional_render GL_NV_copy_image GL_NV_depth_clamp GL_NV_packed_depth_stencil GL_NV_shader_atomic_float GL_NV_texture_barrier GL_OES_EGL_image GL_OVR_multiview GL_OVR_multiview2 GL_S3_s3tc
+OPENGL LOG: Creating OpenGL 4.5 graphics device ; Context level  <OpenGL 4.5> ; Context handle 547154624
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5731:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
+FMOD failed to initialize the output device.: "Error initializing output device. " (60)
+Forced to initialize FMOD to to the device driver's system output rate 48000, this may impact performance and/or give inconsistent experiences compared to selected sample rate 48000
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5731:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
+FMOD failed to initialize the output device.: "Error initializing output device. " (60)
+FMOD failed to initialize any audio devices, running on emulated software output with no sound. Please check your audio drivers and/or hardware for malfunction.
+Begin MonoManager ReloadAssembly
+- Loaded All Assemblies, in  0.101 seconds
+- Finished resetting the current domain, in  0.003 seconds
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+Default vsync count 1
+Could not fetch DPI for display (screen): Couldn't get DPI
+Could not fetch DPI for display (screen): Couldn't get DPI
+requesting resize 1864 x 860
+resizing window to 1864 x 860
+Desktop is 1864 x 860 @ 0 Hz
+Could not fetch DPI for display (screen): Couldn't get DPI
+Could not fetch DPI for display (screen): Couldn't get DPI
+Could not fetch DPI for display (screen): Couldn't get DPI
+UnloadTime: 0.929155 ms
+[Skyline] 71404 vertices, 2 helipads
+[Estuary] 3114 trees, 462 shrubs
+[Arena] twin-bridges: 3,253,939 triangles; heaviest:
+  1,705,984 concrete_road_barrier (28 meshes)
+  264,432 covered_car (105 meshes)
+  183,888 wooden_military_crate (24 meshes)
+  125,712 old_military_crate (60 meshes)
+  125,216 Rip-rap (1 meshes)
+  110,616 dutch_ship_large_01 (3 meshes)
+  108,616 Railings and lamps (1 meshes)
+  96,360 metal_jerrycan_green (50 meshes)
+  91,098 lateral_sea_marker (7 meshes)
+  75,208 portable_searchlight (4 meshes)
+  69,162 dutch_ship_medium (3 meshes)
+  38,496 binoculars (8 meshes)
+  27,252 pier_old (3 meshes)
+  24,480 ocean_buoy (2 meshes)
+  17,676 barrel_03 (12 meshes)
+[Figure] Prone: 71 bones, 9 renderers
+[Figure] skin 0: 0 bones, head #-1, middle at 0.48 of the head, size (0.10, 0.04, 0.03)
+[Figure] skin Object_97: 88 bones, head #6, middle at 0.52 of the head, size (0.14, 0.10, 0.08)
+[Figure] skin Object_99: 88 bones, head #6, middle at -0.02 of the head, size (0.26, 0.44, 0.27)
+[Figure] skin Object_101: 88 bones, head #6, middle at -4.57 of the head, size (0.43, 0.20, 0.26)
+[Figure] skin Object_103: 88 bones, head #6, middle at -2.45 of the head, size (0.52, 0.66, 0.35)
+[Figure] skin Object_105: 88 bones, head #6, middle at -1.07 of the head, size (0.42, 0.44, 0.37)
+[Figure] skin Object_107: 88 bones, head #6, middle at -1.26 of the head, size (0.68, 0.63, 0.41)
+[Figure] skin Object_109: 88 bones, head #6, middle at 0.57 of the head, size (0.18, 0.17, 0.32)
+[Figure] skin Object_111: 88 bones, head #6, middle at 1.34 of the head, size (0.28, 0.26, 0.27)
+[Figure] Object_111 seated on the head: down 0.178
+[Figure] skin Object_113: 88 bones, head #6, middle at -4.04 of the head, size (0.51, 0.92, 0.34)
+[Figure] skin Object_115: 88 bones, head #6, middle at -0.74 of the head, size (0.36, 0.17, 0.12)
+[Figure] skin Object_117: 88 bones, head #6, middle at -1.48 of the head, size (0.73, 0.18, 0.23)
+[Figure] skin Object_119: 88 bones, head #6, middle at -2.38 of the head, size (0.37, 0.08, 0.30)
+[Figure] skin Object_121: 88 bones, head #6, middle at -2.64 of the head, size (0.52, 0.20, 0.42)
+[Figure] skin Object_123: 88 bones, head #6, middle at -6.05 of the head, size (0.62, 0.23, 0.41)
+[Figure] Prone: 110 bones, 15 renderers
+Releasing render texture that is set to be RenderTexture.active!
+[Memory] menu, twin-bridges: reserved 778 MB, allocated 649 MB, managed 18 MB, textures 757 MB, 309 meshes with 6,795,858 vertices, 380 textures, 454 materials
+[Sound] twin-bridges: 25 clips, 7.8 MB of PCM
+requesting resize 1864 x 860
+resizing window to 1864 x 860
+Desktop is 1864 x 860 @ 0 Hz
+Could not fetch DPI for display (screen): Couldn't get DPI
+Could not fetch DPI for display (screen): Couldn't get DPI
+[Impostor] island_tree_02 try 0: (4.21, 3.41, 4.07) m, 69662 solid px, 69662 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_03 try 0: (2.97, 2.62, 2.91) m, 58521 solid px, 58505 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/01-Title.png
+[Impostor] island_tree_01 try 0: (4.76, 5.03, 4.82) m, 82222 solid px, 82220 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] tree_small_02 try 0: (2.92, 4.56, 4.29) m, 59469 solid px, 59467 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/02-Lobby.png
+[Impostor] shrub_02 try 0: (6.57, 2.55, 2.54) m, 3948 solid px, 3948 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/03-Play.png
+[Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/04-Loadout.png
+[Figure] Standing: 143 bones, 10 renderers
+[Studio] dressed: 52 renderers, bounds Center: (0.05, -1999.07, 0.54), Extents: (0.35, 0.89, 0.70)
+[Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/05-Operators.png
+[Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/06-Versus.png
+[Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/07-Hud.png
+[Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/08-Scope.png
+[Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/09-Killcam.png
+[Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/10-Results.png
+[Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/11-Settings.png
+[Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/12-Gunsmith.png
+[Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/13-HudLayout.png
+[Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/14-Career.png
+[Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/15-Pass.png
+[Capture] enemy at (0.00, 24.00, 638.00) bounds (-0.01, 24.32, 638.14) size (0.68, 0.56, 2.70)
+[Capture] enemy at (0.00, 24.00, 638.00) bounds (-0.01, 24.32, 638.14) size (0.68, 0.56, 2.70)
+[Capture] enemy at (0.00, 24.00, 638.00) bounds (-0.01, 24.32, 638.14) size (0.68, 0.56, 2.70)
+[Viewmodel] gloved: arms (-0.03, 0.05, 0.04) size (0.49, 0.33, 0.79), carbine (0.06, 0.06, 0.17) size (0.12, 0.44, 1.08), rifle (0.06, 0.13, 0.28) size (0.13, 0.24, 1.30)
+[Viewmodel] hands and rifle, eyepiece at (0.04, 0.18, 0.20)
+[Capture] World-Aim
+[Capture] World-Raise
+[Capture] Scope-25x
+[Capture] Scope-bolt308-12x
+[Capture] Scope-bolt308-25x
+[Capture] Scope-bolt65cm-12x
+[Capture] Scope-bolt65cm-25x
+[Capture] Scope-mag338-12x
+[Capture] Scope-mag338-25x
+[Capture] Scope-am50-12x
+[Capture] Scope-am50-25x
+[Capture] review shot: Ground after 0.849 s at (0.56, 23.02, 633.19), 2812 points
+[Capture] Shot-Trace
+[Capture] Shot-Trace-Far
+[Capture] Shot-Trace-Eye
+[Capture] Shot-Enemy
+[Capture] Shot-Enemy-Later
+[Capture] Shot-Blast-Side
+[Capture] Shot-Trace-Side
+[Figure] Standing: 143 bones, 10 renderers
+[Figure] skin 0: 0 bones, head #-1, middle at 0.48 of the head, size (0.10, 0.04, 0.03)
+[Figure] skin Object_97: 88 bones, head #6, middle at 0.52 of the head, size (0.14, 0.10, 0.08)
+[Figure] skin Object_99: 88 bones, head #6, middle at -0.02 of the head, size (0.26, 0.44, 0.27)
+[Figure] skin Object_101: 88 bones, head #6, middle at -4.57 of the head, size (0.43, 0.20, 0.26)
+[Figure] skin Object_103: 88 bones, head #6, middle at -2.45 of the head, size (0.52, 0.66, 0.35)
+[Figure] skin Object_105: 88 bones, head #6, middle at -1.07 of the head, size (0.42, 0.44, 0.37)
+[Figure] skin Object_107: 88 bones, head #6, middle at -1.26 of the head, size (0.68, 0.63, 0.41)
+[Figure] skin Object_109: 88 bones, head #6, middle at 0.57 of the head, size (0.18, 0.17, 0.32)
+[Figure] skin Object_111: 88 bones, head #6, middle at 1.34 of the head, size (0.28, 0.26, 0.27)
+[Figure] Object_111 seated on the head: down 0.178
+[Figure] skin Object_113: 88 bones, head #6, middle at -4.04 of the head, size (0.51, 0.92, 0.34)
+[Figure] skin Object_115: 88 bones, head #6, middle at -0.74 of the head, size (0.36, 0.17, 0.12)
+[Figure] skin Object_117: 88 bones, head #6, middle at -1.48 of the head, size (0.73, 0.18, 0.23)
+[Figure] skin Object_119: 88 bones, head #6, middle at -2.38 of the head, size (0.37, 0.08, 0.30)
+[Figure] skin Object_121: 88 bones, head #6, middle at -2.64 of the head, size (0.52, 0.20, 0.42)
+[Figure] skin Object_123: 88 bones, head #6, middle at -6.05 of the head, size (0.62, 0.23, 0.41)
+[Figure] Standing: 110 bones, 15 renderers
+[Figure] Standing: 89 bones, 10 renderers
+[Figure] Standing: 71 bones, 9 renderers
+[Figure] skin 0: 0 bones, head #-1, middle at 0.48 of the head, size (0.10, 0.04, 0.03)
+[Figure] skin Object_97: 88 bones, head #6, middle at 0.52 of the head, size (0.14, 0.10, 0.08)
+[Figure] skin Object_99: 88 bones, head #6, middle at -0.02 of the head, size (0.26, 0.44, 0.27)
+[Figure] skin Object_101: 88 bones, head #6, middle at -4.57 of the head, size (0.43, 0.20, 0.26)
+[Figure] skin Object_103: 88 bones, head #6, middle at -2.45 of the head, size (0.52, 0.66, 0.35)
+[Figure] skin Object_105: 88 bones, head #6, middle at -1.07 of the head, size (0.42, 0.44, 0.37)
+[Figure] skin Object_107: 88 bones, head #6, middle at -1.26 of the head, size (0.68, 0.63, 0.41)
+[Figure] skin Object_109: 88 bones, head #6, middle at 0.57 of the head, size (0.18, 0.17, 0.32)
+[Figure] skin Object_111: 88 bones, head #6, middle at 1.34 of the head, size (0.28, 0.26, 0.27)
+[Figure] Object_111 seated on the head: down 0.178
+[Figure] skin Object_113: 88 bones, head #6, middle at -4.04 of the head, size (0.51, 0.92, 0.34)
+[Figure] skin Object_115: 88 bones, head #6, middle at -0.74 of the head, size (0.36, 0.17, 0.12)
+[Figure] skin Object_117: 88 bones, head #6, middle at -1.48 of the head, size (0.73, 0.18, 0.23)
+[Figure] skin Object_119: 88 bones, head #6, middle at -2.38 of the head, size (0.37, 0.08, 0.30)
+[Figure] skin Object_121: 88 bones, head #6, middle at -2.64 of the head, size (0.52, 0.20, 0.42)
+[Figure] skin Object_123: 88 bones, head #6, middle at -6.05 of the head, size (0.62, 0.23, 0.41)
+[Figure] Standing: 110 bones, 15 renderers
+[Capture] Move-Stand: figure bounds (1.25, 2.02, 1.69)
+[Capture] Move-Walk: figure bounds (1.25, 2.02, 1.69)
+[Capture] Move-Crouch: figure bounds (1.27, 2.02, 1.98)
+[Capture] Move-CrouchWalk: figure bounds (1.30, 2.02, 2.33)
+[Capture] Move-Prone: figure bounds (1.13, 1.58, 2.85)
+[Capture] Move-Crawl: figure bounds (1.26, 1.55, 2.88)
+Unloading 5 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 1288 unused Assets to reduce memory usage. Loaded Objects now: 7126.
+Total: 18.024935 ms (FindLiveObjects: 0.584392 ms CreateObjectMapping: 0.102703 ms MarkObjects: 11.824201 ms  DeleteObjects: 5.513318 ms)
+
+[Memory] map unloaded: reserved 814 MB, allocated 624 MB, managed 50 MB, textures 1104 MB, 312 meshes with 6,369,534 vertices, 491 textures, 376 materials
+[Library] missing model shrub_03
+[Library] missing model shrub_04
+[Wilds] Shore plants: 17033 plants, 26 pictures
+[Arena] watchtowers: 2,064,078 triangles; heaviest:
+  712,614 dead_tree_trunk (7 meshes)
+  665,024 dead_tree_trunk_02 (8 meshes)
+  287,322 tree_stump_01 (7 meshes)
+  102,198 Shore plants (26 meshes)
+  41,904 old_military_crate (20 meshes)
+  38,496 binoculars (8 meshes)
+  37,604 portable_searchlight (2 meshes)
+  24,740 Bulrush heads (1 meshes)
+  22,272 Dead wood (1 meshes)
+  19,272 metal_jerrycan_green (10 meshes)
+  18,168 pier_old (2 meshes)
+  17,148 Reeds (1 meshes)
+  13,104 Mud banks (1 meshes)
+  12,244 tower_lattice (266 meshes)
+  11,560 Tower steel (2 meshes)
+[Figure] Prone: 71 bones, 9 renderers
+[Figure] skin 0: 0 bones, head #-1, middle at 0.48 of the head, size (0.10, 0.04, 0.03)
+[Figure] skin Object_97: 88 bones, head #6, middle at 0.52 of the head, size (0.14, 0.10, 0.08)
+[Figure] skin Object_99: 88 bones, head #6, middle at -0.02 of the head, size (0.26, 0.44, 0.27)
+[Figure] skin Object_101: 88 bones, head #6, middle at -4.57 of the head, size (0.43, 0.20, 0.26)
+[Figure] skin Object_103: 88 bones, head #6, middle at -2.45 of the head, size (0.52, 0.66, 0.35)
+[Figure] skin Object_105: 88 bones, head #6, middle at -1.07 of the head, size (0.42, 0.44, 0.37)
+[Figure] skin Object_107: 88 bones, head #6, middle at -1.26 of the head, size (0.68, 0.63, 0.41)
+[Figure] skin Object_109: 88 bones, head #6, middle at 0.57 of the head, size (0.18, 0.17, 0.32)
+[Figure] skin Object_111: 88 bones, head #6, middle at 1.34 of the head, size (0.28, 0.26, 0.27)
+[Figure] Object_111 seated on the head: down 0.178
+[Figure] skin Object_113: 88 bones, head #6, middle at -4.04 of the head, size (0.51, 0.92, 0.34)
+[Figure] skin Object_115: 88 bones, head #6, middle at -0.74 of the head, size (0.36, 0.17, 0.12)
+[Figure] skin Object_117: 88 bones, head #6, middle at -1.48 of the head, size (0.73, 0.18, 0.23)
+[Figure] skin Object_119: 88 bones, head #6, middle at -2.38 of the head, size (0.37, 0.08, 0.30)
+[Figure] skin Object_121: 88 bones, head #6, middle at -2.64 of the head, size (0.52, 0.20, 0.42)
+[Figure] skin Object_123: 88 bones, head #6, middle at -6.05 of the head, size (0.62, 0.23, 0.41)
+[Figure] Prone: 110 bones, 15 renderers
+[Memory] map watchtowers: reserved 839 MB, allocated 676 MB, managed 82 MB, textures 1376 MB, 578 meshes with 7,177,455 vertices, 585 textures, 733 materials
+[Sound] watchtowers: 25 clips, 7.6 MB of PCM
+[Impostor] shrub_01 try 0: (2.59, 0.40, 0.22) m, 2440 solid px, 2440 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#0 try 0: (0.18, 0.14, 0.16) m, 21384 solid px, 21384 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#1 try 0: (0.28, 0.17, 0.28) m, 26155 solid px, 26155 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#2 try 0: (0.19, 0.18, 0.20) m, 24396 solid px, 24396 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#3 try 0: (0.15, 0.29, 0.13) m, 11232 solid px, 11232 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#4 try 0: (0.16, 0.32, 0.16) m, 9371 solid px, 9371 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#5 try 0: (0.15, 0.24, 0.13) m, 17878 solid px, 17878 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#6 try 0: (0.17, 0.10, 0.19) m, 13704 solid px, 13704 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#7 try 0: (0.19, 0.14, 0.20) m, 29935 solid px, 29935 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#8 try 0: (0.22, 0.22, 0.22) m, 42335 solid px, 42335 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#9 try 0: (0.32, 0.15, 0.33) m, 38811 solid px, 38811 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#10 try 0: (0.28, 0.14, 0.26) m, 35312 solid px, 35312 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#11 try 0: (0.02, 0.08, 0.03) m, 6403 solid px, 6403 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#12 try 0: (0.07, 0.11, 0.07) m, 6360 solid px, 6360 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 397 unused Assets to reduce memory usage. Loaded Objects now: 8680.
+Total: 9.773069 ms (FindLiveObjects: 0.456290 ms CreateObjectMapping: 0.126589 ms MarkObjects: 8.063651 ms  DeleteObjects: 1.125968 ms)
+
+[Memory] map unloaded: reserved 855 MB, allocated 634 MB, managed 43 MB, textures 1297 MB, 481 meshes with 6,650,686 vertices, 571 textures, 427 materials
+[Arena] oil-rigs: 882,479 triangles; heaviest:
+  243,712 concrete_road_barrier (4 meshes)
+  110,616 dutch_ship_large_01 (3 meshes)
+  91,098 lateral_sea_marker (7 meshes)
+  88,314 rig_deepwater (31 meshes)
+  73,440 ocean_buoy (6 meshes)
+  58,340 rig_benkos (62 meshes)
+  41,904 old_military_crate (20 meshes)
+  38,496 binoculars (8 meshes)
+  32,728 Far rig (42 meshes)
+  21,768 Steelwork (2 meshes)
+  19,272 metal_jerrycan_green (10 meshes)
+  14,208 Rails and stairs (2 meshes)
+  10,072 Jacket (2 meshes)
+  8,952 Helideck net (2 meshes)
+  8,764 ammo_box (10 meshes)
+[Figure] Prone: 71 bones, 9 renderers
+[Figure] skin 0: 0 bones, head #-1, middle at 0.48 of the head, size (0.10, 0.04, 0.03)
+[Figure] skin Object_97: 88 bones, head #6, middle at 0.52 of the head, size (0.14, 0.10, 0.08)
+[Figure] skin Object_99: 88 bones, head #6, middle at -0.02 of the head, size (0.26, 0.44, 0.27)
+[Figure] skin Object_101: 88 bones, head #6, middle at -4.57 of the head, size (0.43, 0.20, 0.26)
+[Figure] skin Object_103: 88 bones, head #6, middle at -2.45 of the head, size (0.52, 0.66, 0.35)
+[Figure] skin Object_105: 88 bones, head #6, middle at -1.07 of the head, size (0.42, 0.44, 0.37)
+[Figure] skin Object_107: 88 bones, head #6, middle at -1.26 of the head, size (0.68, 0.63, 0.41)
+[Figure] skin Object_109: 88 bones, head #6, middle at 0.57 of the head, size (0.18, 0.17, 0.32)
+[Figure] skin Object_111: 88 bones, head #6, middle at 1.34 of the head, size (0.28, 0.26, 0.27)
+[Figure] Object_111 seated on the head: down 0.178
+[Figure] skin Object_113: 88 bones, head #6, middle at -4.04 of the head, size (0.51, 0.92, 0.34)
+[Figure] skin Object_115: 88 bones, head #6, middle at -0.74 of the head, size (0.36, 0.17, 0.12)
+[Figure] skin Object_117: 88 bones, head #6, middle at -1.48 of the head, size (0.73, 0.18, 0.23)
+[Figure] skin Object_119: 88 bones, head #6, middle at -2.38 of the head, size (0.37, 0.08, 0.30)
+[Figure] skin Object_121: 88 bones, head #6, middle at -2.64 of the head, size (0.52, 0.20, 0.42)
+[Figure] skin Object_123: 88 bones, head #6, middle at -6.05 of the head, size (0.62, 0.23, 0.41)
+[Figure] Prone: 110 bones, 15 renderers
+[Memory] map oil-rigs: reserved 843 MB, allocated 646 MB, managed 50 MB, textures 1492 MB, 735 meshes with 7,141,543 vertices, 628 textures, 860 materials
+[Sound] oil-rigs: 25 clips, 7.7 MB of PCM
+[Impostor] grass_medium_02#0 try 0: (0.12, 0.16, 0.12) m, 10835 solid px, 10836 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_02#1 try 0: (0.18, 0.18, 0.20) m, 14493 solid px, 14493 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_02#2 try 0: (0.91, 0.41, 0.43) m, 5705 solid px, 5705 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] fern_02#0 try 0: (0.99, 0.43, 0.89) m, 42048 solid px, 42048 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] fern_02#1 try 0: (0.87, 0.35, 0.77) m, 35511 solid px, 35511 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] fern_02#2 try 0: (0.55, 0.29, 0.61) m, 34844 solid px, 34844 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] fern_02#3 try 0: (0.57, 0.21, 0.59) m, 41313 solid px, 41313 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 513 unused Assets to reduce memory usage. Loaded Objects now: 9420.
+Total: 13.563199 ms (FindLiveObjects: 0.659773 ms CreateObjectMapping: 0.340899 ms MarkObjects: 11.117893 ms  DeleteObjects: 1.444343 ms)
+
+[Memory] map unloaded: reserved 843 MB, allocated 632 MB, managed 39 MB, textures 1445 MB, 574 meshes with 6,853,644 vertices, 605 textures, 495 materials
+[Wilds] Veld: 79972 plants, 38 pictures
+[Wilds] Lane stones: 16000 stones
+[Wilds] Spot pebbles: 16000 stones
+[Arena] dry-valley: 8,298,246 triangles; heaviest:
+  1,462,272 concrete_road_barrier (24 meshes)
+  1,038,059 namaqualand_cliff_01 (11 meshes)
+  694,450 namaqualand_boulders_01 (34 meshes)
+  685,748 namaqualand_boulder_02 (7 meshes)
+  627,326 namaqualand_boulder_05 (7 meshes)
+  545,080 shrub_02 (80 meshes)
+  518,608 namaqualand_boulder_03 (8 meshes)
+  479,832 Veld (38 meshes)
+  472,528 namaqualand_boulder_04 (8 meshes)
+  288,000 Lane stones (1 meshes)
+  288,000 Spot pebbles (1 meshes)
+  251,424 old_military_crate (120 meshes)
+  230,976 binoculars (48 meshes)
+  199,750 sandbag_barrier (10 meshes)
+  134,424 dry_branches_medium_01 (24 meshes)
+[Figure] Prone: 71 bones, 9 renderers
+[Figure] skin 0: 0 bones, head #-1, middle at 0.48 of the head, size (0.10, 0.04, 0.03)
+[Figure] skin Object_97: 88 bones, head #6, middle at 0.52 of the head, size (0.14, 0.10, 0.08)
+[Figure] skin Object_99: 88 bones, head #6, middle at -0.02 of the head, size (0.26, 0.44, 0.27)
+[Figure] skin Object_101: 88 bones, head #6, middle at -4.57 of the head, size (0.43, 0.20, 0.26)
+[Figure] skin Object_103: 88 bones, head #6, middle at -2.45 of the head, size (0.52, 0.66, 0.35)
+[Figure] skin Object_105: 88 bones, head #6, middle at -1.07 of the head, size (0.42, 0.44, 0.37)
+[Figure] skin Object_107: 88 bones, head #6, middle at -1.26 of the head, size (0.68, 0.63, 0.41)
+[Figure] skin Object_109: 88 bones, head #6, middle at 0.57 of the head, size (0.18, 0.17, 0.32)
+[Figure] skin Object_111: 88 bones, head #6, middle at 1.34 of the head, size (0.28, 0.26, 0.27)
+[Figure] Object_111 seated on the head: down 0.178
+[Figure] skin Object_113: 88 bones, head #6, middle at -4.04 of the head, size (0.51, 0.92, 0.34)
+[Figure] skin Object_115: 88 bones, head #6, middle at -0.74 of the head, size (0.36, 0.17, 0.12)
+[Figure] skin Object_117: 88 bones, head #6, middle at -1.48 of the head, size (0.73, 0.18, 0.23)
+[Figure] skin Object_119: 88 bones, head #6, middle at -2.38 of the head, size (0.37, 0.08, 0.30)
+[Figure] skin Object_121: 88 bones, head #6, middle at -2.64 of the head, size (0.52, 0.20, 0.42)
+[Figure] skin Object_123: 88 bones, head #6, middle at -6.05 of the head, size (0.62, 0.23, 0.41)
+[Figure] Prone: 110 bones, 15 renderers
+[Memory] map dry-valley: reserved 1177 MB, allocated 990 MB, managed 104 MB, textures 2199 MB, 757 meshes with 11,022,980 vertices, 821 textures, 971 materials
+[Sound] dry-valley: 25 clips, 8.1 MB of PCM
+[Impostor] wild_rooibos_bush#0 try 0: (1.18, 0.54, 0.84) m, 39717 solid px, 39690 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] wild_rooibos_bush#1 try 0: (0.43, 0.45, 0.47) m, 90807 solid px, 90630 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] wild_rooibos_bush#2 try 0: (0.33, 0.42, 0.38) m, 83395 solid px, 83395 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] wild_rooibos_bush#3 try 0: (0.28, 0.31, 0.17) m, 60757 solid px, 60757 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] didelta_spinosa#0 try 0: (2.12, 2.07, 1.86) m, 90098 solid px, 90097 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] didelta_spinosa#1 try 0: (1.27, 1.30, 1.57) m, 62038 solid px, 62037 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] didelta_spinosa#2 try 0: (0.82, 0.94, 1.06) m, 51051 solid px, 51051 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] searsia_lucida#0 try 0: (3.22, 2.34, 2.84) m, 62776 solid px, 62776 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] searsia_lucida#1 try 0: (1.51, 1.68, 1.25) m, 68553 solid px, 68550 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] searsia_lucida#2 try 0: (0.66, 0.74, 0.48) m, 47108 solid px, 47108 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] searsia_lucida#3 try 0: (0.38, 0.79, 0.32) m, 30434 solid px, 30434 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] quiver_tree_01 try 0: (1.18, 2.72, 0.97) m, 20149 solid px, 20149 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] quiver_tree_02 try 0: (0.87, 1.47, 0.88) m, 47521 solid px, 47521 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] cheiridopsis_succulent#0 try 0: (0.20, 0.19, 0.18) m, 74384 solid px, 74384 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 449 unused Assets to reduce memory usage. Loaded Objects now: 10370.
+Total: 12.611700 ms (FindLiveObjects: 0.751941 ms CreateObjectMapping: 0.330713 ms MarkObjects: 10.136410 ms  DeleteObjects: 1.392466 ms)
+
+[Memory] map unloaded: reserved 1065 MB, allocated 858 MB, managed 38 MB, textures 2029 MB, 659 meshes with 8,179,541 vertices, 785 textures, 642 materials
+[Arena] harbor-rooftops: 3,604,324 triangles; heaviest:
+  1,462,272 concrete_road_barrier (24 meshes)
+  683,496 exterior_aircon_unit (72 meshes)
+  251,424 old_military_crate (120 meshes)
+  230,976 binoculars (48 meshes)
+  138,324 dutch_ship_medium (6 meshes)
+  115,632 metal_jerrycan_green (60 meshes)
+  110,616 dutch_ship_large_01 (3 meshes)
+  73,296 Concrete (1 meshes)
+  70,440 Steel (1 meshes)
+  66,588 container_rusted (54 meshes)
+  52,838 portable_generator (8 meshes)
+  52,584 ammo_box (60 meshes)
+  49,352 Rooftop plant (1 meshes)
+  26,028 lateral_sea_marker (2 meshes)
+  25,376 Rusty steel (1 meshes)
+[Figure] Prone: 71 bones, 9 renderers
+[Figure] skin 0: 0 bones, head #-1, middle at 0.48 of the head, size (0.10, 0.04, 0.03)
+[Figure] skin Object_97: 88 bones, head #6, middle at 0.52 of the head, size (0.14, 0.10, 0.08)
+[Figure] skin Object_99: 88 bones, head #6, middle at -0.02 of the head, size (0.26, 0.44, 0.27)
+[Figure] skin Object_101: 88 bones, head #6, middle at -4.57 of the head, size (0.43, 0.20, 0.26)
+[Figure] skin Object_103: 88 bones, head #6, middle at -2.45 of the head, size (0.52, 0.66, 0.35)
+[Figure] skin Object_105: 88 bones, head #6, middle at -1.07 of the head, size (0.42, 0.44, 0.37)
+[Figure] skin Object_107: 88 bones, head #6, middle at -1.26 of the head, size (0.68, 0.63, 0.41)
+[Figure] skin Object_109: 88 bones, head #6, middle at 0.57 of the head, size (0.18, 0.17, 0.32)
+[Figure] skin Object_111: 88 bones, head #6, middle at 1.34 of the head, size (0.28, 0.26, 0.27)
+[Figure] Object_111 seated on the head: down 0.178
+[Figure] skin Object_113: 88 bones, head #6, middle at -4.04 of the head, size (0.51, 0.92, 0.34)
+[Figure] skin Object_115: 88 bones, head #6, middle at -0.74 of the head, size (0.36, 0.17, 0.12)
+[Figure] skin Object_117: 88 bones, head #6, middle at -1.48 of the head, size (0.73, 0.18, 0.23)
+[Figure] skin Object_119: 88 bones, head #6, middle at -2.38 of the head, size (0.37, 0.08, 0.30)
+[Figure] skin Object_121: 88 bones, head #6, middle at -2.64 of the head, size (0.52, 0.20, 0.42)
+[Figure] skin Object_123: 88 bones, head #6, middle at -6.05 of the head, size (0.62, 0.23, 0.41)
+[Figure] Prone: 110 bones, 15 renderers
+[Memory] map harbor-rooftops: reserved 1034 MB, allocated 823 MB, managed 85 MB, textures 2228 MB, 754 meshes with 9,023,015 vertices, 861 textures, 992 materials
+[Sound] harbor-rooftops: 25 clips, 7.8 MB of PCM
+[Impostor] cheiridopsis_succulent#1 try 0: (0.24, 0.17, 0.24) m, 82778 solid px, 82802 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] cheiridopsis_succulent#2 try 0: (0.24, 0.20, 0.26) m, 104923 solid px, 104923 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] cheiridopsis_succulent#3 try 0: (0.35, 0.25, 0.35) m, 98056 solid px, 98056 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] cheiridopsis_succulent#4 try 0: (0.39, 0.23, 0.35) m, 80470 solid px, 80470 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] cheiridopsis_succulent#5 try 0: (0.45, 0.23, 0.40) m, 69049 solid px, 69049 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] cheiridopsis_succulent#6 try 0: (0.51, 0.27, 0.42) m, 68346 solid px, 68346 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] cheiridopsis_succulent#7 try 0: (0.60, 0.24, 0.53) m, 66515 solid px, 66515 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] cheiridopsis_succulent#8 try 0: (0.51, 0.27, 0.55) m, 71724 solid px, 71724 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 392 unused Assets to reduce memory usage. Loaded Objects now: 10518.
+Total: 13.087470 ms (FindLiveObjects: 1.604192 ms CreateObjectMapping: 0.247469 ms MarkObjects: 10.022170 ms  DeleteObjects: 1.213419 ms)
+
+[Memory] map unloaded: reserved 1018 MB, allocated 776 MB, managed 58 MB, textures 2167 MB, 676 meshes with 8,232,952 vertices, 821 textures, 677 materials
+[Library] missing model pine_sapling_medium
+[Wilds] Forest: 55986 plants, 20 pictures
+[Wilds] Lane stones: 12000 stones
+[Wilds] Spot pebbles: 12000 stones
+[AlpineRidge] 2600 spruce pictures, 0 far cones
+[Arena] alpine-ridge: 6,243,077 triangles; heaviest:
+  1,218,560 concrete_road_barrier (20 meshes)
+  920,832 mountainside (6 meshes)
+  576,470 rock_moss_set_02 (70 meshes)
+  568,143 rock_moss_set_01 (54 meshes)
+  335,916 Forest (20 meshes)
+  332,512 dead_tree_trunk_02 (4 meshes)
+  302,610 rock_face_01 (15 meshes)
+  216,000 Lane stones (1 meshes)
+  216,000 Spot pebbles (1 meshes)
+  209,520 old_military_crate (100 meshes)
+  192,480 binoculars (40 meshes)
+  177,198 namaqualand_boulder_04 (3 meshes)
+  172,224 spruce (4278 meshes)
+  164,184 tree_stump_01 (4 meshes)
+  125,934 rocks_scan_1 (252 meshes)
+[Figure] Prone: 71 bones, 9 renderers
+[Figure] skin 0: 0 bones, head #-1, middle at 0.48 of the head, size (0.10, 0.04, 0.03)
+[Figure] skin Object_97: 88 bones, head #6, middle at 0.52 of the head, size (0.14, 0.10, 0.08)
+[Figure] skin Object_99: 88 bones, head #6, middle at -0.02 of the head, size (0.26, 0.44, 0.27)
+[Figure] skin Object_101: 88 bones, head #6, middle at -4.57 of the head, size (0.43, 0.20, 0.26)
+[Figure] skin Object_103: 88 bones, head #6, middle at -2.45 of the head, size (0.52, 0.66, 0.35)
+[Figure] skin Object_105: 88 bones, head #6, middle at -1.07 of the head, size (0.42, 0.44, 0.37)
+[Figure] skin Object_107: 88 bones, head #6, middle at -1.26 of the head, size (0.68, 0.63, 0.41)
+[Figure] skin Object_109: 88 bones, head #6, middle at 0.57 of the head, size (0.18, 0.17, 0.32)
+[Figure] skin Object_111: 88 bones, head #6, middle at 1.34 of the head, size (0.28, 0.26, 0.27)
+[Figure] Object_111 seated on the head: down 0.178
+[Figure] skin Object_113: 88 bones, head #6, middle at -4.04 of the head, size (0.51, 0.92, 0.34)
+[Figure] skin Object_115: 88 bones, head #6, middle at -0.74 of the head, size (0.36, 0.17, 0.12)
+[Figure] skin Object_117: 88 bones, head #6, middle at -1.48 of the head, size (0.73, 0.18, 0.23)
+[Figure] skin Object_119: 88 bones, head #6, middle at -2.38 of the head, size (0.37, 0.08, 0.30)
+[Figure] skin Object_121: 88 bones, head #6, middle at -2.64 of the head, size (0.52, 0.20, 0.42)
+[Figure] skin Object_123: 88 bones, head #6, middle at -6.05 of the head, size (0.62, 0.23, 0.41)
+[Figure] Prone: 110 bones, 15 renderers
+[Memory] map alpine-ridge: reserved 1147 MB, allocated 995 MB, managed 155 MB, textures 2530 MB, 957 meshes with 12,367,002 vertices, 1105 textures, 1201 materials
+[Sound] alpine-ridge: 25 clips, 8.6 MB of PCM
+[Impostor] spruce try 0: (6.30, 4.51, 3.38) m, 29043 solid px, 29043 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] fir_sapling_medium#0 try 0: (4.99, 8.83, 5.28) m, 33812 solid px, 33812 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] fir_sapling_medium#1 try 0: (4.27, 7.80, 3.96) m, 25513 solid px, 25513 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] fir_sapling_medium#2 try 0: (4.31, 5.91, 4.01) m, 42365 solid px, 42365 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 488 unused Assets to reduce memory usage. Loaded Objects now: 12357.
+Total: 17.555171 ms (FindLiveObjects: 0.611662 ms CreateObjectMapping: 0.231826 ms MarkObjects: 15.284235 ms  DeleteObjects: 1.427138 ms)
+
+[Memory] map unloaded: reserved 1191 MB, allocated 971 MB, managed 51 MB, textures 2450 MB, 873 meshes with 10,258,657 vertices, 1084 textures, 880 materials
+[Wilds] Range woods: 49177 plants, 39 pictures
+[Wilds] Lane stones: 6000 stones
+[Wilds] Spot pebbles: 6000 stones
+[Arena] training-lane: 2,767,276 triangles; heaviest:
+  1,218,560 concrete_road_barrier (20 meshes)
+  295,062 Range woods (39 meshes)
+  228,085 Rifle (115 meshes)
+  209,520 old_military_crate (100 meshes)
+  192,480 binoculars (40 meshes)
+  108,000 Lane stones (1 meshes)
+  108,000 Spot pebbles (1 meshes)
+  96,360 metal_jerrycan_green (50 meshes)
+  83,956 rocks_scan_1 (168 meshes)
+  52,838 portable_generator (8 meshes)
+  43,820 ammo_box (50 meshes)
+  39,976 rocks_scan_2 (80 meshes)
+  29,970 rocks_scan_3 (60 meshes)
+  17,280 old_tyre (6 meshes)
+  17,250 rock_kit (3 meshes)
+[Figure] Prone: 71 bones, 9 renderers
+[Figure] skin 0: 0 bones, head #-1, middle at 0.48 of the head, size (0.10, 0.04, 0.03)
+[Figure] skin Object_97: 88 bones, head #6, middle at 0.52 of the head, size (0.14, 0.10, 0.08)
+[Figure] skin Object_99: 88 bones, head #6, middle at -0.02 of the head, size (0.26, 0.44, 0.27)
+[Figure] skin Object_101: 88 bones, head #6, middle at -4.57 of the head, size (0.43, 0.20, 0.26)
+[Figure] skin Object_103: 88 bones, head #6, middle at -2.45 of the head, size (0.52, 0.66, 0.35)
+[Figure] skin Object_105: 88 bones, head #6, middle at -1.07 of the head, size (0.42, 0.44, 0.37)
+[Figure] skin Object_107: 88 bones, head #6, middle at -1.26 of the head, size (0.68, 0.63, 0.41)
+[Figure] skin Object_109: 88 bones, head #6, middle at 0.57 of the head, size (0.18, 0.17, 0.32)
+[Figure] skin Object_111: 88 bones, head #6, middle at 1.34 of the head, size (0.28, 0.26, 0.27)
+[Figure] Object_111 seated on the head: down 0.178
+[Figure] skin Object_113: 88 bones, head #6, middle at -4.04 of the head, size (0.51, 0.92, 0.34)
+[Figure] skin Object_115: 88 bones, head #6, middle at -0.74 of the head, size (0.36, 0.17, 0.12)
+[Figure] skin Object_117: 88 bones, head #6, middle at -1.48 of the head, size (0.73, 0.18, 0.23)
+[Figure] skin Object_119: 88 bones, head #6, middle at -2.38 of the head, size (0.37, 0.08, 0.30)
+[Figure] skin Object_121: 88 bones, head #6, middle at -2.64 of the head, size (0.52, 0.20, 0.42)
+[Figure] skin Object_123: 88 bones, head #6, middle at -6.05 of the head, size (0.62, 0.23, 0.41)
+[Figure] Prone: 110 bones, 15 renderers
+[Memory] map training-lane: reserved 1205 MB, allocated 962 MB, managed 107 MB, textures 2551 MB, 1020 meshes with 11,608,487 vertices, 1125 textures, 1414 materials
+[Sound] training-lane: 25 clips, 7.5 MB of PCM
+[Impostor] grass_bermuda_01#2 try 0: (0.04, 0.10, 0.03) m, 52085 solid px, 52085 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#3 try 0: (0.05, 0.07, 0.02) m, 109636 solid px, 109636 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#4 try 0: (0.06, 0.07, 0.09) m, 72278 solid px, 72278 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#5 try 0: (0.05, 0.10, 0.02) m, 28311 solid px, 28311 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#6 try 0: (0.07, 0.08, 0.04) m, 69832 solid px, 69832 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#7 try 0: (0.04, 0.11, 0.03) m, 28907 solid px, 28907 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#8 try 0: (0.07, 0.15, 0.05) m, 44803 solid px, 44803 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#9 try 0: (0.08, 0.13, 0.05) m, 60114 solid px, 60114 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#10 try 0: (0.04, 0.09, 0.04) m, 10197 solid px, 10197 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#11 try 0: (0.07, 0.15, 0.08) m, 33016 solid px, 33016 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#12 try 0: (0.00, 0.15, 0.01) m, 4093 solid px, 4093 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#13 try 0: (0.00, 0.15, 0.01) m, 4101 solid px, 4101 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#15 try 0: (0.05, 0.06, 0.04) m, 96691 solid px, 96691 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#16 try 0: (0.06, 0.05, 0.03) m, 63810 solid px, 63810 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Figure] Prone: 143 bones, 10 renderers
+[Impostor] grass_bermuda_01#17 try 0: (0.03, 0.09, 0.02) m, 39308 solid px, 39308 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#18 try 0: (0.04, 0.07, 0.02) m, 70852 solid px, 70852 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Capture] Practice-Hud
+[Capture] practice plates: plate-1 at 288 m, x -14, plate-2 at 310 m, x -22, plate-3 at 452 m, x 3, plate-4 at 489 m, x -8, plate-5 at 606 m, x 40
+[Capture] Practice-Scope
+Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 832 unused Assets to reduce memory usage. Loaded Objects now: 11723.
+Total: 14.267829 ms (FindLiveObjects: 0.776858 ms CreateObjectMapping: 0.204886 ms MarkObjects: 11.074458 ms  DeleteObjects: 2.211456 ms)
+
+[Skyline] 71404 vertices, 2 helipads
+[Estuary] 3114 trees, 462 shrubs
+[Arena] twin-bridges: 3,253,939 triangles; heaviest:
+  1,705,984 concrete_road_barrier (28 meshes)
+  264,432 covered_car (105 meshes)
+  183,888 wooden_military_crate (24 meshes)
+  125,712 old_military_crate (60 meshes)
+  125,216 Rip-rap (1 meshes)
+  110,616 dutch_ship_large_01 (3 meshes)
+  108,616 Railings and lamps (1 meshes)
+  96,360 metal_jerrycan_green (50 meshes)
+  91,098 lateral_sea_marker (7 meshes)
+  75,208 portable_searchlight (4 meshes)
+  69,162 dutch_ship_medium (3 meshes)
+  38,496 binoculars (8 meshes)
+  27,252 pier_old (3 meshes)
+  24,480 ocean_buoy (2 meshes)
+  17,676 barrel_03 (12 meshes)
+[Figure] Prone: 71 bones, 9 renderers
+[Figure] skin 0: 0 bones, head #-1, middle at 0.48 of the head, size (0.10, 0.04, 0.03)
+[Figure] skin Object_97: 88 bones, head #6, middle at 0.52 of the head, size (0.14, 0.10, 0.08)
+[Figure] skin Object_99: 88 bones, head #6, middle at -0.02 of the head, size (0.26, 0.44, 0.27)
+[Figure] skin Object_101: 88 bones, head #6, middle at -4.57 of the head, size (0.43, 0.20, 0.26)
+[Figure] skin Object_103: 88 bones, head #6, middle at -2.45 of the head, size (0.52, 0.66, 0.35)
+[Figure] skin Object_105: 88 bones, head #6, middle at -1.07 of the head, size (0.42, 0.44, 0.37)
+[Figure] skin Object_107: 88 bones, head #6, middle at -1.26 of the head, size (0.68, 0.63, 0.41)
+[Figure] skin Object_109: 88 bones, head #6, middle at 0.57 of the head, size (0.18, 0.17, 0.32)
+[Figure] skin Object_111: 88 bones, head #6, middle at 1.34 of the head, size (0.28, 0.26, 0.27)
+[Figure] Object_111 seated on the head: down 0.178
+[Figure] skin Object_113: 88 bones, head #6, middle at -4.04 of the head, size (0.51, 0.92, 0.34)
+[Figure] skin Object_115: 88 bones, head #6, middle at -0.74 of the head, size (0.36, 0.17, 0.12)
+[Figure] skin Object_117: 88 bones, head #6, middle at -1.48 of the head, size (0.73, 0.18, 0.23)
+[Figure] skin Object_119: 88 bones, head #6, middle at -2.38 of the head, size (0.37, 0.08, 0.30)
+[Figure] skin Object_121: 88 bones, head #6, middle at -2.64 of the head, size (0.52, 0.20, 0.42)
+[Figure] skin Object_123: 88 bones, head #6, middle at -6.05 of the head, size (0.62, 0.23, 0.41)
+[Figure] Prone: 110 bones, 15 renderers
+[Memory] menu again, twin-bridges: reserved 1170 MB, allocated 934 MB, managed 54 MB, textures 2550 MB, 1010 meshes with 10,952,626 vertices, 1149 textures, 1208 materials
+Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
+[Sound] twin-bridges: 25 clips, 7.8 MB of PCM
+Unloading 464 unused Assets to reduce memory usage. Loaded Objects now: 11721.
+Total: 9.991469 ms (FindLiveObjects: 0.575909 ms CreateObjectMapping: 0.224074 ms MarkObjects: 7.971608 ms  DeleteObjects: 1.219558 ms)
+
+[Wilds] Range woods: 49177 plants, 39 pictures
+[Wilds] Lane stones: 6000 stones
+[Wilds] Spot pebbles: 6000 stones
+[Arena] training-lane: 2,767,276 triangles; heaviest:
+  1,218,560 concrete_road_barrier (20 meshes)
+  295,062 Range woods (39 meshes)
+  228,085 Rifle (115 meshes)
+  209,520 old_military_crate (100 meshes)
+  192,480 binoculars (40 meshes)
+  108,000 Lane stones (1 meshes)
+  108,000 Spot pebbles (1 meshes)
+  96,360 metal_jerrycan_green (50 meshes)
+  83,956 rocks_scan_1 (168 meshes)
+  52,838 portable_generator (8 meshes)
+  43,820 ammo_box (50 meshes)
+  39,976 rocks_scan_2 (80 meshes)
+  29,970 rocks_scan_3 (60 meshes)
+  17,280 old_tyre (6 meshes)
+  17,250 rock_kit (3 meshes)
+[Memory] map training-lane: reserved 1189 MB, allocated 943 MB, managed 93 MB, textures 2543 MB
+[Sound] training-lane: 25 clips, 7.5 MB of PCM
+[Figure] Prone: 143 bones, 10 renderers
+[Memory] training started: reserved 1189 MB, allocated 945 MB, managed 95 MB, textures 2543 MB, 992 meshes with 11,523,675 vertices, 1122 textures, 1228 materials
+[Capture] Training-Flow
+[Physics::Module] Cleanup current backend.
+[Physics::Module] Id: 0xf2b8ea05
+Input System module state changed to: ShutdownInProgress.
+Input System polling thread exited.
+Input System module state changed to: Shutdown.
