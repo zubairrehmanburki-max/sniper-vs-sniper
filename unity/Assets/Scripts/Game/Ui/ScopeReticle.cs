@@ -82,8 +82,8 @@ namespace SniperDuel.Game.Ui
 
         static float Major(float m) => Mathf.Clamp(0.3f * m, 3.5f, 7);
 
-        /// <summary>A dot a quarter of a mil across, kept readable at every zoom.</summary>
-        static float DotRadius(float m) => Mathf.Clamp(0.125f * m, 1.3f, 3.2f);
+        /// <summary>A mil-dot, kept readable at every zoom.</summary>
+        static float DotRadius(float m) => Mathf.Clamp(0.17f * m, 1.7f, 3.4f);
 
         static void Dot(Painter2D p, Vector2 at, float radius)
         {
@@ -140,7 +140,8 @@ namespace SniperDuel.Game.Ui
                 p.Stroke();
                 // A dot at every mil on all four arms.
                 p.fillColor = col;
-                float d = DotRadius(m) + grow;
+                // Only a thin light edge round the dots, or they read as rings.
+                float d = DotRadius(m) + grow * 0.35f;
                 for (int i = 1; i <= reach; i++)
                 {
                     float o = i * m;
@@ -238,7 +239,7 @@ namespace SniperDuel.Game.Ui
             p.Stroke();
             if (m < 6) return;
             p.fillColor = col;
-            float d = Mathf.Clamp(0.08f * m, 1.1f, 2.2f) + grow;
+            float d = Mathf.Clamp(0.08f * m, 1.1f, 2.2f) + grow * 0.35f;
             for (int i = 2; i <= rows; i++)
             {
                 float y = i * m;
