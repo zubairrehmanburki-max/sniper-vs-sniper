@@ -29,16 +29,23 @@ namespace SniperDuel.Game.World
         public static Arena Build(DuelMap map)
         {
             var arena = new Arena { Map = map };
+            void Step(string what) => Trail.Mark($"map {map.Id}: {what}");
+            Step("sound");
             // This map's rifle report (with its echoes) and ambience, synthesised in the background.
             Sound.SetMap(map.Id);
             var root = new GameObject("Arena " + map.Id).transform;
             arena.Root = root;
+            Step("sky");
             arena.Sky = Atmos.Build(map, root);
+            Step("land");
             Land.Build(map, root);
             if (map.Water.HasValue) Land.Water(map, root);
+            Step("structures");
             Structures.Build(map, root);
+            Step("dressing");
             Dressing.Build(map, root);
             // Desert, harbor, alpine and range maps get their own terrain dressing.
+            Step("biome");
             Biomes.Build(map, root, arena.Flags);
             // The estuary maps get a city on the banks so the far horizon isn't empty water.
             if (map.Id == "twin-bridges")
@@ -62,7 +69,9 @@ namespace SniperDuel.Game.World
             if (map.Id == "watchtowers") Marsh.Build(map, root);
             if (map.Id == "oil-rigs") Offshore.Build(map, root);
             // The downloaded set pieces: viaduct, towers, rigs, containers, cover, cliffs, trees, rocks.
+            Step("scenery");
             Scenery.Build(map, root);
+            Step("flags");
 
             var ground = map.Terrain ?? map.Ground;
             float water = (float)(map.Water ?? -1000);
@@ -91,6 +100,7 @@ namespace SniperDuel.Game.World
                 arena.Flags.Add(Flag.Create(basePos, pole, new Color(0.85f, 0.25f, 0.12f), root));
             }
 
+            Step("spot kits");
             for (int i = 0; i < 2; i++)
             {
                 var side = i == 0 ? Side.A : Side.B;
@@ -98,7 +108,9 @@ namespace SniperDuel.Game.World
                     arena.Blocks.AddRange(Dressing.Kit(Library.ToUnity(spot), side == Side.A ? 0 : 180, root, !OnSmallTower(map, spot)));
             }
             // Water and steel reflect the finished scene; the probe renders once per map.
+            Step("reflection probe");
             arena.Sky.Probe.RenderProbe();
+            Step("built");
             Debug.Log($"[Arena] {map.Id}: {Wilds.Triangles(root.gameObject):N0} triangles; heaviest:{Wilds.Heaviest(root.gameObject)}");
             return arena;
         }

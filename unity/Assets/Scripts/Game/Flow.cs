@@ -76,6 +76,7 @@ namespace SniperDuel.Game
             title.On("account", () => { settings.OpenAccount(); Go("Settings", false); });
             title.Text("version", Catalog.Version + " · OFFLINE");
             title.Show("loading", false);
+            if (Trail.Previous != null) title.Text("tip", "LAST RUN STOPPED AT: " + Trail.Previous.Replace("\n", " · "));
 
             WireLobby();
             WirePlay();
@@ -132,6 +133,7 @@ namespace SniperDuel.Game
                 Destroy(duel.gameObject);
                 duel = null;
             }
+            if (screen != "Versus") Trail.Menu();
             rig.Current = CameraRig.Mode.Menu;
             Settings.SetInMenus(true);
             if (refreshScreen && refresh.TryGetValue(screen, out var r)) r();
@@ -342,8 +344,10 @@ namespace SniperDuel.Game
             starting = true;
             matchMode = mode;
             matchRifle = Profile.Rifle(cfg);
+            Trail.Mark("training: " + matchRifle);
             yield return SwitchArena();
             starting = false;
+            Trail.Mark("training: starting practice");
             duel = Duel.Begin(Gear.ForMatch(cfg, matchRifle), ui, rig, arena!, PlayerName, matchRifle, Profile.Difficulty, Duel.NewSeed(), solo: true);
             Settings.SetInMenus(false);
             duel.Left += () => Go("Play");
@@ -362,8 +366,10 @@ namespace SniperDuel.Game
             {
                 var old = arena;
                 arena = null;
+                Trail.Mark("unloading " + old.Map.Id);
                 yield return Arena.Unload(old);
             }
+            Trail.Mark("building " + id);
             arena = Arena.Build(Maps.ById(id));
             rig.MenuFocus = Library.ToUnity(arena.Map.Spots.A[0]);
             Mem.Log("map " + id);

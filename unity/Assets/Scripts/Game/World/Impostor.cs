@@ -152,6 +152,7 @@ namespace SniperDuel.Game.World
                     if (Pending.Count == 0) return;
                     var (id, card, tex, tries) = Pending[0];
                     Pending.RemoveAt(0);
+                    Trail.Mark("picture " + id);
                     try { shot = new Shot(id, tex, tries); }
                     catch (System.Exception e) { Debug.LogWarning($"[Impostor] {id}: {e}"); }
                     return;

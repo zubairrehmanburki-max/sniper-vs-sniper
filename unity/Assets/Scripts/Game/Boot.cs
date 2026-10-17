@@ -41,6 +41,7 @@ namespace SniperDuel.Game
         void Awake()
         {
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
+            Trail.Begin();
 
             Config = GameConfig.Parse(Resources.Load<TextAsset>("Config/game").text);
             var camGo = new GameObject("Main Camera") { tag = "MainCamera" };

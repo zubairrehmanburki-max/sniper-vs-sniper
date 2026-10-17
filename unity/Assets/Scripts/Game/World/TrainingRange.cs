@@ -25,11 +25,17 @@ namespace SniperDuel.Game.World
             var lane = Biomes.LaneOf(map);
             float length = (float)map.LaneLength;
 
+            void Step(string what) => Trail.Mark("range: " + what);
+            Step("cover");
             Biomes.Cover(map, root, new Biomes.CoverKit { Rock = Library.Rock(3), Default = CoverLook.Concrete });
 
+            Step("firing lines");
             FiringLines(map, root, Y);
+            Step("targets");
             Targets(root, Y);
+            Step("berms");
             Berms(root, Y, length);
+            Step("huts");
 
             // A range hut behind each line with the red flag up: the range is live.
             var hut = new MeshBuilder();
@@ -45,7 +51,9 @@ namespace SniperDuel.Game.World
             hut.Object("Range huts", Library.Surface("concrete_wall_008", 4, new Color(0.86f, 0.84f, 0.78f)), root);
             tin.Object("Range hut roofs", Library.Surface("corrugated_iron_02", 2, new Color(0.7f, 0.72f, 0.74f)), root);
 
+            Step("woods");
             Woods(map, root, rng, lane, length, Y);
+            Step("hills");
 
             Biomes.Horizon(root, length / 2, new Biomes.Hills
             {
@@ -95,9 +103,12 @@ namespace SniperDuel.Game.World
             Wilds.LaneCarpet(flora, map, lane, rng, grass, 20000, 0.22f, 0.3f, Y);
             Wilds.LanePatches(flora, map, lane, rng, grass, 600, 22, 1.5f, 0.26f, 0.32f, Y);
             Wilds.SpotTufts(flora, map, rng, grass, 8000, 0.14f, 0.18f, Y);
+            Trail.Mark("range: plant meshes");
             flora.Build(root, "Range woods");
+            Trail.Mark("range: stones");
             Wilds.LaneStones(root, map, lane, rng, Library.Rock(0.9f, new Color(0.74f, 0.72f, 0.68f)), 6000, Y, null, 0.3f);
 
+            Trail.Mark("range: clutter");
             // Clutter round the range huts.
             var tinted = new Dictionary<Material, Material>();
             foreach (var (hx, hs) in new[] { (-78f, LineA - 40), (72f, LineB + 36) })
@@ -147,6 +158,7 @@ namespace SniperDuel.Game.World
                         steel.Box(new Vector3(x + dx, y + 0.38f, benchS + dz), new Vector3(0.06f, 0.8f, 0.06f));
                     wood.Box(new Vector3(x, y + 0.48f, benchS + back * 1.2f), new Vector3(0.5f, 0.05f, 0.4f));
                     // A rifle laid on each bench, muzzle down-range: every model the armoury has.
+                    Trail.Mark("range: bench rifle " + models[shown % models.Count]);
                     var gun = Figure.Rifle(root, models[shown++ % models.Count]);
                     gun.transform.rotation = Quaternion.Euler(0, side == Side.A ? 0 : 180, 0);
                     gun.transform.position = new Vector3(x + 0.1f, y + 0.83f, benchS);

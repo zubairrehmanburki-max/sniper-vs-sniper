@@ -134,6 +134,7 @@ namespace SniperDuel.Game
         public static Duel Begin(Kit kit, UiHost ui, CameraRig rig, Arena arena, string playerName, string baseRifle, BotDifficulty bot, uint seed, bool solo = false)
         {
             var cfg = kit.Config;
+            Trail.Mark($"duel: begin {(solo ? "practice" : "duel")} on {arena.Map.Id} with {baseRifle}");
             var d = new GameObject("Duel").AddComponent<Duel>();
             d.cfg = cfg;
             d.solo = solo;
@@ -168,15 +169,20 @@ namespace SniperDuel.Game
                 new PlayerSetup(playerName, kit.RifleId) { Suppressed = kit.Suppressed },
                 new PlayerSetup(Catalog.BotName(bot), botRifle, bot)), 0, cfg, turnLock: true);
             d.zoom = (int)Math.Round((cfg.Scope.MinZoom + cfg.Scope.MaxZoom) / 2);
+            Trail.Mark("duel: screens");
             d.BindScreens();
+            Trail.Mark("duel: first phase");
             d.EnterPhase();
             if (solo)
             {
+                Trail.Mark("duel: plates");
                 d.plates = Plates.Create(arena.Root);
                 d.NewField();
             }
             else d.LookAtEnemy();
+            Trail.Mark("duel: hud");
             d.ShowHud();
+            Trail.Mark("duel: first frame");
             return d;
         }
 
@@ -1033,8 +1039,14 @@ namespace SniperDuel.Game
             SetPaused(true);
         }
 
+        /// <summary>Frames played, for the crash trail.</summary>
+        int frames;
+
         void Update()
         {
+            frames++;
+            if (frames <= 3 || frames == 5 || frames == 10 || frames == 30 || frames == 60 || frames % 300 == 0)
+                Trail.Mark($"{(solo ? "practice" : "duel")} frame {frames}, {time:0} s");
             if (paused) return;
             float dt = Mathf.Min(0.1f, Time.deltaTime);
             time += dt;
@@ -1214,7 +1226,11 @@ namespace SniperDuel.Game
         void SyncPlayer()
         {
             var p = State.Players[Me];
-            if (arena.Player == null) rig.Body = arena.PlacePlayer(p.Position, p.Stance, Me, live: true).gameObject;
+            if (arena.Player == null)
+            {
+                Trail.Mark($"duel: player figure {arena.PlayerSoldier}");
+                rig.Body = arena.PlacePlayer(p.Position, p.Stance, Me, live: true).gameObject;
+            }
             var t = arena.Player!.transform;
             t.position = Library.ToUnity(p.Position);
             t.rotation = Quaternion.Euler(0, bodyYaw, 0);

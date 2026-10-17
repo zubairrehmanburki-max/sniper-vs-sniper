@@ -25,12 +25,28 @@ namespace SniperDuel.Game
                 var sized = new List<(string name, long bytes)>();
                 foreach (var t in Resources.FindObjectsOfTypeAll<Texture>()) sized.Add((t.name, Bytes(t)));
                 long total = sized.Sum(t => t.bytes);
+                var kinds = sized.GroupBy(t => Kind(t.name)).Select(g => (kind: g.Key, n: g.Count(), bytes: g.Sum(t => t.bytes))).OrderByDescending(g => g.bytes);
                 more = $", {meshes.Length} meshes with {verts:N0} vertices, {sized.Count} textures ({total / MB:0} MB by size), " +
-                    $"{Resources.FindObjectsOfTypeAll<Material>().Length} materials; biggest textures: " +
+                    $"{Resources.FindObjectsOfTypeAll<Material>().Length} materials; textures by kind: " +
+                    string.Join(", ", kinds.Select(g => $"{g.kind} {g.n}x {g.bytes / MB:0} MB")) + "; biggest textures: " +
                     string.Join(", ", sized.OrderByDescending(t => t.bytes).Take(12).Select(t => $"{t.name} {t.bytes / MB:0.0}"));
             }
             Debug.Log($"[Memory] {what}: reserved {Profiler.GetTotalReservedMemoryLong() / MB:0} MB, allocated {Profiler.GetTotalAllocatedMemoryLong() / MB:0} MB, " +
                 $"managed {Profiler.GetMonoHeapSizeLong() / MB:0} MB, textures {Texture.currentTextureMemory / MB:0} MB{more}");
+        }
+
+        static string Kind(string name)
+        {
+            if (name.EndsWith("(mask)")) return "repacked masks";
+            if (name.EndsWith("(weathered)")) return "weathered";
+            if (name.StartsWith("Impostor")) return "plant pictures";
+            if (name.StartsWith("image_") || name.StartsWith("Image_")) return "model textures";
+            if (name.Contains("_diff")) return "surface colour";
+            if (name.Contains("_nor")) return "surface normal";
+            if (name.Contains("_arm") || name.Contains("_mask")) return "surface mask";
+            if (name.Contains("puresky")) return "sky";
+            if (name.StartsWith("_")) return "render targets";
+            return name.Length == 0 ? "unnamed" : "other";
         }
 
         /// <summary>A texture's size on the GPU, worked out from its format, size, mips and faces.</summary>
