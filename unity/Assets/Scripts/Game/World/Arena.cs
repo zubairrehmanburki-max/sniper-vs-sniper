@@ -103,6 +103,20 @@ namespace SniperDuel.Game.World
             return arena;
         }
 
+        /// <summary>
+        /// Tears a map down and frees everything only it used: the meshes, textures and materials
+        /// built at runtime outlive their objects until Unity unloads unused assets. Yield the
+        /// result before building the next map, so two maps never sit in memory together.
+        /// </summary>
+        public static AsyncOperation Unload(Arena arena)
+        {
+            if (arena.Root != null) Object.DestroyImmediate(arena.Root.gameObject);
+            arena.Enemy = null;
+            arena.Player = null;
+            System.GC.Collect();
+            return Resources.UnloadUnusedAssets();
+        }
+
         /// <summary>True when a spot is on a tower roof too small for the kit's road barriers.</summary>
         static bool OnSmallTower(DuelMap map, Vec3 spot)
         {

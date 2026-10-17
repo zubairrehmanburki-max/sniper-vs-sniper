@@ -80,6 +80,8 @@ namespace SniperDuel.Game
             Flow.Create(Config, ui, rig, arena);
             Frame("Title");
             ui.Show("Title");
+            // The flow owns the map from here; holding it too would keep it in memory after a switch.
+            arena = null;
         }
 
         void BuildArena(string mapId)
@@ -146,6 +148,7 @@ namespace SniperDuel.Game
         {
             Directory.CreateDirectory(dir);
             int n = 0;
+            Mem.Log("menu, twin-bridges", true);
             foreach (var name in AllScreens)
             {
                 try { Frame(name); flow.Preview(name); ui.Show(name); }
@@ -334,9 +337,15 @@ namespace SniperDuel.Game
             foreach (var id in Maps.Ids)
             {
                 if (id == "twin-bridges") continue;
-                if (arena != null) Destroy(arena.Root.gameObject);
+                if (arena != null)
+                {
+                    yield return Arena.Unload(arena);
+                    arena = null;
+                    Mem.Log("map unloaded", true);
+                }
                 try { BuildArena(id); }
                 catch (Exception e) { Debug.LogException(e); continue; }
+                Mem.Log("map " + id, true);
                 foreach (var (label, screen) in new[] { ("Menu", "Title"), ("Eye", "Hud"), ("Scope", "Scope") })
                 {
                     Frame(screen);
@@ -378,6 +387,15 @@ namespace SniperDuel.Game
             // Solo practice on the range lane (the last map built): the HUD from a live session,
             // then a plate through the scope at 12x after a hit.
             if (arena != null && arena.Map.Id == "training-lane") yield return CapturePractice(dir, () => ++n);
+            // Training as a player starts it: from the menu's Twin Bridges, through the flow.
+            if (arena != null)
+            {
+                yield return Arena.Unload(arena);
+                arena = null;
+            }
+            BuildArena("twin-bridges");
+            Mem.Log("menu again, twin-bridges", true);
+            yield return CaptureTraining(dir, flow, () => ++n);
             for (int f = 0; f < 10; f++) yield return null;
             Application.Quit(0);
         }
@@ -470,6 +488,19 @@ namespace SniperDuel.Game
             Destroy(side.gameObject);
             ui.HideAll();
             Frame("");
+            Time.captureDeltaTime = 0;
+        }
+
+        /// <summary>START TRAINING on the play screen, then a few seconds on the range, with the memory it took.</summary>
+        IEnumerator CaptureTraining(string dir, Flow flow, Func<int> next)
+        {
+            Time.captureDeltaTime = 1f / 30;
+            flow.Use(arena);
+            arena = null;
+            flow.StartTraining();
+            for (int f = 0; f < 90; f++) yield return null;
+            Mem.Log("training started", true);
+            yield return Shoot(dir, next, "Training-Flow");
             Time.captureDeltaTime = 0;
         }
 

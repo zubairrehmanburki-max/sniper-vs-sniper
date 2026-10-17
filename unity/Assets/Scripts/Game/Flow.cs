@@ -100,6 +100,16 @@ namespace SniperDuel.Game
             results.On("bulletcam", Replay);
         }
 
+        /// <summary>The CI screenshot walk: the map now up (built outside the flow) and the training start.</summary>
+        public void Use(Arena? built) => arena = built;
+
+        public void StartTraining()
+        {
+            Go("Play");
+            SetMode(GameMode.Training);
+            StartMatch();
+        }
+
         /// <summary>Fills a screen with live data without opening it (the CI screenshot walk).</summary>
         public void Preview(string screen)
         {
@@ -315,37 +325,56 @@ namespace SniperDuel.Game
 
         void StartMatch()
         {
+            if (starting) return;
             // Online modes rotate maps if asked. Nobody is online until the server is hosted, so every
             // mode goes straight to a bot duel rather than pretending to search.
             if (Catalog.Online(mode) && Profile.MapRotation) mapId = Maps.Ids[UnityEngine.Random.Range(0, Mathf.Min(MapTiles, Maps.Ids.Length))];
-            if (mode == GameMode.Training) StartPractice();
+            if (mode == GameMode.Training) StartCoroutine(Practice());
             else StartCoroutine(Versus());
         }
 
+        /// <summary>The match's map is loading: a second tap mustn't start another.</summary>
+        bool starting;
+
         /// <summary>Solo practice: straight onto the range lane with the plates out, no bot and no versus card.</summary>
-        void StartPractice()
+        IEnumerator Practice()
         {
+            starting = true;
             matchMode = mode;
             matchRifle = Profile.Rifle(cfg);
-            EnsureArena();
+            yield return SwitchArena();
+            starting = false;
             duel = Duel.Begin(Gear.ForMatch(cfg, matchRifle), ui, rig, arena!, PlayerName, matchRifle, Profile.Difficulty, Duel.NewSeed(), solo: true);
             Settings.SetInMenus(false);
             duel.Left += () => Go("Play");
         }
 
-        void EnsureArena()
+        /// <summary>
+        /// Puts the match's map up unless it already is. The old map is torn down and its memory
+        /// freed first: building the new one beside it held both at once, which ran the phone out
+        /// of memory going from the menu's Twin Bridges to the training range.
+        /// </summary>
+        IEnumerator SwitchArena()
         {
             string id = MatchMap;
-            if (arena != null && arena.Map.Id == id) return;
-            if (arena != null) Destroy(arena.Root.gameObject);
+            if (arena != null && arena.Map.Id == id) yield break;
+            if (arena != null)
+            {
+                var old = arena;
+                arena = null;
+                yield return Arena.Unload(old);
+            }
             arena = Arena.Build(Maps.ById(id));
             rig.MenuFocus = Library.ToUnity(arena.Map.Spots.A[0]);
+            Mem.Log("map " + id);
         }
 
         IEnumerator Versus()
         {
+            starting = true;
             Go("Versus");
-            EnsureArena();
+            yield return SwitchArena();
+            starting = false;
             var map = arena!.Map;
             matchMode = mode;
             matchBot = Bot;
