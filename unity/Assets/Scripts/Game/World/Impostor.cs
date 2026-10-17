@@ -51,6 +51,13 @@ namespace SniperDuel.Game.World
 
         static readonly Dictionary<string, int> VariantCounts = new Dictionary<string, int>();
 
+        /// <summary>Drops the cached pictures (a map is being unloaded); the next map shoots its own.</summary>
+        public static void Forget()
+        {
+            Cards.Clear();
+            VariantCounts.Clear();
+        }
+
         /// <summary>
         /// How many separate plants a model holds side by side (Poly Haven ships grass, shrubs and
         /// saplings as a row of variants): 1 for a single plant, 0 when the model is missing. Each

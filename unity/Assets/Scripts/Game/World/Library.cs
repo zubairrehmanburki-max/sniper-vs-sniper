@@ -14,6 +14,19 @@ namespace SniperDuel.Game.World
         static readonly Dictionary<string, Material> Materials = new Dictionary<string, Material>();
         static readonly Dictionary<string, GameObject?> Models = new Dictionary<string, GameObject?>();
 
+        /// <summary>
+        /// Drops the caches of models, materials and made textures (a map is being unloaded), so
+        /// what only that map used can be freed; anything still in use keeps its own reference.
+        /// </summary>
+        public static void Forget()
+        {
+            Materials.Clear();
+            Models.Clear();
+            StreakedMaps.Clear();
+            Converted.Clear();
+            Repacked.Clear();
+        }
+
         /// <summary>Rules coordinates (z = −lane distance) to Unity (z = lane distance).</summary>
         public static Vector3 ToUnity(Vec3 p) => new Vector3((float)p.X, (float)p.Y, (float)-p.Z);
         public static Vector3 ToUnity(double x, double y, double z) => new Vector3((float)x, (float)y, (float)-z);

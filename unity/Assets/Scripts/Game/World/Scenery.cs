@@ -104,6 +104,9 @@ namespace SniperDuel.Game.World
         static readonly Color Sandstone = new Color(1.55f, 1.25f, 0.95f);
         static readonly Dictionary<Material, Material> Tinted = new Dictionary<Material, Material>();
 
+        /// <summary>Drops the cached tinted materials (a map is being unloaded).</summary>
+        public static void Forget() => Tinted.Clear();
+
         static void Drop(GameObject m, string[] words)
         {
             if (words.Length == 0) return;

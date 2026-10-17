@@ -105,7 +105,8 @@ namespace SniperDuel.Game.World
 
         /// <summary>
         /// Tears a map down and frees everything only it used: the meshes, textures and materials
-        /// built at runtime outlive their objects until Unity unloads unused assets. Yield the
+        /// built at runtime and the models loaded for it outlive their objects until Unity unloads
+        /// unused assets. Yield the
         /// result before building the next map, so two maps never sit in memory together.
         /// </summary>
         public static AsyncOperation Unload(Arena arena)
@@ -113,6 +114,13 @@ namespace SniperDuel.Game.World
             if (arena.Root != null) Object.DestroyImmediate(arena.Root.gameObject);
             arena.Enemy = null;
             arena.Player = null;
+            // The sky photo and the caches of models, textures and materials hold the old map's
+            // assets too; whatever the next map needs is loaded again.
+            RenderSettings.skybox = null;
+            Library.Forget();
+            Impostor.Forget();
+            Figure.Forget();
+            Scenery.Forget();
             System.GC.Collect();
             return Resources.UnloadUnusedAssets();
         }

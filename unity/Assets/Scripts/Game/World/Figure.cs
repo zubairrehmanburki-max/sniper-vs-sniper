@@ -711,6 +711,14 @@ namespace SniperDuel.Game.World
         static readonly Dictionary<Part, Material> RifleMats = new Dictionary<Part, Material>();
         static readonly Dictionary<(Material, Color), Material> Painted = new Dictionary<(Material, Color), Material>();
 
+        /// <summary>Drops the cached rifle materials and readable texture copies (a map is being unloaded).</summary>
+        public static void Forget()
+        {
+            Readables.Clear();
+            RifleMats.Clear();
+            Painted.Clear();
+        }
+
         /// <summary>
         /// Repaints the rifle furniture (stock and grip) under `root` in a finish colour, keeping each
         /// material's maps; the metal and glass stay as they are.
