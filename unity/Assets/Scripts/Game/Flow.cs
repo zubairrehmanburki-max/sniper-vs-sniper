@@ -351,6 +351,8 @@ namespace SniperDuel.Game
             duel = Duel.Begin(Gear.ForMatch(cfg, matchRifle), ui, rig, arena!, PlayerName, matchRifle, Profile.Difficulty, Duel.NewSeed(), solo: true);
             Settings.SetInMenus(false);
             duel.Left += () => Go("Play");
+            // The soldiers' and rifles' imported originals, now replaced by light copies.
+            yield return Arena.Trim();
         }
 
         /// <summary>
@@ -398,6 +400,7 @@ namespace SniperDuel.Game
             duel = Duel.Begin(Gear.ForMatch(cfg, matchRifle), ui, rig, arena, PlayerName, matchRifle, matchBot, seed);
             Settings.SetInMenus(false);
             duel.Finished += ShowResults;
+            yield return Arena.Trim();
         }
 
         /// <summary>The versus card, from the match about to be played: both kits, who shoots first, the round 1 wind and air.</summary>
