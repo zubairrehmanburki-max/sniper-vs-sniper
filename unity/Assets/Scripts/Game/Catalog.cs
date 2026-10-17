@@ -218,7 +218,7 @@ namespace SniperDuel.Game
             {
                 Name = "OPTIC", Default = 0, Options = new[]
                 {
-                    new PartInfo { Name = "5–25× FFP MIL", Note = "5–25× zoom", Detail = "The all-rounder: 5× to find the target, 25× to read the wind on it. Mil marks stay true at every zoom." },
+                    new PartInfo { Name = "5–25× LONG", Note = "5–25× zoom", Detail = "The all-rounder: 5× to find the target, 25× to read the wind on it. Mil marks stay true at every zoom." },
                     new PartInfo { Name = "3–18× COMPACT", Note = "3–18× zoom, lighter", Detail = "Zooms out wider, so the target is quicker to find, but tops out at 18×. Lighter than the long scope.", WeightKg = -0.3f },
                     new PartInfo { Name = "6–24× MID", Note = "6–24× zoom", Detail = "Starts a little closer in than the 5–25 and stops at 24×.", WeightKg = 0.1f },
                     new PartInfo { Name = "7–35× HIGH MAG", Note = "Weapon level 12", Detail = "7× to 35×: more magnification for the longest lanes, at a weight you'll carry.", RecoilPct = -4, WeightKg = 0.4f, Level = 12 },

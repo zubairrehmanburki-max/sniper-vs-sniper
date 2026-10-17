@@ -52,6 +52,7 @@ namespace SniperDuel.Game
             PostFx.Setup(cam, transform);
             // Frame rate, quality, render scale, shadows, audio levels and haptics from the saved settings.
             Settings.Apply();
+            ScopeStyle.Use(Profile.Rifle(Config));
 
             ui = UiHost.Create();
             ui.Created += s =>
@@ -204,6 +205,24 @@ namespace SniperDuel.Game
                 yield return new WaitForEndOfFrame();
                 Debug.Log($"[Capture] {label}");
             }
+            // Each rifle's own scope on the enemy at 12× and wound out to 25×.
+            foreach (var r in Config.Rifles)
+            {
+                ScopeStyle.Use(r.Id);
+                foreach (var (zoom, screen) in new[] { ("12x", "Scope"), ("25x", "Scope25") })
+                {
+                    Frame(screen);
+                    AimAtEnemy();
+                    ui.Show("Scope");
+                    for (int f = 0; f < 8; f++) yield return null;
+                    string label = $"Scope-{r.Id}-{zoom}";
+                    ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"{++n:00}-{label}.png"));
+                    yield return null;
+                    yield return new WaitForEndOfFrame();
+                    Debug.Log($"[Capture] {label}");
+                }
+            }
+            ScopeStyle.Use(Profile.Rifle(Config));
             ui.HideAll();
             Frame("");
             if (arena != null) yield return CaptureShots(dir, () => ++n);

@@ -17,6 +17,8 @@ namespace SniperDuel.Game.World
         static Vignette? vignette;
         static DepthOfField? dof;
         static float scope = -1, xray, flash, defocus;
+        static Color glass = Color.white;
+        static float glassExposure;
 
         public static Volume Setup(Camera cam, Transform parent)
         {
@@ -66,6 +68,14 @@ namespace SniperDuel.Game.World
             Apply();
         }
 
+        /// <summary>The colour and light loss of the fitted scope's glass (ScopeStyle), seen while scoped.</summary>
+        public static void Glass(Color colour, float exposure)
+        {
+            glass = colour;
+            glassExposure = exposure;
+            Apply();
+        }
+
         /// <summary>
         /// The scope's side focus set wrong, 0 sharp to 1 fully soft: a gaussian depth of field
         /// that softens the far picture until the focus knob matches the range.
@@ -100,7 +110,8 @@ namespace SniperDuel.Game.World
         {
             if (grade == null) return;
             float sc = Mathf.Max(0, scope);
-            grade.postExposure.Override(Mathf.Lerp(0.15f, 0.05f, sc) - 0.25f * xray + 1.1f * flash * flash);
+            grade.postExposure.Override(Mathf.Lerp(0.15f, 0.05f + glassExposure, sc) - 0.25f * xray + 1.1f * flash * flash);
+            grade.colorFilter.Override(Color.Lerp(Color.white, glass, sc));
             grade.contrast.Override(Mathf.Lerp(12f, 18f, sc) + 14f * xray);
             grade.saturation.Override(Mathf.Lerp(-6f, 8f, sc) - 35f * xray);
             if (vignette != null) vignette.intensity.Override(0.22f + 0.2f * xray);

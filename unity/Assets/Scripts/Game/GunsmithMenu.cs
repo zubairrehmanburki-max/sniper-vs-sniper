@@ -121,7 +121,8 @@ namespace SniperDuel.Game
             // Effect panel for the option being looked at.
             var o = Option;
             s.Text("detail", o.Name);
-            s.Text("detailText", o.Detail);
+            // Every optic on a rifle keeps that rifle's own glass and reticle; the part sets the zoom.
+            s.Text("detailText", slot == 0 ? $"{o.Detail} Glass and reticle on this rifle: {ScopeStyle.For(rifle).Name.ToLowerInvariant()}." : o.Detail);
             Row(0, "Muzzle velocity", o.VelocityMps, " m/s");
             Row(1, "Wind resistance", o.WindPct, "%");
             Row(2, "Recoil recovery", o.RecoilPct, "%");

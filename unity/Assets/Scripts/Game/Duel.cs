@@ -148,6 +148,8 @@ namespace SniperDuel.Game
             rig.RifleFinish = kit.Finish;
             arena.PlayerSoldier = kit.Soldier;
             arena.PlayerRifle = rig.RifleModel = Figure.RifleModel(baseRifle);
+            // Each rifle looks through its own scope: reticle, glass and eyepiece.
+            ScopeStyle.Use(baseRifle);
             // The bot's rifle by how good it is: the old Mosin, the SV-98, the Timberwolf.
             arena.EnemyRifle = bot switch { BotDifficulty.Easy => "rifle_mosin", BotDifficulty.Hard => "rifle_timberwolf", _ => "rifle_sv98m" };
             // The figure is re-made in this duel's outfit and finish on the first frame.

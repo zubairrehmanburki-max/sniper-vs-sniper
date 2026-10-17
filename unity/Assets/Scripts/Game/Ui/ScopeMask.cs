@@ -4,12 +4,13 @@ using UnityEngine.UIElements;
 namespace SniperDuel.Game.Ui
 {
     /// <summary>
-    /// The scope's eyepiece over the world, as in a real rifle scope held to the eye: clear,
-    /// untinted glass with a soft dark fall-off at its edge, a thick machined metal tube round it,
+    /// The scope's eyepiece over the world, as in a real rifle scope held to the eye: the glass
+    /// with a soft dark fall-off at its edge, a thick machined metal tube round it,
     /// and the world beyond the tube dimmed nearly to black. Drawn as raw vertex-coloured rings so
     /// the gradients are smooth. The clear circle (the exit pupil) shifts with the shooter's eye:
     /// as the rifle wobbles, recoils or the eye sits off the axis, a dark crescent ("scope shadow")
-    /// creeps in from one edge while the tube itself stays put, as in a real scope.
+    /// creeps in from one edge while the tube itself stays put, as in a real scope. The eyepiece
+    /// size, the tube, the edge and the glare follow the fitted rifle's scope (ScopeStyle).
     /// </summary>
     public static class ScopeMask
     {
@@ -20,9 +21,7 @@ namespace SniperDuel.Game.Ui
         static Vector2 drawn;
         static float drawnOpen = -1;
         static Vector2 drawnSize;
-
-        /// <summary>Outer edge of the tube, in glass radii.</summary>
-        const float Tube = 1.32f;
+        static ScopeStyle? drawnStyle;
 
         /// <summary>
         /// Where the eyepiece sits in an element's frame: on the camera axis (the middle of the
@@ -38,7 +37,7 @@ namespace SniperDuel.Game.Ui
             if (wb.height < 1 || float.IsNaN(wb.height)) return false;
             centre = e.WorldToLocal(wb.center);
             height = wb.height;
-            radius = Mathf.Min(wb.height * 0.485f, wb.width * 0.31f);
+            radius = Mathf.Min(wb.height * 0.485f, wb.width * 0.31f) * ScopeStyle.Current.Pupil;
             return true;
         }
 
@@ -51,7 +50,7 @@ namespace SniperDuel.Game.Ui
             e.schedule.Execute(() =>
             {
                 var size = e.panel?.visualTree.worldBound.size ?? Vector2.zero;
-                if ((EyeOffset - drawn).sqrMagnitude > 0.25f || Mathf.Abs(Open - drawnOpen) > 0.002f || size != drawnSize) e.MarkDirtyRepaint();
+                if ((EyeOffset - drawn).sqrMagnitude > 0.25f || Mathf.Abs(Open - drawnOpen) > 0.002f || size != drawnSize || drawnStyle != ScopeStyle.Current) e.MarkDirtyRepaint();
             }).Every(16);
             e.generateVisualContent += ctx =>
             {
@@ -59,32 +58,38 @@ namespace SniperDuel.Game.Ui
                 drawn = EyeOffset;
                 drawnOpen = Open;
                 drawnSize = e.panel?.visualTree.worldBound.size ?? Vector2.zero;
+                var style = drawnStyle = ScopeStyle.Current;
+                float tube = style.Tube, fall = style.Falloff;
                 float open = Mathf.SmoothStep(0, 1, Mathf.Clamp01(Open));
                 // Arriving at the eyepiece the picture starts wide and tunnels in to the tube.
                 float r = radius * Mathf.Lerp(1.9f, 1, open);
                 var pupil = centre + Vector2.ClampMagnitude(EyeOffset, r * 0.45f);
                 float outer = Mathf.Max(drawnSize.x, drawnSize.y, 1000) * 2;
                 byte a = (byte)Mathf.RoundToInt(Mathf.Lerp(150, 255, open));
+                // The tube's metal in the scope's own finish.
+                Color32 M(byte cr, byte cg, byte cb) => new Color32(
+                    (byte)Mathf.Clamp(cr * style.Metal.r, 0, 255), (byte)Mathf.Clamp(cg * style.Metal.g, 0, 255), (byte)Mathf.Clamp(cb * style.Metal.b, 0, 255), a);
 
                 // Eye-box shadow: soft falloff to black round the pupil, out under the tube.
                 var black = new Color32(1, 1, 1, 0);
-                Ring(ctx, pupil, r * 0.76f, black, pupil, r * 0.9f, With(black, 55));
-                Ring(ctx, pupil, r * 0.9f, With(black, 55), pupil, r * 0.985f, With(black, 185));
+                float mid = Mathf.Lerp(fall, 0.985f, 0.6f);
+                Ring(ctx, pupil, r * fall, black, pupil, r * mid, With(black, 55));
+                Ring(ctx, pupil, r * mid, With(black, 55), pupil, r * 0.985f, With(black, 185));
                 Ring(ctx, pupil, r * 0.985f, With(black, 185), pupil, r * 1.04f, With(black, a));
-                Ring(ctx, pupil, r * 1.04f, With(black, a), centre, r * Tube + 2, With(black, a));
+                Ring(ctx, pupil, r * 1.04f, With(black, a), centre, r * tube + 2, With(black, a));
 
                 // The tube: dark machined metal with a shadowed inner lip, a lit bevel and a dark
                 // outer edge, catching a little more light from above.
-                Ring(ctx, centre, r, new Color32(4, 4, 4, a), centre, r + 5, new Color32(14, 15, 15, a), 0.1f);
-                Ring(ctx, centre, r + 5, new Color32(14, 15, 15, a), centre, r * 1.1f, new Color32(40, 42, 44, a), 0.45f);
-                Ring(ctx, centre, r * 1.1f, new Color32(40, 42, 44, a), centre, r * 1.13f, new Color32(60, 62, 65, a), 0.6f);
-                Ring(ctx, centre, r * 1.13f, new Color32(60, 62, 65, a), centre, r * 1.16f, new Color32(24, 25, 26, a), 0.5f);
-                Ring(ctx, centre, r * 1.16f, new Color32(24, 25, 26, a), centre, r * (Tube - 0.03f), new Color32(33, 34, 36, a), 0.4f);
-                Ring(ctx, centre, r * (Tube - 0.03f), new Color32(33, 34, 36, a), centre, r * Tube, new Color32(6, 6, 6, a), 0.3f);
+                Ring(ctx, centre, r, M(4, 4, 4), centre, r + 5, M(14, 15, 15), 0.1f);
+                Ring(ctx, centre, r + 5, M(14, 15, 15), centre, r * 1.1f, M(40, 42, 44), 0.45f);
+                Ring(ctx, centre, r * 1.1f, M(40, 42, 44), centre, r * 1.13f, M(60, 62, 65), 0.6f);
+                Ring(ctx, centre, r * 1.13f, M(60, 62, 65), centre, r * 1.16f, M(24, 25, 26), 0.5f);
+                Ring(ctx, centre, r * 1.16f, M(24, 25, 26), centre, r * (tube - 0.03f), M(33, 34, 36), 0.4f);
+                Ring(ctx, centre, r * (tube - 0.03f), M(33, 34, 36), centre, r * tube, M(6, 6, 6), 0.3f);
                 // Beyond the tube the world is still there, dimmed nearly to black.
                 byte dim = (byte)Mathf.RoundToInt(Mathf.Lerp(150, 232, open));
-                Ring(ctx, centre, r * Tube, With(black, a), centre, r * Tube + 40, With(black, dim));
-                Ring(ctx, centre, r * Tube + 40, With(black, dim), centre, outer, With(black, dim));
+                Ring(ctx, centre, r * tube, With(black, a), centre, r * tube + 40, With(black, dim));
+                Ring(ctx, centre, r * tube + 40, With(black, dim), centre, outer, With(black, dim));
 
                 var p = ctx.painter2D;
                 // A faint lit edge where the glass meets the tube.
@@ -94,12 +99,12 @@ namespace SniperDuel.Game.Ui
                 p.Arc(centre, r - 0.6f, 0, 360);
                 p.Stroke();
                 // A sliver of glare on the glass, top left.
-                p.strokeColor = new Color(1, 1, 1, 0.05f * open);
+                p.strokeColor = new Color(1, 1, 1, 0.05f * style.Glare * open);
                 p.lineWidth = 5;
                 p.BeginPath();
                 p.Arc(centre, r * 0.9f, 200, 245);
                 p.Stroke();
-                p.strokeColor = new Color(1, 1, 1, 0.03f * open);
+                p.strokeColor = new Color(1, 1, 1, 0.03f * style.Glare * open);
                 p.lineWidth = 2;
                 p.BeginPath();
                 p.Arc(centre, r * 0.84f, 210, 232);
