@@ -1,5 +1,5 @@
-Processor: AMD EPYC 7763 64-Core Processor, 4 core(s) @ 2445 MHz 
-Available Memory: 15989 MB 
+Processor: Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz, 4 core(s) @ 3533 MHz 
+Available Memory: 15988 MB 
 Linux Kernel and distribution: Linux 6.17 Ubuntu 24.04 64bit
 System Language: C
 Keyboard Layout: us
@@ -26,7 +26,7 @@ _ARB_query_buffer_object GL_ARB_robust_buffer_access_behavior GL_ARB_robustness 
 RB_texture_compression_bptc GL_ARB_texture_compression_rgtc GL_ARB_texture_cube_map_array GL_ARB_texture_filter_anisotropic GL_ARB_texture_filter_minmax GL_ARB_texture_float GL_ARB_texture_gather GL_ARB_texture_mirror_clamp_to_edge GL_ARB_texture_multisample GL_ARB_texture_non_power_of_two GL_ARB_texture_query_levels GL_ARB_texture_query_lod GL_ARB_texture_rectangle GL_ARB_texture_rg GL_ARB_texture_rgb10_a2ui GL_ARB_texture_stencil8 GL_ARB_texture_storage GL_ARB_texture_storage_multisample GL_ARB_texture_swizzle GL_ARB_texture_view GL_ARB_timer_query GL_ARB_transform_feedback2 GL_ARB_transform_feedback3 GL_ARB_transform_feedback_instanced GL_ARB_transform_feedback_overflow_query GL_ARB_uniform_buffer_object GL_ARB_vertex_array_bgra GL_ARB_vertex_array_object GL_ARB_vertex_attrib_64bit GL_ARB_vertex_attrib_binding GL_ARB_vertex_buffer_object GL_ARB_vertex_shader GL_ARB_vertex_type_10f_11f_11f_rev GL_ARB_vertex_type_2_10_10_10_rev GL_ARB_viewport_array GL_ARM_shader_framebuffer_fetch_depth_stencil GL_ATI_blend
 _equation_separate GL_ATI_meminfo GL_ATI_texture_float GL_ATI_texture_mirror_once GL_EXT_EGL_image_storage GL_EXT_EGL_image_storage_compression GL_EXT_EGL_sync GL_EXT_abgr GL_EXT_blend_equation_separate GL_EXT_debug_label GL_EXT_draw_buffers2 GL_EXT_draw_instanced GL_EXT_framebuffer_blit GL_EXT_framebuffer_multisample GL_EXT_framebuffer_multisample_blit_scaled GL_EXT_framebuffer_object GL_EXT_framebuffer_sRGB GL_EXT_memory_object GL_EXT_memory_object_fd GL_EXT_packed_depth_stencil GL_EXT_packed_float GL_EXT_pixel_buffer_object GL_EXT_polygon_offset_clamp GL_EXT_provoking_vertex GL_EXT_shader_clock GL_EXT_shader_framebuffer_fetch GL_EXT_shader_framebuffer_fetch_non_coherent GL_EXT_shader_image_load_formatted GL_EXT_shader_integer_mix GL_EXT_texture_array GL_EXT_texture_compression_dxt1 GL_EXT_texture_compression_rgtc GL_EXT_texture_compression_s3tc GL_EXT_texture_filter_anisotropic GL_EXT_texture_filter_minmax GL_EXT_texture_integer GL_EXT_texture_mirror_clamp GL_EXT_texture_sRGB GL_EXT_texture_sRGB_R8 GL_EXT
 _texture_sRGB_RG8 GL_EXT_texture_sRGB_decode GL_EXT_texture_shadow_lod GL_EXT_texture_shared_exponent GL_EXT_texture_snorm GL_EXT_texture_storage GL_EXT_texture_swizzle GL_EXT_timer_query GL_EXT_transform_feedback GL_EXT_vertex_array_bgra GL_EXT_vertex_attrib_64bit GL_IBM_multimode_draw_arrays GL_INTEL_shader_atomic_float_minmax GL_KHR_blend_equation_advanced GL_KHR_blend_equation_advanced_coherent GL_KHR_context_flush_control GL_KHR_debug GL_KHR_no_error GL_KHR_parallel_shader_compile GL_KHR_robust_buffer_access_behavior GL_KHR_robustness GL_KHR_texture_compression_astc_ldr GL_KHR_texture_compression_astc_sliced_3d GL_MESA_framebuffer_flip_y GL_MESA_pack_invert GL_MESA_shader_integer_functions GL_MESA_texture_signed_rgba GL_NVX_gpu_memory_info GL_NV_alpha_to_coverage_dither_control GL_NV_conditional_render GL_NV_copy_image GL_NV_depth_clamp GL_NV_packed_depth_stencil GL_NV_shader_atomic_float GL_NV_texture_barrier GL_OES_EGL_image GL_OVR_multiview GL_OVR_multiview2 GL_S3_s3tc
-OPENGL LOG: Creating OpenGL 4.5 graphics device ; Context level  <OpenGL 4.5> ; Context handle 878212192
+OPENGL LOG: Creating OpenGL 4.5 graphics device ; Context level  <OpenGL 4.5> ; Context handle 615926016
 ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
 ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
 ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
@@ -48,7 +48,7 @@ ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
 FMOD failed to initialize the output device.: "Error initializing output device. " (60)
 FMOD failed to initialize any audio devices, running on emulated software output with no sound. Please check your audio drivers and/or hardware for malfunction.
 Begin MonoManager ReloadAssembly
-- Loaded All Assemblies, in  0.127 seconds
+- Loaded All Assemblies, in  0.116 seconds
 - Finished resetting the current domain, in  0.004 seconds
 [Physics::Module] Selected backend.
 [Physics::Module] Name: PhysX
@@ -65,7 +65,7 @@ Desktop is 1864 x 860 @ 0 Hz
 Could not fetch DPI for display (screen): Couldn't get DPI
 Could not fetch DPI for display (screen): Couldn't get DPI
 Could not fetch DPI for display (screen): Couldn't get DPI
-UnloadTime: 0.964060 ms
+UnloadTime: 1.133117 ms
 [Skyline] 71404 vertices, 2 helipads
 [Estuary] 3114 trees, 462 shrubs
 [Arena] twin-bridges: 3,253,939 triangles; heaviest:
@@ -103,7 +103,7 @@ UnloadTime: 0.964060 ms
 [Figure] skin Object_123: 88 bones, head #6, middle at -6.05 of the head, size (0.62, 0.23, 0.41)
 [Figure] Prone: 110 bones, 15 renderers
 Releasing render texture that is set to be RenderTexture.active!
-[Memory] menu, twin-bridges: reserved 778 MB, allocated 649 MB, managed 17 MB, textures 757 MB, 309 meshes with 6,795,858 vertices, 380 textures (758 MB by size), 454 materials; biggest textures: concrete_wall_008_diff_2k (weathered) 21.3, kloofendal_48d_partly_cloudy_puresky_4k 10.7, image_17 (mask) 5.3, image_12 (mask) 5.3, image_9 (mask) 5.3, image_6 (mask) 5.3, image_1 (mask) 5.3, image_18 (mask) 5.3, image_14 (mask) 5.3, image_10 (mask) 5.3, image_6 (mask) 5.3, image_1 (mask) 5.3
+[Memory] menu, twin-bridges: reserved 778 MB, allocated 649 MB, managed 17 MB, textures 757 MB, 309 meshes with 6,795,858 vertices, 380 textures (758 MB by size), 454 materials; textures by kind: model textures 64x 273 MB, repacked masks 28x 137 MB, unnamed 28x 103 MB, surface normal 39x 83 MB, surface mask 38x 63 MB, surface colour 38x 41 MB, weathered 1x 21 MB, other 138x 19 MB, sky 1x 11 MB, plant pictures 5x 7 MB; biggest textures: concrete_wall_008_diff_2k (weathered) 21.3, kloofendal_48d_partly_cloudy_puresky_4k 10.7, image_17 (mask) 5.3, image_12 (mask) 5.3, image_9 (mask) 5.3, image_6 (mask) 5.3, image_1 (mask) 5.3, image_18 (mask) 5.3, image_14 (mask) 5.3, image_10 (mask) 5.3, image_6 (mask) 5.3, image_1 (mask) 5.3
 [Sound] twin-bridges: 25 clips, 7.8 MB of PCM
 requesting resize 1864 x 860
 resizing window to 1864 x 860
@@ -111,10 +111,10 @@ Desktop is 1864 x 860 @ 0 Hz
 Could not fetch DPI for display (screen): Couldn't get DPI
 Could not fetch DPI for display (screen): Couldn't get DPI
 [Impostor] island_tree_02 try 0: (4.21, 3.41, 4.07) m, 69662 solid px, 69662 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] island_tree_03 try 0: (2.97, 2.62, 2.91) m, 58521 solid px, 58516 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_03 try 0: (2.97, 2.62, 2.91) m, 58521 solid px, 58506 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/01-Title.png
-[Impostor] island_tree_01 try 0: (4.76, 5.03, 4.82) m, 82222 solid px, 82220 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] tree_small_02 try 0: (2.92, 4.56, 4.29) m, 59469 solid px, 59466 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_01 try 0: (4.76, 5.03, 4.82) m, 82222 solid px, 82221 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] tree_small_02 try 0: (2.92, 4.56, 4.29) m, 59469 solid px, 59468 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/02-Lobby.png
 [Impostor] shrub_02 try 0: (6.57, 2.55, 2.54) m, 3948 solid px, 3948 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/03-Play.png
@@ -200,10 +200,10 @@ Could not fetch DPI for display (screen): Couldn't get DPI
 [Capture] Move-Prone: figure bounds (1.13, 1.58, 2.85)
 [Capture] Move-Crawl: figure bounds (1.26, 1.55, 2.88)
 Unloading 5 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 4674 unused Assets to reduce memory usage. Loaded Objects now: 3740.
-Total: 36.478582 ms (FindLiveObjects: 0.587838 ms CreateObjectMapping: 0.153206 ms MarkObjects: 20.265676 ms  DeleteObjects: 15.471601 ms)
+Unloading 4674 unused Assets to reduce memory usage. Loaded Objects now: 3741.
+Total: 35.597574 ms (FindLiveObjects: 0.768910 ms CreateObjectMapping: 0.220572 ms MarkObjects: 23.772178 ms  DeleteObjects: 10.835469 ms)
 
-[Memory] map unloaded: reserved 719 MB, allocated 502 MB, managed 54 MB, textures 228 MB, 64 meshes with 62,445 vertices, 221 textures (284 MB by size), 191 materials; biggest textures: kloofendal_48d_partly_cloudy_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_7 (mask) 5.3, image_4 (mask) 5.3, image_1 (mask) 5.3, image_23 (mask) 5.3, image_20 (mask) 5.3, image_16 (mask) 5.3
+[Memory] map unloaded: reserved 738 MB, allocated 518 MB, managed 44 MB, textures 228 MB, 64 meshes with 62,445 vertices, 221 textures (284 MB by size), 191 materials; textures by kind: model textures 27x 139 MB, repacked masks 12x 64 MB, render targets 33x 46 MB, other 138x 15 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: kloofendal_48d_partly_cloudy_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_7 (mask) 5.3, image_4 (mask) 5.3, image_1 (mask) 5.3, image_23 (mask) 5.3, image_20 (mask) 5.3, image_16 (mask) 5.3
 [Library] missing model shrub_03
 [Library] missing model shrub_04
 [Wilds] Shore plants: 17033 plants, 26 pictures
@@ -241,12 +241,12 @@ Total: 36.478582 ms (FindLiveObjects: 0.587838 ms CreateObjectMapping: 0.153206 
 [Figure] skin Object_121: 88 bones, head #6, middle at -2.64 of the head, size (0.52, 0.20, 0.42)
 [Figure] skin Object_123: 88 bones, head #6, middle at -6.05 of the head, size (0.62, 0.23, 0.41)
 [Figure] Prone: 110 bones, 15 renderers
-[Memory] map watchtowers: reserved 906 MB, allocated 731 MB, managed 48 MB, textures 992 MB, 456 meshes with 6,671,066 vertices, 467 textures (1054 MB by size), 603 materials; biggest textures: kloofendal_38d_partly_cloudy_puresky_4k 10.7, kloofendal_48d_partly_cloudy_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_17 (mask) 5.3, image_12 (mask) 5.3, image_9 (mask) 5.3, image_6 (mask) 5.3, image_1 (mask) 5.3
+[Memory] map watchtowers: reserved 906 MB, allocated 731 MB, managed 41 MB, textures 992 MB, 456 meshes with 6,671,066 vertices, 467 textures (1054 MB by size), 603 materials; textures by kind: model textures 71x 358 MB, repacked masks 45x 240 MB, unnamed 43x 141 MB, surface normal 35x 82 MB, surface mask 34x 65 MB, render targets 33x 46 MB, surface colour 34x 41 MB, plant pictures 26x 35 MB, other 144x 26 MB, sky 2x 21 MB; biggest textures: kloofendal_38d_partly_cloudy_puresky_4k 10.7, kloofendal_48d_partly_cloudy_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_17 (mask) 5.3, image_12 (mask) 5.3, image_9 (mask) 5.3, image_6 (mask) 5.3, image_1 (mask) 5.3
 [Sound] watchtowers: 25 clips, 7.6 MB of PCM
-[Impostor] island_tree_02 try 0: (4.21, 3.41, 4.07) m, 68730 solid px, 68730 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] island_tree_03 try 0: (2.97, 2.62, 2.91) m, 68957 solid px, 68953 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] island_tree_01 try 0: (4.76, 5.03, 4.82) m, 81656 solid px, 81656 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] tree_small_02 try 0: (2.92, 4.56, 4.29) m, 60856 solid px, 60854 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_02 try 0: (4.21, 3.41, 4.07) m, 68730 solid px, 68728 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_03 try 0: (2.97, 2.62, 2.91) m, 68957 solid px, 68951 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_01 try 0: (4.76, 5.03, 4.82) m, 81656 solid px, 81655 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] tree_small_02 try 0: (2.92, 4.56, 4.29) m, 60856 solid px, 60855 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] shrub_01 try 0: (2.59, 0.40, 0.22) m, 2440 solid px, 2440 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] shrub_02 try 0: (6.57, 2.55, 2.54) m, 3232 solid px, 3232 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_01#0 try 0: (0.18, 0.14, 0.16) m, 21384 solid px, 21384 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
@@ -258,10 +258,10 @@ Total: 36.478582 ms (FindLiveObjects: 0.587838 ms CreateObjectMapping: 0.153206 
 [Impostor] grass_medium_01#6 try 0: (0.17, 0.10, 0.19) m, 13704 solid px, 13704 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_01#7 try 0: (0.19, 0.14, 0.20) m, 29935 solid px, 29935 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 3533 unused Assets to reduce memory usage. Loaded Objects now: 3775.
-Total: 18.192034 ms (FindLiveObjects: 0.368468 ms CreateObjectMapping: 0.094286 ms MarkObjects: 14.130983 ms  DeleteObjects: 3.598077 ms)
+Unloading 3441 unused Assets to reduce memory usage. Loaded Objects now: 3933.
+Total: 16.960078 ms (FindLiveObjects: 0.477610 ms CreateObjectMapping: 0.250439 ms MarkObjects: 11.454409 ms  DeleteObjects: 4.777179 ms)
 
-[Memory] map unloaded: reserved 858 MB, allocated 594 MB, managed 65 MB, textures 244 MB, 67 meshes with 62,697 vertices, 240 textures (303 MB by size), 203 materials; biggest textures: kloofendal_38d_partly_cloudy_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_7 (mask) 5.3, image_4 (mask) 5.3, image_1 (mask) 5.3, image_23 (mask) 5.3, image_20 (mask) 5.3, image_16 (mask) 5.3
+[Memory] map unloaded: reserved 782 MB, allocated 514 MB, managed 40 MB, textures 252 MB, 84 meshes with 89,517 vertices, 246 textures (316 MB by size), 205 materials; textures by kind: model textures 27x 139 MB, repacked masks 13x 69 MB, render targets 40x 50 MB, other 139x 19 MB, plant pictures 13x 17 MB, sky 1x 11 MB, unnamed 10x 9 MB, surface normal 1x 1 MB, surface mask 1x 1 MB, surface colour 1x 1 MB; biggest textures: kloofendal_38d_partly_cloudy_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, grass_medium_01_arm_1k (mask) 5.3, image_7 (mask) 5.3, image_4 (mask) 5.3, image_1 (mask) 5.3, image_23 (mask) 5.3, image_20 (mask) 5.3
 [Arena] oil-rigs: 882,479 triangles; heaviest:
   243,712 concrete_road_barrier (4 meshes)
   110,616 dutch_ship_large_01 (3 meshes)
@@ -296,9 +296,9 @@ Total: 18.192034 ms (FindLiveObjects: 0.368468 ms CreateObjectMapping: 0.094286 
 [Figure] skin Object_121: 88 bones, head #6, middle at -2.64 of the head, size (0.52, 0.20, 0.42)
 [Figure] skin Object_123: 88 bones, head #6, middle at -6.05 of the head, size (0.62, 0.23, 0.41)
 [Figure] Prone: 110 bones, 15 renderers
-[Memory] map oil-rigs: reserved 475 MB, allocated 265 MB, managed 66 MB, textures 785 MB, 443 meshes with 815,671 vertices, 396 textures (850 MB by size), 662 materials; biggest textures: kloofendal_38d_partly_cloudy_puresky_4k 10.7, qwantani_dusk_1_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_17 (mask) 5.3, image_12 (mask) 5.3, image_9 (mask) 5.3, image_6 (mask) 5.3, image_1 (mask) 5.3
+[Memory] map oil-rigs: reserved 475 MB, allocated 267 MB, managed 74 MB, textures 793 MB, 460 meshes with 842,491 vertices, 401 textures (859 MB by size), 664 materials; textures by kind: model textures 86x 421 MB, repacked masks 25x 133 MB, surface normal 20x 58 MB, unnamed 22x 57 MB, surface mask 19x 50 MB, render targets 40x 50 MB, surface colour 19x 29 MB, other 155x 23 MB, sky 2x 21 MB, plant pictures 13x 17 MB; biggest textures: kloofendal_38d_partly_cloudy_puresky_4k 10.7, qwantani_dusk_1_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_17 (mask) 5.3, image_12 (mask) 5.3, image_9 (mask) 5.3, image_6 (mask) 5.3, image_1 (mask) 5.3
 [Sound] oil-rigs: 25 clips, 7.7 MB of PCM
-[Impostor] grass_medium_01#8 try 0: (0.22, 0.22, 0.22) m, 42333 solid px, 42333 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#8 try 0: (0.22, 0.22, 0.22) m, 41857 solid px, 41857 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_01#9 try 0: (0.32, 0.15, 0.33) m, 38809 solid px, 38809 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_01#10 try 0: (0.28, 0.14, 0.26) m, 35311 solid px, 35311 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_01#11 try 0: (0.02, 0.08, 0.03) m, 6406 solid px, 6406 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
@@ -310,11 +310,11 @@ Total: 18.192034 ms (FindLiveObjects: 0.368468 ms CreateObjectMapping: 0.094286 
 [Impostor] fern_02#1 try 0: (0.87, 0.35, 0.77) m, 35511 solid px, 35511 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] fern_02#2 try 0: (0.55, 0.29, 0.61) m, 34844 solid px, 34844 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] fern_02#3 try 0: (0.57, 0.21, 0.59) m, 41313 solid px, 41313 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 2996 unused Assets to reduce memory usage. Loaded Objects now: 3761.
-Total: 25.089482 ms (FindLiveObjects: 0.493431 ms CreateObjectMapping: 0.102582 ms MarkObjects: 19.391443 ms  DeleteObjects: 5.101765 ms)
+Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 2995 unused Assets to reduce memory usage. Loaded Objects now: 3762.
+Total: 28.955270 ms (FindLiveObjects: 0.480912 ms CreateObjectMapping: 0.177144 ms MarkObjects: 20.425601 ms  DeleteObjects: 7.871059 ms)
 
-[Memory] map unloaded: reserved 459 MB, allocated 159 MB, managed 65 MB, textures 228 MB, 67 meshes with 62,697 vertices, 238 textures (287 MB by size), 191 materials; biggest textures: qwantani_dusk_1_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_7 (mask) 5.3, image_4 (mask) 5.3, image_1 (mask) 5.3, image_23 (mask) 5.3, image_20 (mask) 5.3, image_16 (mask) 5.3
+[Memory] map unloaded: reserved 475 MB, allocated 196 MB, managed 71 MB, textures 228 MB, 67 meshes with 62,697 vertices, 238 textures (287 MB by size), 191 materials; textures by kind: model textures 27x 139 MB, repacked masks 12x 64 MB, render targets 40x 50 MB, other 148x 15 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: qwantani_dusk_1_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_7 (mask) 5.3, image_4 (mask) 5.3, image_1 (mask) 5.3, image_23 (mask) 5.3, image_20 (mask) 5.3, image_16 (mask) 5.3
 [Wilds] Veld: 79972 plants, 38 pictures
 [Wilds] Lane stones: 16000 stones
 [Wilds] Spot pebbles: 16000 stones
@@ -352,27 +352,27 @@ Total: 25.089482 ms (FindLiveObjects: 0.493431 ms CreateObjectMapping: 0.102582 
 [Figure] skin Object_121: 88 bones, head #6, middle at -2.64 of the head, size (0.52, 0.20, 0.42)
 [Figure] skin Object_123: 88 bones, head #6, middle at -6.05 of the head, size (0.62, 0.23, 0.41)
 [Figure] Prone: 110 bones, 15 renderers
-[Memory] map dry-valley: reserved 809 MB, allocated 609 MB, managed 80 MB, textures 1389 MB, 393 meshes with 4,415,588 vertices, 572 textures (1454 MB by size), 709 materials; biggest textures: kloofendal_48d_partly_cloudy_puresky_4k 10.7, qwantani_dusk_1_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_17 (mask) 5.3, image_12 (mask) 5.3, image_9 (mask) 5.3, image_6 (mask) 5.3, image_1 (mask) 5.3
+[Memory] map dry-valley: reserved 809 MB, allocated 609 MB, managed 89 MB, textures 1389 MB, 393 meshes with 4,415,588 vertices, 572 textures (1454 MB by size), 709 materials; textures by kind: model textures 135x 657 MB, repacked masks 56x 299 MB, unnamed 54x 185 MB, surface normal 30x 72 MB, surface mask 30x 57 MB, plant pictures 38x 51 MB, render targets 40x 50 MB, surface colour 30x 36 MB, other 157x 26 MB, sky 2x 21 MB; biggest textures: kloofendal_48d_partly_cloudy_puresky_4k 10.7, qwantani_dusk_1_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_17 (mask) 5.3, image_12 (mask) 5.3, image_9 (mask) 5.3, image_6 (mask) 5.3, image_1 (mask) 5.3
 [Sound] dry-valley: 25 clips, 8.1 MB of PCM
-[Impostor] wild_rooibos_bush#0 try 0: (1.18, 0.54, 0.84) m, 39717 solid px, 39684 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] wild_rooibos_bush#1 try 0: (0.43, 0.45, 0.47) m, 90807 solid px, 90736 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] wild_rooibos_bush#0 try 0: (1.18, 0.54, 0.84) m, 39717 solid px, 39666 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] wild_rooibos_bush#1 try 0: (0.43, 0.45, 0.47) m, 90807 solid px, 90758 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] wild_rooibos_bush#2 try 0: (0.33, 0.42, 0.38) m, 83395 solid px, 83395 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] wild_rooibos_bush#3 try 0: (0.28, 0.31, 0.17) m, 60757 solid px, 60757 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] didelta_spinosa#0 try 0: (2.12, 2.07, 1.86) m, 90098 solid px, 90098 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] didelta_spinosa#1 try 0: (1.27, 1.30, 1.57) m, 62038 solid px, 62036 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] didelta_spinosa#1 try 0: (1.27, 1.30, 1.57) m, 62038 solid px, 62038 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] didelta_spinosa#2 try 0: (0.82, 0.94, 1.06) m, 51051 solid px, 51051 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] searsia_lucida#0 try 0: (3.22, 2.34, 2.84) m, 62776 solid px, 62776 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] searsia_lucida#1 try 0: (1.51, 1.68, 1.25) m, 68553 solid px, 68553 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] searsia_lucida#1 try 0: (1.51, 1.68, 1.25) m, 68553 solid px, 68548 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] searsia_lucida#2 try 0: (0.66, 0.74, 0.48) m, 47108 solid px, 47108 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] searsia_lucida#3 try 0: (0.38, 0.79, 0.32) m, 30434 solid px, 30434 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_02#0 try 0: (0.12, 0.16, 0.12) m, 12090 solid px, 12090 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_02#1 try 0: (0.18, 0.18, 0.20) m, 14242 solid px, 14242 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_02#2 try 0: (0.91, 0.41, 0.43) m, 6500 solid px, 6500 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 2891 unused Assets to reduce memory usage. Loaded Objects now: 3970.
-Total: 15.247127 ms (FindLiveObjects: 0.521023 ms CreateObjectMapping: 0.108963 ms MarkObjects: 9.471264 ms  DeleteObjects: 5.145577 ms)
+Unloading 2891 unused Assets to reduce memory usage. Loaded Objects now: 3971.
+Total: 18.840957 ms (FindLiveObjects: 0.331799 ms CreateObjectMapping: 0.173877 ms MarkObjects: 14.789310 ms  DeleteObjects: 3.545723 ms)
 
-[Memory] map unloaded: reserved 625 MB, allocated 319 MB, managed 47 MB, textures 268 MB, 84 meshes with 89,517 vertices, 271 textures (332 MB by size), 217 materials; biggest textures: kloofendal_48d_partly_cloudy_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, grass_medium_01_arm_1k (mask) 5.3, image_7 (mask) 5.3, image_4 (mask) 5.3, image_1 (mask) 5.3, image_23 (mask) 5.3, image_20 (mask) 5.3
+[Memory] map unloaded: reserved 665 MB, allocated 416 MB, managed 44 MB, textures 268 MB, 84 meshes with 89,517 vertices, 271 textures (332 MB by size), 217 materials; textures by kind: model textures 27x 139 MB, repacked masks 13x 69 MB, render targets 40x 50 MB, plant pictures 25x 33 MB, other 152x 19 MB, sky 1x 11 MB, unnamed 10x 9 MB, surface normal 1x 1 MB, surface mask 1x 1 MB, surface colour 1x 1 MB; biggest textures: kloofendal_48d_partly_cloudy_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, grass_medium_01_arm_1k (mask) 5.3, image_7 (mask) 5.3, image_4 (mask) 5.3, image_1 (mask) 5.3, image_23 (mask) 5.3, image_20 (mask) 5.3
 [Arena] harbor-rooftops: 3,604,324 triangles; heaviest:
   1,462,272 concrete_road_barrier (24 meshes)
   683,496 exterior_aircon_unit (72 meshes)
@@ -407,7 +407,7 @@ Total: 15.247127 ms (FindLiveObjects: 0.521023 ms CreateObjectMapping: 0.108963 
 [Figure] skin Object_121: 88 bones, head #6, middle at -2.64 of the head, size (0.52, 0.20, 0.42)
 [Figure] skin Object_123: 88 bones, head #6, middle at -6.05 of the head, size (0.62, 0.23, 0.41)
 [Figure] Prone: 110 bones, 15 renderers
-[Memory] map harbor-rooftops: reserved 575 MB, allocated 345 MB, managed 94 MB, textures 878 MB, 305 meshes with 1,260,778 vertices, 469 textures (944 MB by size), 598 materials; biggest textures: kloofendal_48d_partly_cloudy_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_17 (mask) 5.3, image_12 (mask) 5.3, image_9 (mask) 5.3, image_6 (mask) 5.3, image_1 (mask) 5.3, image_18 (mask) 5.3
+[Memory] map harbor-rooftops: reserved 555 MB, allocated 346 MB, managed 53 MB, textures 878 MB, 305 meshes with 1,260,778 vertices, 469 textures (944 MB by size), 598 materials; textures by kind: model textures 71x 359 MB, repacked masks 34x 181 MB, unnamed 31x 93 MB, surface normal 33x 83 MB, surface mask 32x 68 MB, render targets 40x 50 MB, surface colour 30x 40 MB, plant pictures 25x 33 MB, other 172x 26 MB, sky 1x 11 MB; biggest textures: kloofendal_48d_partly_cloudy_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_17 (mask) 5.3, image_12 (mask) 5.3, image_9 (mask) 5.3, image_6 (mask) 5.3, image_1 (mask) 5.3, image_18 (mask) 5.3
 [Sound] harbor-rooftops: 25 clips, 7.8 MB of PCM
 [Impostor] grass_medium_01#0 try 0: (0.18, 0.14, 0.16) m, 20593 solid px, 20593 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_01#1 try 0: (0.28, 0.17, 0.28) m, 25920 solid px, 25920 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
@@ -424,10 +424,10 @@ Total: 15.247127 ms (FindLiveObjects: 0.521023 ms CreateObjectMapping: 0.108963 
 [Impostor] grass_medium_01#12 try 0: (0.07, 0.11, 0.07) m, 6528 solid px, 6528 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] quiver_tree_01 try 0: (1.18, 2.72, 0.97) m, 19667 solid px, 19667 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 2322 unused Assets to reduce memory usage. Loaded Objects now: 3799.
-Total: 13.110995 ms (FindLiveObjects: 0.475478 ms CreateObjectMapping: 0.148247 ms MarkObjects: 7.322882 ms  DeleteObjects: 5.164149 ms)
+Unloading 2322 unused Assets to reduce memory usage. Loaded Objects now: 3800.
+Total: 10.568032 ms (FindLiveObjects: 0.308341 ms CreateObjectMapping: 0.100684 ms MarkObjects: 6.840046 ms  DeleteObjects: 3.318721 ms)
 
-[Memory] map unloaded: reserved 495 MB, allocated 194 MB, managed 60 MB, textures 242 MB, 68 meshes with 111,702 vertices, 254 textures (306 MB by size), 201 materials; biggest textures: kloofendal_48d_partly_cloudy_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_7 (mask) 5.3, image_4 (mask) 5.3, image_1 (mask) 5.3, image_23 (mask) 5.3, image_20 (mask) 5.3, image_16 (mask) 5.3
+[Memory] map unloaded: reserved 523 MB, allocated 209 MB, managed 43 MB, textures 242 MB, 68 meshes with 111,702 vertices, 254 textures (306 MB by size), 201 materials; textures by kind: model textures 27x 139 MB, repacked masks 12x 64 MB, render targets 40x 50 MB, other 152x 19 MB, plant pictures 11x 14 MB, sky 1x 11 MB, unnamed 10x 9 MB, surface colour 1x 1 MB; biggest textures: kloofendal_48d_partly_cloudy_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_7 (mask) 5.3, image_4 (mask) 5.3, image_1 (mask) 5.3, image_23 (mask) 5.3, image_20 (mask) 5.3, image_16 (mask) 5.3
 [Library] missing model pine_sapling_medium
 [Wilds] Forest: 55986 plants, 20 pictures
 [Wilds] Lane stones: 12000 stones
@@ -467,28 +467,27 @@ Total: 13.110995 ms (FindLiveObjects: 0.475478 ms CreateObjectMapping: 0.148247 
 [Figure] skin Object_121: 88 bones, head #6, middle at -2.64 of the head, size (0.52, 0.20, 0.42)
 [Figure] skin Object_123: 88 bones, head #6, middle at -6.05 of the head, size (0.62, 0.23, 0.41)
 [Figure] Prone: 110 bones, 15 renderers
-[Memory] map alpine-ridge: reserved 700 MB, allocated 534 MB, managed 102 MB, textures 1005 MB, 491 meshes with 4,509,457 vertices, 658 textures (1071 MB by size), 772 materials; biggest textures: kloofendal_48d_partly_cloudy_puresky_4k 10.7, pizzo_pernice_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_17 (mask) 5.3, image_12 (mask) 5.3, image_9 (mask) 5.3, image_6 (mask) 5.3, image_1 (mask) 5.3
+[Memory] map alpine-ridge: reserved 700 MB, allocated 534 MB, managed 41 MB, textures 1005 MB, 491 meshes with 4,509,457 vertices, 658 textures (1071 MB by size), 772 materials; textures by kind: model textures 231x 498 MB, repacked masks 33x 176 MB, unnamed 31x 93 MB, surface normal 27x 72 MB, surface mask 25x 56 MB, render targets 40x 50 MB, plant pictures 31x 41 MB, surface colour 28x 37 MB, other 210x 28 MB, sky 2x 21 MB; biggest textures: kloofendal_48d_partly_cloudy_puresky_4k 10.7, pizzo_pernice_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_17 (mask) 5.3, image_12 (mask) 5.3, image_9 (mask) 5.3, image_6 (mask) 5.3, image_1 (mask) 5.3
 [Sound] alpine-ridge: 25 clips, 8.6 MB of PCM
-[Impostor] quiver_tree_02 try 0: (0.87, 1.47, 0.88) m, 47275 solid px, 47271 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] quiver_tree_02 try 0: (0.87, 1.47, 0.88) m, 47275 solid px, 47270 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] cheiridopsis_succulent#0 try 0: (0.20, 0.19, 0.18) m, 85722 solid px, 85722 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] cheiridopsis_succulent#1 try 0: (0.24, 0.17, 0.24) m, 77760 solid px, 77760 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] cheiridopsis_succulent#2 try 0: (0.24, 0.20, 0.26) m, 98259 solid px, 98259 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] cheiridopsis_succulent#3 try 0: (0.35, 0.25, 0.35) m, 97435 solid px, 97435 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] cheiridopsis_succulent#4 try 0: (0.39, 0.23, 0.35) m, 82308 solid px, 82308 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] cheiridopsis_succulent#5 try 0: (0.45, 0.23, 0.40) m, 66647 solid px, 66647 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] cheiridopsis_succulent#6 try 0: (0.51, 0.27, 0.42) m, 71096 solid px, 71095 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] cheiridopsis_succulent#6 try 0: (0.51, 0.27, 0.42) m, 71096 solid px, 71096 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] cheiridopsis_succulent#7 try 0: (0.60, 0.24, 0.53) m, 53407 solid px, 53407 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] cheiridopsis_succulent#8 try 0: (0.51, 0.27, 0.55) m, 73888 solid px, 73881 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] cheiridopsis_succulent#8 try 0: (0.51, 0.27, 0.55) m, 73888 solid px, 73870 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] spruce try 0: (6.30, 4.51, 3.38) m, 29043 solid px, 29043 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] fir_sapling_medium#0 try 0: (4.99, 8.83, 5.28) m, 33812 solid px, 33812 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] fir_sapling_medium#1 try 0: (4.27, 7.80, 3.96) m, 25513 solid px, 25513 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] fir_sapling_medium#2 try 0: (4.31, 5.91, 4.01) m, 42365 solid px, 42365 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
-[Impostor] grass_medium_01#0 try 0: (0.18, 0.14, 0.16) m, 20848 solid px, 20848 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-Unloading 4015 unused Assets to reduce memory usage. Loaded Objects now: 3846.
-Total: 16.974120 ms (FindLiveObjects: 0.603296 ms CreateObjectMapping: 0.137066 ms MarkObjects: 10.560967 ms  DeleteObjects: 5.672370 ms)
+Unloading 3995 unused Assets to reduce memory usage. Loaded Objects now: 3928.
+Total: 30.842037 ms (FindLiveObjects: 0.550346 ms CreateObjectMapping: 0.233630 ms MarkObjects: 17.865785 ms  DeleteObjects: 12.191808 ms)
 
-[Memory] map unloaded: reserved 626 MB, allocated 401 MB, managed 61 MB, textures 248 MB, 67 meshes with 62,697 vertices, 307 textures (307 MB by size), 206 materials; biggest textures: pizzo_pernice_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_7 (mask) 5.3, image_4 (mask) 5.3, image_1 (mask) 5.3, image_23 (mask) 5.3, image_20 (mask) 5.3, image_16 (mask) 5.3
+[Memory] map unloaded: reserved 640 MB, allocated 372 MB, managed 53 MB, textures 250 MB, 84 meshes with 89,517 vertices, 310 textures (310 MB by size), 207 materials; textures by kind: model textures 27x 139 MB, repacked masks 12x 64 MB, render targets 40x 50 MB, plant pictures 17x 22 MB, other 202x 15 MB, sky 1x 11 MB, unnamed 10x 9 MB, surface colour 1x 1 MB; biggest textures: pizzo_pernice_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_7 (mask) 5.3, image_4 (mask) 5.3, image_1 (mask) 5.3, image_23 (mask) 5.3, image_20 (mask) 5.3, image_16 (mask) 5.3
 [Library] missing model shrub_03
 [Library] missing model shrub_04
 [Wilds] Range woods: 49177 plants, 39 pictures
@@ -528,8 +527,9 @@ Total: 16.974120 ms (FindLiveObjects: 0.603296 ms CreateObjectMapping: 0.137066 
 [Figure] skin Object_121: 88 bones, head #6, middle at -2.64 of the head, size (0.52, 0.20, 0.42)
 [Figure] skin Object_123: 88 bones, head #6, middle at -6.05 of the head, size (0.62, 0.23, 0.41)
 [Figure] Prone: 110 bones, 15 renderers
-[Memory] map training-lane: reserved 1088 MB, allocated 863 MB, managed 99 MB, textures 1419 MB, 617 meshes with 7,597,380 vertices, 787 textures (1484 MB by size), 1061 materials; biggest textures: pizzo_pernice_puresky_4k 10.7, sunflowers_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_17 (mask) 5.3, image_12 (mask) 5.3, image_9 (mask) 5.3, image_6 (mask) 5.3, image_1 (mask) 5.3
+[Memory] map training-lane: reserved 1086 MB, allocated 864 MB, managed 112 MB, textures 1421 MB, 617 meshes with 7,597,380 vertices, 789 textures (1487 MB by size), 1062 materials; textures by kind: model textures 268x 647 MB, repacked masks 54x 288 MB, unnamed 52x 177 MB, surface normal 36x 88 MB, plant pictures 56x 74 MB, surface mask 36x 71 MB, render targets 40x 50 MB, surface colour 36x 44 MB, other 209x 26 MB, sky 2x 21 MB; biggest textures: pizzo_pernice_puresky_4k 10.7, sunflowers_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_17 (mask) 5.3, image_12 (mask) 5.3, image_9 (mask) 5.3, image_6 (mask) 5.3, image_1 (mask) 5.3
 [Sound] training-lane: 25 clips, 7.5 MB of PCM
+[Impostor] grass_medium_01#0 try 0: (0.18, 0.14, 0.16) m, 20848 solid px, 20848 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_01#1 try 0: (0.28, 0.17, 0.28) m, 25920 solid px, 25920 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_01#2 try 0: (0.19, 0.18, 0.20) m, 24955 solid px, 24955 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_01#3 try 0: (0.15, 0.29, 0.13) m, 11313 solid px, 11313 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
@@ -547,20 +547,20 @@ Total: 16.974120 ms (FindLiveObjects: 0.603296 ms CreateObjectMapping: 0.137066 
 [Figure] Prone: 143 bones, 10 renderers
 [Impostor] grass_medium_02#2 try 0: (0.91, 0.41, 0.43) m, 7167 solid px, 7167 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] island_tree_02 try 0: (4.21, 3.41, 4.07) m, 68397 solid px, 68397 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] island_tree_03 try 0: (2.97, 2.62, 2.91) m, 60316 solid px, 60303 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_03 try 0: (2.97, 2.62, 2.91) m, 60316 solid px, 60293 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] spruce try 0: (6.30, 4.51, 3.38) m, 27558 solid px, 27558 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] island_tree_01 try 0: (4.76, 5.03, 4.82) m, 81706 solid px, 81706 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] tree_small_02 try 0: (2.92, 4.56, 4.29) m, 57638 solid px, 57638 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] shrub_01 try 0: (2.59, 0.40, 0.22) m, 3459 solid px, 3459 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_01 try 0: (4.76, 5.03, 4.82) m, 81706 solid px, 81705 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] tree_small_02 try 0: (2.92, 4.56, 4.29) m, 57638 solid px, 57636 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Practice-Hud
+[Impostor] shrub_01 try 0: (2.59, 0.40, 0.22) m, 3459 solid px, 3459 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] practice plates: plate-1 at 288 m, x -14, plate-2 at 310 m, x -22, plate-3 at 452 m, x 3, plate-4 at 489 m, x -8, plate-5 at 606 m, x 40
 [Impostor] shrub_02 try 0: (6.57, 2.55, 2.54) m, 4047 solid px, 4047 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_01#0 try 0: (0.18, 0.14, 0.16) m, 20584 solid px, 20584 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_01#1 try 0: (0.28, 0.17, 0.28) m, 25920 solid px, 25920 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Practice-Scope
 Unloading 3 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 5525 unused Assets to reduce memory usage. Loaded Objects now: 3146.
-Total: 26.005432 ms (FindLiveObjects: 0.389276 ms CreateObjectMapping: 0.107621 ms MarkObjects: 13.508881 ms  DeleteObjects: 11.999423 ms)
+Unloading 5452 unused Assets to reduce memory usage. Loaded Objects now: 3225.
+Total: 31.293742 ms (FindLiveObjects: 0.653208 ms CreateObjectMapping: 0.340560 ms MarkObjects: 15.581931 ms  DeleteObjects: 14.717539 ms)
 
 [Skyline] 71404 vertices, 2 helipads
 [Estuary] 3114 trees, 462 shrubs
@@ -598,12 +598,11 @@ Total: 26.005432 ms (FindLiveObjects: 0.389276 ms CreateObjectMapping: 0.107621 
 [Figure] skin Object_121: 88 bones, head #6, middle at -2.64 of the head, size (0.52, 0.20, 0.42)
 [Figure] skin Object_123: 88 bones, head #6, middle at -6.05 of the head, size (0.62, 0.23, 0.41)
 [Figure] Prone: 110 bones, 15 renderers
-[Memory] menu again, twin-bridges: reserved 988 MB, allocated 743 MB, managed 75 MB, textures 932 MB, 351 meshes with 6,846,729 vertices, 584 textures (1015 MB by size), 620 materials; biggest textures: concrete_wall_008_diff_2k (weathered) 21.3, TempBuffer 37 2048x2048 16.0, kloofendal_48d_partly_cloudy_puresky_4k 10.7, sunflowers_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_17 (mask) 5.3, image_12 (mask) 5.3, image_9 (mask) 5.3
-Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
+[Memory] menu again, twin-bridges: reserved 974 MB, allocated 743 MB, managed 75 MB, textures 939 MB, 351 meshes with 6,846,729 vertices, 587 textures (1022 MB by size), 622 materials; textures by kind: model textures 77x 340 MB, repacked masks 38x 191 MB, unnamed 38x 112 MB, surface normal 40x 84 MB, surface mask 39x 63 MB, other 237x 50 MB, render targets 40x 50 MB, plant pictures 36x 48 MB, surface colour 39x 42 MB, weathered 1x 21 MB, sky 2x 21 MB; biggest textures: concrete_wall_008_diff_2k (weathered) 21.3, TempBuffer 38 2048x2048 16.0, kloofendal_48d_partly_cloudy_puresky_4k 10.7, sunflowers_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_17 (mask) 5.3, image_12 (mask) 5.3, image_9 (mask) 5.3
+Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
 [Sound] twin-bridges: 25 clips, 7.8 MB of PCM
-[Impostor] grass_medium_01#2 try 0: (0.19, 0.18, 0.20) m, 24955 solid px, 24955 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-Unloading 2380 unused Assets to reduce memory usage. Loaded Objects now: 3077.
-Total: 23.422520 ms (FindLiveObjects: 0.263361 ms CreateObjectMapping: 0.059672 ms MarkObjects: 14.348408 ms  DeleteObjects: 8.750728 ms)
+Unloading 2435 unused Assets to reduce memory usage. Loaded Objects now: 3159.
+Total: 27.290239 ms (FindLiveObjects: 2.459023 ms CreateObjectMapping: 0.196894 ms MarkObjects: 20.583159 ms  DeleteObjects: 4.050270 ms)
 
 [Library] missing model shrub_03
 [Library] missing model shrub_04
@@ -626,8 +625,9 @@ Total: 23.422520 ms (FindLiveObjects: 0.263361 ms CreateObjectMapping: 0.059672 
   29,970 rocks_scan_3 (60 meshes)
   17,280 old_tyre (6 meshes)
   17,250 rock_kit (3 meshes)
-[Memory] map training-lane: reserved 1084 MB, allocated 852 MB, managed 156 MB, textures 1213 MB
+[Memory] map training-lane: reserved 1086 MB, allocated 853 MB, managed 113 MB, textures 1214 MB
 [Sound] training-lane: 25 clips, 7.5 MB of PCM
+[Impostor] grass_medium_01#2 try 0: (0.19, 0.18, 0.20) m, 25053 solid px, 25053 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Figure] Prone: 143 bones, 10 renderers
 [Impostor] grass_medium_01#3 try 0: (0.15, 0.29, 0.13) m, 11313 solid px, 11313 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_01#4 try 0: (0.16, 0.32, 0.16) m, 10001 solid px, 10001 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
@@ -658,14 +658,13 @@ Total: 23.422520 ms (FindLiveObjects: 0.263361 ms CreateObjectMapping: 0.059672 
 [Impostor] grass_bermuda_01#16 try 0: (0.06, 0.05, 0.03) m, 63810 solid px, 63810 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_bermuda_01#17 try 0: (0.03, 0.09, 0.02) m, 39308 solid px, 39308 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_bermuda_01#18 try 0: (0.04, 0.07, 0.02) m, 70852 solid px, 70852 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] island_tree_02 try 0: (4.21, 3.41, 4.07) m, 68397 solid px, 68397 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Memory] training started: reserved 1073 MB, allocated 715 MB, managed 38 MB, textures 1119 MB, 575 meshes with 7,498,608 vertices, 734 textures (1185 MB by size), 929 materials; biggest textures: sunflowers_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_23 (mask) 5.3, image_20 (mask) 5.3, image_16 (mask) 5.3, image_13 (mask) 5.3, image_10 (mask) 5.3, image_1 (mask) 5.3
-[Impostor] island_tree_03 try 0: (2.97, 2.62, 2.91) m, 60316 solid px, 60304 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Memory] training started: reserved 1091 MB, allocated 715 MB, managed 41 MB, textures 1120 MB, 575 meshes with 7,498,608 vertices, 735 textures (1186 MB by size), 930 materials; textures by kind: model textures 242x 515 MB, repacked masks 51x 272 MB, plant pictures 75x 100 MB, surface normal 36x 88 MB, surface mask 36x 71 MB, render targets 40x 50 MB, surface colour 36x 44 MB, other 207x 26 MB, sky 1x 11 MB, unnamed 11x 10 MB; biggest textures: sunflowers_puresky_4k 10.7, _SMAATarget_1864x860_B10G11R11_UFloatPack32_Tex2D 6.1, _BlendTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _EdgeStencilTexture_1864x860_R8G8B8A8_UNorm_Tex2D 6.1, _CameraTargetAttachment_1864x860_B10G11R11_UFloatPack32_Tex2D_MSAA4x 6.1, _CameraNormalsTexture_1864x860_R8G8B8A8_SNorm_Tex2D 6.1, image_23 (mask) 5.3, image_20 (mask) 5.3, image_16 (mask) 5.3, image_13 (mask) 5.3, image_10 (mask) 5.3, image_1 (mask) 5.3
+[Impostor] island_tree_02 try 0: (4.21, 3.41, 4.07) m, 68397 solid px, 68396 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_03 try 0: (2.97, 2.62, 2.91) m, 60316 solid px, 60309 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Training-Flow
 [Impostor] island_tree_01 try 0: (4.76, 5.03, 4.82) m, 81706 solid px, 81706 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] tree_small_02 try 0: (2.92, 4.56, 4.29) m, 57638 solid px, 57638 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] shrub_02 try 0: (6.57, 2.55, 2.54) m, 4047 solid px, 4047 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] island_tree_02 try 0: (4.21, 3.41, 4.07) m, 68397 solid px, 68395 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Physics::Module] Cleanup current backend.
 [Physics::Module] Id: 0xf2b8ea05
 Input System module state changed to: ShutdownInProgress.
