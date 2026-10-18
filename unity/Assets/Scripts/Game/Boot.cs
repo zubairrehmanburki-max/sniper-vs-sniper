@@ -400,6 +400,7 @@ namespace SniperDuel.Game
             }
             BuildArena("twin-bridges");
             Mem.Log("menu again, twin-bridges", true);
+            yield return CaptureCrosshair(dir, () => ++n);
             yield return CaptureTraining(dir, flow, () => ++n);
             for (int f = 0; f < 10; f++) yield return null;
             Application.Quit(0);
@@ -506,6 +507,37 @@ namespace SniperDuel.Game
             for (int f = 0; f < 90; f++) yield return null;
             Mem.Log("training started", true);
             yield return Shoot(dir, next, "Training-Flow");
+            Time.captureDeltaTime = 0;
+        }
+
+        /// <summary>
+        /// The white crosshair against the scope, on Twin Bridges in a live session with the sway
+        /// held still: from the shoulder, then scoped in at the default 10x, at three aims (the far
+        /// bridge, the skyline, the water), so each scope picture can be laid over the middle of its
+        /// shoulder picture.
+        /// </summary>
+        IEnumerator CaptureCrosshair(string dir, Func<int> next)
+        {
+            Time.captureDeltaTime = 1f / 30;
+            string rifle = Profile.Rifle(Config);
+            var map = arena!.Map;
+            var eye = Combat.EyeOf(map.Spots.A[0], Stance.Prone, Config);
+            var far = Combat.EyeOf(map.Spots.B[0], Stance.Prone, Config);
+            double yaw = Math.Atan2(far.X - eye.X, -(far.Z - eye.Z));
+            double pitch = Math.Atan2(far.Y - eye.Y, Math.Sqrt((far.X - eye.X) * (far.X - eye.X) + (far.Z - eye.Z) * (far.Z - eye.Z)));
+            foreach (var (label, dy, dp) in new[] { ("Bridge", 0.035, 0.004), ("Skyline", -0.12, 0.03), ("Water", 0.08, -0.02) })
+            {
+                var duel = Duel.Begin(Gear.ForMatch(Config, rifle), ui, rig, arena!, "YOU", rifle, BotDifficulty.Medium, 0x5eed, solo: true);
+                for (int f = 0; f < 3; f++) yield return null;
+                duel.CaptureAim(yaw + dy, pitch + dp);
+                yield return Shoot(dir, next, $"Cross-{label}-Hip", 30);
+                duel.CaptureScope();
+                yield return Shoot(dir, next, $"Cross-{label}-Scope", 40);
+                Debug.Log($"[Capture] crosshair {label}: hip fov {CameraRig.EyeFov}, scope fov {rig.Fov:0.###}");
+                Destroy(duel.gameObject);
+                yield return null;
+            }
+            ui.HideAll();
             Time.captureDeltaTime = 0;
         }
 

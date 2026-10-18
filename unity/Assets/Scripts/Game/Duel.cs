@@ -68,6 +68,18 @@ namespace SniperDuel.Game
         /// </summary>
         float sightInv, sightAim;
         float sightClock;
+        /// <summary>For the capture run: no sway, so a hip and a scope picture can be laid over each other.</summary>
+        bool still;
+
+        /// <summary>For the capture run: aims (rules radians) with the sway held still.</summary>
+        internal void CaptureAim(double y, double p)
+        {
+            yaw = y;
+            pitch = p;
+            still = true;
+        }
+
+        internal void CaptureScope() => SetScoped(true);
 
         /// <summary>The finger aiming by dragging the screen, and the screen root that holds it.</summary>
         int? lookPointer;
@@ -642,6 +654,7 @@ namespace SniperDuel.Game
             DropLook();
             DropFire();
             DropStick();
+            if (on) AimAtCrosshair();
             scoped = false;
             raising = on ? 1 : -1;
             Sound.Raise(on);
@@ -919,7 +932,7 @@ namespace SniperDuel.Game
         Aim TrueAim()
         {
             var p = State.Players[Me];
-            var s = Sway.Offset(new SwayInput
+            var s = still ? default : Sway.Offset(new SwayInput
             {
                 Stance = p.Stance,
                 Bipod = p.Stance == Stance.Prone,
@@ -1042,30 +1055,53 @@ namespace SniperDuel.Game
         /// <summary>
         /// The point the eye's line of sight lands on, in Unity space. The shoulder camera sits off to
         /// the side, so looking parallel to the eye its centre would fall beside the true aim and the
-        /// scope would open somewhere else; aimed at this point, the white crosshair is exactly where
-        /// the scope zooms in. Measured a few times a second; past the ground and the targets (open
-        /// sky) it settles on the enemy's range, where the far structures stand.
+        /// scope would open somewhere else; aimed at this point, the white crosshair is on what the
+        /// scope shows. Measured on the drawn world (the far bridges and the skyline are scenery the
+        /// rules don't know) a few times a second; open sky counts as very far.
         /// </summary>
         Vector3 SightPoint(Aim aim, float dt)
         {
+            var eye = Library.ToUnity(Eye());
+            var dir = Quaternion.Euler(-(float)(aim.Pitch * Mathf.Rad2Deg), (float)(aim.Yaw * Mathf.Rad2Deg), 0) * Vector3.forward;
             sightClock -= dt;
             if (sightClock <= 0 || sightInv <= 0)
             {
                 sightClock = 0.1f;
-                var eye = Eye();
-                double far = 600;
-                if (!solo)
-                {
-                    var e = State.Players[Side.B].Position;
-                    far = Math.Max(50, Math.Sqrt((e.X - eye.X) * (e.X - eye.X) + (e.Z - eye.Z) * (e.Z - eye.Z)));
-                }
-                var d = Hits.Rangefind(eye, aim, Targets(), map.Ground, 3000, map.Cover) ?? far;
-                sightAim = 1 / (float)Math.Max(5, d);
+                sightAim = 1 / Seen(eye, dir);
                 if (sightInv <= 0) sightInv = sightAim;
             }
             sightInv = Mathf.Lerp(sightInv, sightAim, 1 - Mathf.Exp(-dt * 12));
-            var dir = Quaternion.Euler(-(float)(aim.Pitch * Mathf.Rad2Deg), (float)(aim.Yaw * Mathf.Rad2Deg), 0) * Vector3.forward;
-            return Library.ToUnity(Eye()) + dir / sightInv;
+            return eye + dir / sightInv;
+        }
+
+        /// <summary>Metres along a ray from a point to the first thing drawn there: scenery, a plate or the enemy.</summary>
+        float Seen(Vector3 from, Vector3 dir)
+        {
+            float best = World.Pick.Ray(arena.Root, from, dir, SkyRange, rig.Body != null ? rig.Body.transform : null) ?? SkyRange;
+            // The figures are skinned, so the rules' silhouettes stand in for them.
+            var r = Quaternion.LookRotation(dir).eulerAngles;
+            var a = new Aim { Yaw = Mathf.DeltaAngle(0, r.y) * Mathf.Deg2Rad, Pitch = -Mathf.DeltaAngle(0, r.x) * Mathf.Deg2Rad };
+            var t = Hits.Rangefind(Library.ToRules(from), a, Targets(), (x, z) => double.NegativeInfinity, 0.5);
+            if (t.HasValue && t.Value < best) best = (float)t.Value;
+            return Mathf.Max(1, best);
+        }
+
+        const float SkyRange = 5000;
+
+        /// <summary>
+        /// Scoping in from the shoulder: the eye turns onto exactly what was under the white
+        /// crosshair, wherever it lies, so the scope opens on it.
+        /// </summary>
+        void AimAtCrosshair()
+        {
+            if (!rig.ThirdPerson || rig.Current != CameraRig.Mode.Eye) return;
+            var cam = rig.Cam.transform;
+            var at = cam.position + cam.forward * Seen(cam.position, cam.forward);
+            var to = at - Library.ToUnity(Eye());
+            double y = Math.Atan2(to.x, to.z), p = Math.Atan2(to.y, new Vector2(to.x, to.z).magnitude);
+            yaw = y - lastSway.Right / 1000;
+            pitch = Math.Max(-0.3, Math.Min(0.3, p - lastSway.Up / 1000 - recoil));
+            sightInv = sightAim = 1 / to.magnitude;
         }
 
         // ---- frame ---------------------------------------------------------
@@ -1265,6 +1301,7 @@ namespace SniperDuel.Game
             PostFx.Scope(0);
             PostFx.Defocus(0);
             rig.Raise = 1;
+            rig.AimPoint = null;
             if (plates != null) Destroy(plates.gameObject);
             if (ScopeDials.Turned?.Target == (object)this) ScopeDials.Turned = null;
         }
