@@ -1,0 +1,39 @@
+name: Unity third-party assets
+description: >
+  Puts the free assets listed in unity/assets.json into unity/Assets/Resources/TP. They are
+  fetched once per version of assets.json and kept as a release (unity-assets-<hash>), so builds
+  don't depend on the original hosts.
+inputs:
+  sketchfab-token:
+    description: Sketchfab API token for the CC-BY models (only needed when the asset set is first built)
+    required: false
+    default: ""
+outputs:
+  tag:
+    description: Release tag holding this asset set
+    value: ${{ steps.key.outputs.tag }}
+runs:
+  using: composite
+  steps:
+    - id: key
+      shell: bash
+      run: echo "tag=unity-assets-$(sha256sum unity/assets.json tools/unity-assets/fetch.py tools/unity-assets/glbfix.py | sha256sum | cut -c1-12)" >> "$GITHUB_OUTPUT"
+    - name: Download or build the asset set
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        SKETCHFAB_API_TOKEN: ${{ inputs.sketchfab-token }}
+        TAG: ${{ steps.key.outputs.tag }}
+      run: |
+        if ! gh release download "$TAG" -p assets.tgz -D "$RUNNER_TEMP" 2>/dev/null; then
+          python3 -m pip install -q pillow==10.4.0 || python3 -m pip install -q --break-system-packages pillow==10.4.0
+          python3 tools/unity-assets/fetch.py unity/assets.json "$RUNNER_TEMP/assets"
+          tar -czf "$RUNNER_TEMP/assets.tgz" -C "$RUNNER_TEMP/assets" .
+          gh release create "$TAG" "$RUNNER_TEMP/assets.tgz" --prerelease --title "$TAG" \
+            --notes "Free third-party assets for the Unity build (see CREDITS.md inside)." \
+            || gh release download "$TAG" -p assets.tgz -D "$RUNNER_TEMP" --clobber
+        fi
+        mkdir -p unity/Assets/Resources/TP
+        tar -xzf "$RUNNER_TEMP/assets.tgz" -C unity/Assets/Resources/TP
+        rm -rf "$RUNNER_TEMP/assets.tgz" "$RUNNER_TEMP/assets"
+        du -sh unity/Assets/Resources/TP

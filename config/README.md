@@ -44,6 +44,9 @@ Bullet lengths and twist rates (needed for spin drift) are typical published val
 - **Sudden death escalation** (not in the plan): after `rules.suddenDeathNoProneAfterPairs` (2)
   sudden-death pairs nobody may lie prone, and after `rules.suddenDeathStandingAfterPairs` (4) both
   players must stand. This ends the rare stalemate where both players hide fully behind cover.
+  The Unity game turns this off (2026-10-17): stance is always the player's own choice.
+- **Turn lock** (Unity game, 2026-10-17): you walk and change stance only in your own turn, and once
+  you fire you stay on that spot in that stance until the enemy fires (`Match.CanMove`). Bots too.
 - **Alpine Ridge** models thin, cold air through the map's altitude and temperature, and the shot
   angle through the real slope. Up- and down-slope thermals, and temperature changing with height
   along the path, are not modelled; the wind field is the same layered, gusty model as elsewhere.

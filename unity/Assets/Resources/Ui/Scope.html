@@ -1,0 +1,42 @@
+<div style="width: 932px; height: 430px; position: relative; overflow: hidden; color: #EDEFE8; font-family: 'Barlow', 'Helvetica Neue', sans-serif; text-shadow: 0 1px 3px rgba(0,0,0,0.6)">
+<div data-bind="reticle" style="position: absolute; left: 0; top: 0; width: 932px; height: 430px"></div>
+<div data-bind="mask" style="position: absolute; left: 0; top: 0; width: 932px; height: 430px"></div>
+<div data-bind="heart" style="position: absolute; left: 0; top: 0; width: 932px; height: 430px"></div>
+
+<div style="position: absolute; left: 0; right: 0; top: 10px; display: flex; justify-content: center">
+<div data-bind="scoreBox" style="height: 38px; padding: 0 16px; border-radius: 19px; background: rgba(10,12,11,0.66); display: flex; align-items: center; gap: 10px; text-shadow: none">
+<span data-bind="turn" style="font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 13px; letter-spacing: 0.16em; color: #F2B33D">YOUR SHOT</span>
+<span data-bind="timer" style="font-family: 'Share Tech Mono', monospace; font-size: 21px">0:17</span>
+<span style="font-size: 13px; color: #A7AD9F">·</span>
+<span data-bind="score" style="font-family: 'Share Tech Mono', monospace; font-size: 15px; color: #A7AD9F">1 – 1</span>
+</div>
+</div>
+<div style="position: absolute; left: 0; right: 0; top: 56px; display: flex; justify-content: center">
+<span data-bind="solution" style="padding: 3px 10px; background: rgba(0,0,0,0.5); font-size: 13px; text-shadow: none"></span>
+</div>
+
+<div data-bind="windBox" style="position: absolute; right: 24px; top: 12px; display: flex; align-items: center; gap: 8px">
+<svg data-bind="windArrow" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="2.2" aria-hidden="true" style="transform: rotate(70deg)"><path d="M12 20V4M6 10l6-6 6 6"></path></svg>
+<div style="display: flex; flex-direction: column; gap: 1px">
+<span data-bind="windSpeed" style="font-family: 'Share Tech Mono', monospace; font-size: 21px">5.6 m/s</span>
+<span data-bind="windZone" style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.14em; color: #C9CDC2">WIND · MID</span>
+</div>
+</div>
+
+<div data-bind="lrfBox" style="position: absolute; left: 288px; top: 348px; display: flex; align-items: center; gap: 8px">
+<button data-on="lrf" data-bind="lrfBtn" aria-label="Laser rangefinder" style="width: 54px; height: 54px; border-radius: 50%; border: 2px solid rgba(237,239,232,0.55); background: rgba(10,12,11,0.6); display: grid; place-items: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#EDEFE8" stroke-width="1.8" aria-hidden="true"><rect x="3" y="7" width="14" height="10" rx="2"></rect><path d="M17 10h4M17 14h4M7 12h6"></path></svg></button>
+<div style="display: flex; flex-direction: column; gap: 0">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.14em">LASER</span>
+<span data-bind="lrf" style="font-family: 'Share Tech Mono', monospace; font-size: 16px; color: #ff8a7e">--- m</span>
+</div>
+</div>
+
+<div data-bind="fireRing" style="position: absolute; right: 44px; top: 180px; width: 136px; height: 136px">
+<div data-bind="fireBtn" aria-label="Fire" style="position: absolute; left: 14px; top: 14px; width: 108px; height: 108px; border-radius: 50%; border: 3px solid #E5483B; background: rgba(128,24,20,0.86); box-sizing: border-box; display: grid; place-items: center"><svg width="52" height="52" viewBox="0 0 52 52" aria-hidden="true"><path d="M26 3 L30 15 L41 8 L36 20 L49 22 L38 29 L46 40 L33 37 L32 50 L26 40 L20 50 L19 37 L6 40 L14 29 L3 22 L16 20 L11 8 L22 15 Z" fill="#EDEFE8"></path><circle cx="26" cy="26" r="7" fill="#1a1a1a"></circle></svg></div>
+</div>
+
+<div style="position: absolute; right: 54px; bottom: 18px; display: flex; align-items: center; gap: 10px">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 13px; letter-spacing: 0.14em; text-align: right">SCOPE OUT</span>
+<button data-on="exit" data-bind="scopeBtn" aria-label="Scope out" style="width: 56px; height: 56px; border-radius: 50%; border: 2px solid rgba(237,239,232,0.6); background: rgba(10,12,11,0.62); display: grid; place-items: center"><svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#EDEFE8" stroke-width="2.4" aria-hidden="true"><circle cx="14" cy="14" r="10"></circle><path d="M7 21L21 7"></path></svg></button>
+</div>
+</div>

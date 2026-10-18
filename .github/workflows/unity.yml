@@ -1,0 +1,252 @@
+name: Unity
+
+# The native Unity game in unity/.
+# - core: the engine-free rules and ballistics (unity/Assets/Scripts/Core) under plain .NET. No licence.
+# - screenshots: builds a Linux player and captures every screen to the `screens` branch for review.
+# - ios: Unity exports the Xcode project on Linux; a macOS runner signs it and uploads to TestFlight.
+# The Unity jobs need repository secrets UNITY_LICENSE, UNITY_EMAIL and UNITY_PASSWORD
+# (guide: /mnt/project-files/guides/unity-license.md); without them they are skipped.
+on:
+  push:
+    branches: [main, claude/project-thread-ux5zt1, claude/project-thread-c3cszi, claude/twin-bridges-final-sf70ds, claude/project-thread-oxea50, claude/project-thread-rqqnlq, claude/project-thread-w6mgc0, claude/project-thread-e5f8vx, claude/maps-polish-a0dq2s]
+    paths: [unity/**, config/**, packages/**, .github/workflows/unity.yml]
+  pull_request:
+    paths: [unity/**, config/**, packages/**, .github/workflows/unity.yml]
+  workflow_dispatch:
+    inputs:
+      testflight:
+        description: Upload the iOS build to TestFlight
+        type: boolean
+        default: false
+
+permissions:
+  contents: write # screenshots push to the `screens` branch; match pushes the `certificates` branch
+
+concurrency:
+  group: unity-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Config copy is current
+        run: cmp config/game.json unity/Assets/Resources/Config/game.json
+      - run: dotnet test unity/CoreTests --logger "console;verbosity=normal"
+
+  assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: a
+        uses: ./.github/actions/unity-assets
+        with:
+          sketchfab-token: ${{ secrets.SKETCHFAB_API_TOKEN }}
+      - run: echo "Asset set ${{ steps.a.outputs.tag }}"; cat unity/Assets/Resources/TP/PROBLEMS.txt 2>/dev/null || true
+
+  licence:
+    runs-on: ubuntu-latest
+    outputs:
+      ok: ${{ steps.check.outputs.ok }}
+    steps:
+      - id: check
+        env:
+          L: ${{ secrets.UNITY_LICENSE }}
+          E: ${{ secrets.UNITY_EMAIL }}
+          P: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          if [ -n "$L" ] && [ -n "$E" ] && [ -n "$P" ]; then echo "ok=true" >> "$GITHUB_OUTPUT"
+          else echo "::warning::Unity secrets not set yet; skipping Unity builds"; echo "ok=false" >> "$GITHUB_OUTPUT"; fi
+
+  screenshots:
+    needs: [core, assets, licence]
+    if: needs.licence.outputs.ok == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 170
+    steps:
+      - uses: actions/checkout@v4
+      # The Unity editor image is ~15 GB unpacked; the runner's preinstalled SDKs leave too little room.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/share/swift /usr/local/.ghcup /opt/microsoft /usr/local/share/powershell
+          sudo docker image prune --all --force > /dev/null || true
+          df -h /
+      - uses: ./.github/actions/unity-assets
+        with:
+          sketchfab-token: ${{ secrets.SKETCHFAB_API_TOKEN }}
+      - uses: actions/cache/restore@v4
+        with:
+          path: unity/Library
+          key: library-linux-${{ hashFiles('unity/Packages/manifest.json', 'unity/ProjectSettings/ProjectVersion.txt', 'unity/assets.json') }}-${{ github.run_id }}
+          restore-keys: library-linux-
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: unity
+          targetPlatform: StandaloneLinux64
+          buildMethod: SniperDuel.EditorTools.Build.Linux
+          buildsPath: build
+          buildName: SniperDuel
+          allowDirtyBuild: true
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: unity/Library
+          key: library-linux-${{ hashFiles('unity/Packages/manifest.json', 'unity/ProjectSettings/ProjectVersion.txt', 'unity/assets.json') }}-${{ github.run_id }}
+      - name: Capture every screen
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb mesa-utils libgl1-mesa-dri > /dev/null
+          sudo chown -R "$USER" build
+          chmod +x build/StandaloneLinux64/SniperDuel
+          mkdir -p shots
+          timeout 3600 xvfb-run -a -s "-screen 0 1864x860x24" build/StandaloneLinux64/SniperDuel \
+            -screen-fullscreen 0 -screen-width 1864 -screen-height 860 -force-glcore \
+            -logFile "$PWD/shots/player.log" -capture-all "$PWD/shots" || true
+          grep -E "Capture|Studio|Figure|Exception|Error|error" shots/player.log | head -80 || true
+          tail -30 shots/player.log || true
+          ls -la shots
+          ls shots/*.png > /dev/null
+      - name: Publish to the screens branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          dir="${GITHUB_REF_NAME//\//-}"
+          git fetch origin screens || true
+          git worktree add -B screens ../screens origin/screens 2>/dev/null || { git worktree add --detach ../screens && (cd ../screens && git checkout --orphan screens && git rm -rqf .); }
+          rm -rf "../screens/$dir" && mkdir -p "../screens/$dir" && cp shots/* "../screens/$dir/"
+          cd ../screens && git add -A && git commit -qm "Screens for $GITHUB_SHA" && git push -q origin screens
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: shots
+
+  ios:
+    needs: [core, assets, licence]
+    if: needs.licence.outputs.ok == 'true' && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      # The Unity editor image is ~15 GB unpacked; the runner's preinstalled SDKs leave too little room.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/share/swift /usr/local/.ghcup /opt/microsoft /usr/local/share/powershell
+          sudo docker image prune --all --force > /dev/null || true
+          df -h /
+      - uses: ./.github/actions/unity-assets
+        with:
+          sketchfab-token: ${{ secrets.SKETCHFAB_API_TOKEN }}
+      - uses: actions/cache/restore@v4
+        with:
+          path: unity/Library
+          key: library-ios-${{ hashFiles('unity/Packages/manifest.json', 'unity/ProjectSettings/ProjectVersion.txt', 'unity/assets.json') }}-${{ github.run_id }}
+          restore-keys: library-ios-
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        with:
+          projectPath: unity
+          targetPlatform: iOS
+          buildMethod: SniperDuel.EditorTools.Build.IOS
+          buildsPath: build
+          buildName: SniperDuel
+          allowDirtyBuild: true
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: unity/Library
+          key: library-ios-${{ hashFiles('unity/Packages/manifest.json', 'unity/ProjectSettings/ProjectVersion.txt', 'unity/assets.json') }}-${{ github.run_id }}
+      - name: Pack the Xcode project
+        run: ls build/iOS/SniperDuel && sudo tar -czf xcode.tgz -C build/iOS SniperDuel
+      - uses: actions/upload-artifact@v4
+        with:
+          name: xcode
+          path: xcode.tgz
+          retention-days: 3
+
+  testflight:
+    needs: ios
+    if: github.event_name == 'workflow_dispatch' && inputs.testflight
+    runs-on: macos-26 # Apple requires the iOS 26 SDK (Xcode 26) for uploads
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: xcode
+      - run: mkdir -p "$RUNNER_TEMP/xc" && tar -xzf xcode.tgz -C "$RUNNER_TEMP/xc" && ls "$RUNNER_TEMP/xc/SniperDuel"
+      - name: Write the API key
+        env:
+          P8: ${{ secrets.APPSTORE_KEY_P8 }}
+          KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          ISSUER: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/asc"
+          printf '%s\n' "$P8" > "$RUNNER_TEMP/asc/key.p8"
+          python3 - "$RUNNER_TEMP/asc/key.p8" "$RUNNER_TEMP/asc/key.json" <<'PY'
+          import json, os, sys
+          p8, out = sys.argv[1], sys.argv[2]
+          json.dump({"key_id": os.environ["KEY_ID"], "issuer_id": os.environ["ISSUER"],
+                     "key": open(p8).read(), "in_house": False}, open(out, "w"))
+          PY
+          pass=$(printf 'svs-match:%s:%s' "$KEY_ID" "$P8" | shasum -a 256 | cut -c1-48)
+          echo "::add-mask::$pass"
+          echo "MATCH_PASSWORD=$pass" >> "$GITHUB_ENV"
+      # Same signing as testflight.yml: match keeps the certificate and App Store profile encrypted
+      # on the `certificates` branch and installs them into a throwaway keychain.
+      - name: Fetch the signing certificate and profile
+        env:
+          MATCH_GIT_URL: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          KC="$RUNNER_TEMP/signing.keychain-db"
+          KC_PASS=$(uuidgen)
+          security create-keychain -p "$KC_PASS" "$KC"
+          security set-keychain-settings -lut 3600 "$KC"
+          security unlock-keychain -p "$KC_PASS" "$KC"
+          security list-keychains -d user -s "$KC" "$HOME/Library/Keychains/login.keychain-db"
+          fastlane match appstore --readonly false --git_url "$MATCH_GIT_URL" --git_branch certificates \
+            --app_identifier com.snipervssniper.game \
+            --api_key_path "$RUNNER_TEMP/asc/key.json" --team_id "${{ secrets.APPLE_TEAM_ID }}" \
+            --keychain_name "$KC" --keychain_password "$KC_PASS"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PASS" "$KC" > /dev/null
+      # Only the app target gets the App Store profile; UnityFramework is signed when embedded.
+      - name: Point the app target at the profile
+        working-directory: ${{ runner.temp }}/xc/SniperDuel
+        run: |
+          fastlane run update_code_signing_settings path:Unity-iPhone.xcodeproj targets:Unity-iPhone \
+            use_automatic_signing:false team_id:"${{ secrets.APPLE_TEAM_ID }}" \
+            code_sign_identity:"Apple Distribution" profile_name:"match AppStore com.snipervssniper.game"
+          fastlane run update_code_signing_settings path:Unity-iPhone.xcodeproj targets:UnityFramework \
+            use_automatic_signing:false team_id:"${{ secrets.APPLE_TEAM_ID }}" code_sign_identity:"Apple Distribution"
+      - name: Archive (signed)
+        working-directory: ${{ runner.temp }}/xc/SniperDuel
+        run: >
+          "$GITHUB_WORKSPACE/apps/client/ios/ci/watchdog.sh" 2400
+          xcodebuild -project Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release
+          -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/Game.xcarchive"
+          CURRENT_PROJECT_VERSION="${{ github.run_number }}"
+          archive
+      - name: Upload to TestFlight
+        run: >
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/Game.xcarchive"
+          -exportOptionsPlist apps/client/ios/ci/ExportOptions.plist
+          -exportPath "$RUNNER_TEMP/export"
+          -authenticationKeyPath "$RUNNER_TEMP/asc/key.p8"
+          -authenticationKeyID "${{ secrets.APPSTORE_KEY_ID }}"
+          -authenticationKeyIssuerID "${{ secrets.APPSTORE_ISSUER_ID }}"
+      - name: Remove the API key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/asc"

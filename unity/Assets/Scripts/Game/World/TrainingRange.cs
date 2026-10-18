@@ -1,0 +1,251 @@
+using System.Collections.Generic;
+using SniperDuel.Rules;
+using UnityEngine;
+
+namespace SniperDuel.Game.World
+{
+    /// <summary>
+    /// Training Lane as a proper rifle range: gravel firing pads with rubber mats at every spot and
+    /// shooting benches under a canopy behind each line, concrete barricades for cover, earth side
+    /// berms and a bare-earth backstop behind each end, a range hut flying the red flag, wooded hills
+    /// beyond. The targets are set out for practice by RangeTargets, every one of them live.
+    /// </summary>
+    public static class TrainingRange
+    {
+        /// <summary>Lane distances of the two firing lines (the middle of each side's spots) and the service road's x.</summary>
+        public const float LineA = 70, LineB = 581, RoadX = 84;
+        /// <summary>Where the hedge runs, just outside the foot of each side berm (|x|).</summary>
+        const float Hedge = 110;
+
+        public static void Build(DuelMap map, Transform root, List<Flag> flags)
+        {
+            var ground = map.Terrain ?? map.Ground;
+            float Y(float x, float s) => (float)ground(x, -s);
+            var rng = new System.Random(650);
+            var lane = Biomes.LaneOf(map);
+            float length = (float)map.LaneLength;
+
+            void Step(string what) => Trail.Mark("range: " + what);
+            Step("cover");
+            Biomes.Cover(map, root, new Biomes.CoverKit { Rock = Library.Rock(3), Default = CoverLook.Concrete });
+
+            Step("firing lines");
+            FiringLines(map, root, Y);
+            Step("berms");
+            Berms(root, Y, length);
+            Step("huts");
+
+            // A range hut behind each line with the red flag up: the range is live.
+            var hut = new MeshBuilder();
+            var tin = new MeshBuilder();
+            foreach (var (x, s) in new[] { (-78f, LineA - 40), (72f, LineB + 36) })
+            {
+                float y = Y(x, s);
+                hut.Box(new Vector3(x, y + 1.2f, s), new Vector3(4.2f, 3.2f, 3.2f));
+                tin.Box(new Vector3(x, y + 2.9f, s), new Vector3(5f, 0.12f, 4f), Quaternion.Euler(6, 0, 0));
+                var flag = Flag.Create(new Vector3(x + 3.6f, y, s), 6, new Color(0.8f, 0.06f, 0.05f), root);
+                flags.Add(flag);
+            }
+            hut.Object("Range huts", Library.Surface("concrete_wall_008", 4, new Color(0.86f, 0.84f, 0.78f)), root);
+            tin.Object("Range hut roofs", Library.Surface("corrugated_iron_02", 2, new Color(0.7f, 0.72f, 0.74f)), root);
+
+            Step("woods");
+            Woods(map, root, rng, lane, length, Y);
+            Step("hills");
+
+            Biomes.Horizon(root, length / 2, new Biomes.Hills
+            {
+                MinHeight = 60,
+                MaxHeight = 230,
+                Rock = Library.Surface("sparse_grass", 50, new Color(0.72f, 0.82f, 0.62f)),
+                Seed = 65,
+                Ground = Y,
+            });
+        }
+
+        /// <summary>
+        /// Mixed woods on the hills either side (broadleaf and spruce, as cut-out pictures in clumps),
+        /// a hedge of shrubs along the outside of each side berm, rough grass in clumps everywhere off
+        /// the mown lane, and the clutter of a working range by the huts: old tyres, oil drums and a
+        /// generator.
+        /// </summary>
+        static void Woods(DuelMap map, Transform root, System.Random rng, Biomes.Lane lane, float length, System.Func<float, float, float> Y)
+        {
+            float R(float a, float b) => a + (float)rng.NextDouble() * (b - a);
+            var flora = new Wilds.Flora()
+                .Kind("island_tree_01", 13).Kind("island_tree_02", 12).Kind("island_tree_03", 12).Kind("tree_small_02", 8).Kind("spruce", 19)
+                .Kind("shrub_01", 1.6f).Kind("shrub_02", 1.5f).Kind("shrub_03", 1.5f).Kind("shrub_04", 1.3f)
+                .Kind("grass_medium_01", 0.55f).Kind("grass_medium_02", 0.5f);
+            var trees = flora.Available("island_tree_02", "island_tree_03", "spruce", "island_tree_01", "spruce", "tree_small_02");
+            var shrubs = flora.Available("shrub_01", "shrub_02", "shrub_03", "shrub_04");
+            var grass = flora.Available("grass_medium_01", "grass_medium_02", "grass_bermuda_01");
+            Wilds.Clumps(flora, rng, trees, 280, 18, 45, () =>
+            {
+                float x = (rng.Next(2) == 0 ? -1 : 1) * R(125, 1300), s = R(-900, length + 900);
+                return Mathf.PerlinNoise(x * 0.006f + 1.7f, s * 0.006f + 4.2f) > 0.42f ? new Vector2(x, s) : (Vector2?)null;
+            }, (x, s) => !lane.Contains(x, s, 70) && Mathf.Abs(x - RoadX) > 8, Y, 0.75f, 1.3f, 0.3f);
+            // A hedge line along the outside foot of each side berm.
+            foreach (float side in new[] { -1f, 1f })
+                for (float s = LineA - 60; s < LineB + 60 && shrubs.Length > 0; s += R(2.5f, 5))
+                {
+                    float x = side * R(Hedge - 2, Hedge + 3);
+                    if (Mathf.Abs(x - RoadX) < 6) continue;
+                    flora.Plant(shrubs[rng.Next(shrubs.Length)], new Vector3(x, Y(x, s) - 0.05f, s), R(0, 360), R(0.8f, 1.4f), rng.Next(2) == 0);
+                }
+            Wilds.Clumps(flora, rng, grass, 400, 10, 6, () =>
+            {
+                float x = R(-500, 500), s = R(-300, length + 300);
+                return !lane.Contains(x, s, 4) && Biomes.NearestSpot(map, x, s) > 12 ? new Vector2(x, s) : (Vector2?)null;
+            }, (x, s) => !lane.Contains(x, s, 2) && Mathf.Abs(x - RoadX) > 4, Y, 0.7f, 1.3f, 0.03f);
+            // Clover and short grass in the mown lane, a hand high.
+            Wilds.LaneCarpet(flora, map, lane, rng, grass, 20000, 0.22f, 0.3f, Y);
+            Wilds.LanePatches(flora, map, lane, rng, grass, 600, 22, 1.5f, 0.26f, 0.32f, Y);
+            Wilds.SpotTufts(flora, map, rng, grass, 8000, 0.14f, 0.18f, Y);
+            Trail.Mark("range: plant meshes");
+            flora.Build(root, "Range woods");
+            Trail.Mark("range: stones");
+            Wilds.LaneStones(root, map, lane, rng, Library.Rock(0.9f, new Color(0.74f, 0.72f, 0.68f)), 6000, Y, null, 0.3f);
+
+            Trail.Mark("range: clutter");
+            // Clutter round the range huts.
+            var tinted = new Dictionary<Material, Material>();
+            foreach (var (hx, hs) in new[] { (-78f, LineA - 40), (72f, LineB + 36) })
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    float x = hx - 3.5f + R(-0.3f, 0.3f), s = hs + 2.6f - i * 0.9f;
+                    Wilds.Rock("old_tyre", new Vector3(x, Y(x, s), s), R(0, 360), 0.75f, root, null, tinted, 0);
+                }
+                for (int i = 0; i < 3; i++)
+                {
+                    float x = hx + 2.6f + i * 0.7f, s = hs - 2.3f + R(-0.2f, 0.2f);
+                    Wilds.Rock(rng.Next(2) == 0 ? "Barrel_02" : "barrel_03", new Vector3(x, Y(x, s), s), R(0, 360), 0.62f, root, null, tinted, 0);
+                }
+                float gx = hx - 2.8f, gs = hs - 2.4f;
+                Wilds.Rock("portable_generator", new Vector3(gx, Y(gx, gs), gs), R(0, 360), 0.9f, root, null, tinted, 0);
+            }
+        }
+
+        /// <summary>A rubber mat under each spot, benches under a canopy behind each line.</summary>
+        static void FiringLines(DuelMap map, Transform root, System.Func<float, float, float> Y)
+        {
+            var mats = new MeshBuilder();
+            var wood = new MeshBuilder();
+            var steel = new MeshBuilder();
+            var roof = new MeshBuilder();
+            var models = new List<string>(Figure.RifleModels);
+            int shown = 0;
+            foreach (var side in new[] { Side.A, Side.B })
+            {
+                // The shooter lies behind the spot, toward his own rear.
+                float back = side == Side.A ? -1 : 1;
+                foreach (var p in map.Spots[side])
+                {
+                    var spot = Library.ToUnity(p);
+                    mats.Box(new Vector3(spot.x, spot.y + 0.015f, spot.z + back * 0.7f), new Vector3(1.0f, 0.03f, 2.1f));
+                }
+                float line = side == Side.A ? LineA : LineB;
+                float benchS = line + back * 22;
+                for (int i = 0; i < 5; i++)
+                {
+                    float x = -36 + i * 18;
+                    float y = Y(x, benchS);
+                    // Table top on a steel frame, a stool behind it.
+                    wood.Box(new Vector3(x, y + 0.8f, benchS), new Vector3(1.0f, 0.06f, 1.5f));
+                    foreach (var (dx, dz) in new[] { (-0.4f, -0.6f), (0.4f, -0.6f), (-0.4f, 0.6f), (0.4f, 0.6f) })
+                        steel.Box(new Vector3(x + dx, y + 0.38f, benchS + dz), new Vector3(0.06f, 0.8f, 0.06f));
+                    wood.Box(new Vector3(x, y + 0.48f, benchS + back * 1.2f), new Vector3(0.5f, 0.05f, 0.4f));
+                    // A rifle laid on each bench, muzzle down-range: every model the armoury has.
+                    Trail.Mark("range: bench rifle " + models[shown % models.Count]);
+                    var gun = Figure.Rifle(root, models[shown++ % models.Count]);
+                    gun.transform.rotation = Quaternion.Euler(0, side == Side.A ? 0 : 180, 0);
+                    gun.transform.position = new Vector3(x + 0.1f, y + 0.83f, benchS);
+                    Library.Ground(gun, y + 0.83f);
+                    steel.Box(new Vector3(x, y + 0.23f, benchS + back * 1.2f), new Vector3(0.06f, 0.46f, 0.06f));
+                }
+                // Canopy over the benches: steel posts, a shallow tin roof.
+                float cy = Y(0, benchS);
+                for (float x = -45; x <= 45; x += 15)
+                {
+                    steel.Box(new Vector3(x, cy + 1.6f, benchS - 3.5f), new Vector3(0.14f, 3.6f, 0.14f));
+                    steel.Box(new Vector3(x, cy + 1.6f, benchS + 3.5f), new Vector3(0.14f, 3.6f, 0.14f));
+                }
+                roof.Box(new Vector3(0, cy + 3.5f, benchS), new Vector3(92, 0.1f, 8.4f), Quaternion.Euler(-back * 4, 0, 0));
+            }
+            mats.Object("Firing mats", Library.Plain(new Color(0.1f, 0.13f, 0.1f), 0.15f), root, shadows: false);
+            wood.Object("Benches", Library.Surface("weathered_planks", 1.5f, new Color(0.8f, 0.7f, 0.58f)), root);
+            steel.Object("Range steel", Library.Plain(new Color(0.3f, 0.32f, 0.33f), 0.4f, 0.7f), root);
+            roof.Object("Canopies", Library.Surface("corrugated_iron_02", 2, new Color(0.75f, 0.77f, 0.8f)), root);
+        }
+
+        /// <summary>
+        /// Earth berms: long grassed side berms beyond the target stands, and a bare-earth backstop
+        /// across each end behind the zones, built as trapezoid sections that follow the ground.
+        /// </summary>
+        static void Berms(Transform root, System.Func<float, float, float> Y, float length)
+        {
+            var grass = new MeshBuilder();
+            var earth = new MeshBuilder();
+            foreach (float side in new[] { -1f, 1f })
+                Berm(grass, Y, true, side * 100, -60, length + 60, 14, 3, 3.5f);
+            Berm(earth, Y, false, length + 32, -130, 130, 30, 7, 9);
+            Berm(earth, Y, false, -46, -130, 130, 28, 6, 7);
+            grass.Object("Side berms", Library.Surface("sparse_grass", 8, new Color(0.9f, 1f, 0.82f)), root);
+            earth.Object("Backstops", Library.Surface("brown_mud_leaves_01", 7, new Color(0.6f, 0.52f, 0.44f)), root);
+        }
+
+        /// <summary>
+        /// One berm: its crest runs along s (alongS) at x = `at`, or along x at s = `at`, from `from` to
+        /// `to`; `baseW` wide at the foot, `topW` at the crest, `height` above the ground under the crest.
+        /// </summary>
+        static void Berm(MeshBuilder mb, System.Func<float, float, float> Y, bool alongS, float at, float from, float to, float baseW, float topW, float height)
+        {
+            Vector3 P(float along, float across, float y) => alongS ? new Vector3(at + across, y, along) : new Vector3(along, y, at + across);
+            float G(float along, float across) => alongS ? Y(at + across, along) : Y(along, at + across);
+            const float Step = 8;
+            Vector3[]? prev = null;
+            for (float u = from; u <= to + 0.01f; u += Step)
+            {
+                float crest = G(u, 0) + height;
+                var sec = new[]
+                {
+                    P(u, -baseW / 2, G(u, -baseW / 2) - 0.6f),
+                    P(u, -topW / 2, crest),
+                    P(u, topW / 2, crest),
+                    P(u, baseW / 2, G(u, baseW / 2) - 0.6f),
+                };
+                if (prev == null)
+                {
+                    EndCap(mb, sec, alongS ? -1 : 1);
+                }
+                else
+                {
+                    for (int k = 0; k < 3; k++)
+                    {
+                        // Quad between this section and the last, outward-facing.
+                        Vector3 a = prev[k], b = prev[k + 1], c = sec[k + 1], d = sec[k];
+                        var nm = Vector3.Cross(b - a, c - a);
+                        if (nm.y < 0) { mb.Triangle(a, c, b); mb.Triangle(a, d, c); }
+                        else { mb.Triangle(a, b, c); mb.Triangle(a, c, d); }
+                    }
+                }
+                prev = sec;
+            }
+            if (prev != null) EndCap(mb, prev, alongS ? 1 : -1);
+        }
+
+        /// <summary>Closes a berm's end; `dir` is the direction the cap faces along the berm.</summary>
+        static void EndCap(MeshBuilder mb, Vector3[] sec, float dir)
+        {
+            void Tri(Vector3 a, Vector3 b, Vector3 c)
+            {
+                var nm = Vector3.Cross(b - a, c - a);
+                var axis = Vector3.Cross(sec[3] - sec[0], Vector3.up);
+                if (Vector3.Dot(nm, axis) * dir < 0) mb.Triangle(a, c, b);
+                else mb.Triangle(a, b, c);
+            }
+            Tri(sec[0], sec[1], sec[2]);
+            Tri(sec[0], sec[2], sec[3]);
+        }
+    }
+}

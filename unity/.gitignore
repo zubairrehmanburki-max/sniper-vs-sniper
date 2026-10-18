@@ -1,0 +1,27 @@
+# Unity
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+*.csproj
+*.sln
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+.vs/
+.idea/
+# Third-party assets, downloaded at build time by .github/actions/unity-assets (see unity/assets.json)
+/Assets/Resources/TP/
+/Assets/Resources/TP.meta
+# dotnet test output
+/CoreTests/bin/
+/CoreTests/obj/
+!/CoreTests/SniperDuel.CoreTests.csproj
+# Written by Build.WriteBuildInfo at build time
+/Assets/Resources/BuildInfo.txt
+/Assets/Resources/BuildInfo.txt.meta

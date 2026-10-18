@@ -1,0 +1,266 @@
+{
+  "$comment": "Every gameplay-visible number lives here (GAME_PLAN.md, handoff notes). Units are SI unless the key says otherwise. Bullet data are published figures; see config/README.md for sources and deviations from the plan.",
+  "ballistics": {
+    "dtSeconds": 0.0005,
+    "integrator": "rk4",
+    "sightHeightM": 0.045,
+    "zeroRangeM": 100,
+    "muzzleVelocitySdMps": 4,
+    "transonic": {
+      "machThreshold": 1.2,
+      "sigmaRadPerSqrtS": 0.004
+    },
+    "effects": {
+      "spinDrift": true,
+      "aerodynamicJump": false,
+      "coriolis": false,
+      "transonicDispersion": true
+    }
+  },
+  "rifles": [
+    {
+      "id": "bolt308",
+      "name": "Bolt-action .308",
+      "class": "starter",
+      "cartridge": "7.62x51 / 175 gr match (M118LR class)",
+      "dragModel": "G7",
+      "bc": 0.243,
+      "massKg": 0.01134,
+      "diameterM": 0.00782,
+      "lengthM": 0.0315,
+      "muzzleVelocityMps": 790,
+      "twistM": 0.2858,
+      "sweetSpotM": [
+        300,
+        700
+      ],
+      "coldBoreShiftMrad": {
+        "elevation": 0.1,
+        "windage": 0.0
+      }
+    },
+    {
+      "id": "bolt65cm",
+      "name": "Bolt-action 6.5 Creedmoor",
+      "class": "precision",
+      "cartridge": "6.5 Creedmoor / 140 gr match",
+      "dragModel": "G7",
+      "bc": 0.315,
+      "massKg": 0.00907,
+      "diameterM": 0.00671,
+      "lengthM": 0.0353,
+      "muzzleVelocityMps": 825,
+      "twistM": 0.2032,
+      "sweetSpotM": [
+        400,
+        900
+      ],
+      "coldBoreShiftMrad": {
+        "elevation": 0.1,
+        "windage": -0.05
+      }
+    },
+    {
+      "id": "mag338",
+      "name": "Magnum .338",
+      "class": "magnum",
+      "cartridge": ".338 Lapua Magnum / 250 gr",
+      "dragModel": "G7",
+      "bc": 0.322,
+      "massKg": 0.0162,
+      "diameterM": 0.00861,
+      "lengthM": 0.0395,
+      "muzzleVelocityMps": 900,
+      "twistM": 0.254,
+      "sweetSpotM": [
+        600,
+        1200
+      ],
+      "coldBoreShiftMrad": {
+        "elevation": 0.15,
+        "windage": 0.05
+      }
+    },
+    {
+      "id": "am50",
+      "name": "Anti-materiel .50",
+      "class": "anti-materiel",
+      "cartridge": ".50 BMG / 660 gr",
+      "dragModel": "G7",
+      "bc": 0.36,
+      "massKg": 0.0428,
+      "diameterM": 0.01295,
+      "lengthM": 0.0584,
+      "muzzleVelocityMps": 850,
+      "twistM": 0.381,
+      "sweetSpotM": [
+        800,
+        1500
+      ],
+      "coldBoreShiftMrad": {
+        "elevation": 0.2,
+        "windage": 0.0
+      }
+    }
+  ],
+  "scope": {
+    "minZoom": 5,
+    "maxZoom": 25,
+    "fovAt1xDeg": 30,
+    "clickMrad": 0.1,
+    "maxElevationMrad": 30,
+    "maxWindageMrad": 10,
+    "eyeFovDeg": 60
+  },
+  "sway": {
+    "$comment": "Aim wander is a figure-8 (Lissajous 1:2). Amplitudes in mrad.",
+    "amplitudeMrad": {
+      "prone": 0.35,
+      "crouch": 1.1,
+      "standing": 2.6
+    },
+    "bipodFactor": 0.5,
+    "periodSeconds": 4.5,
+    "holdBreath": {
+      "steadySeconds": 5,
+      "steadyFactor": 0.15,
+      "recoverSeconds": 4,
+      "strainGrowthPerSecond": 0.6,
+      "maxStrainFactor": 3
+    },
+    "eyeHeightM": {
+      "prone": 0.3,
+      "crouch": 1.0,
+      "standing": 1.6
+    }
+  },
+  "target": {
+    "$comment": "Human-size steel silhouette, also the opponent model for mil ranging.",
+    "widthM": 0.5,
+    "heightM": 0.95,
+    "headM": 0.25
+  },
+  "practiceRange": {
+    "targetsM": [
+      300,
+      600,
+      900
+    ],
+    "laneWidthM": 120,
+    "windZonesM": [
+      300,
+      600
+    ],
+    "wind": {
+      "baseSpeedMps": [
+        2,
+        7
+      ],
+      "directionJitterDeg": 40,
+      "gustAmplitude": 0.3,
+      "gustPeriodSeconds": 10,
+      "zoneSpeedJitter": 0.35
+    },
+    "atmosphere": {
+      "altitudeM": 300,
+      "temperatureC": 22,
+      "humidity": 0.45
+    },
+    "latitude": 35,
+    "speedOfSoundForAudioMps": 343,
+    "firingPointHeightM": 1.2
+  },
+  "softCover": {
+    "$comment": "Sheet metal and wood: a hit carrying at least minEnergyJ goes through, keeping energyKeep of its energy (GAME_PLAN: ~30% loss). The .338 and .50 can punish someone hiding behind it; the .308 and 6.5 only up close.",
+    "minEnergyJ": 2500,
+    "energyKeep": 0.7,
+    "maxLayers": 1
+  },
+  "rules": {
+    "$comment": "Match rules (GAME_PLAN core loop + damage model). chestKillEnergyJ deviates from the plan's 2500 J: at 2500 J a .308 could never kill with a chest hit beyond ~150 m. See config/README.md.",
+    "setupSeconds": 60,
+    "moveSeconds": 30,
+    "shotSeconds": 30,
+    "killsToWin": 2,
+    "suddenDeathAfterPairs": 16,
+    "suddenDeathWindDecayPerPair": 0.25,
+    "suddenDeathZoneShrinkPerPair": 0.15,
+    "suddenDeathNoProneAfterPairs": 2,
+    "suddenDeathStandingAfterPairs": 4,
+    "minZoneDepthM": 8,
+    "chestKillEnergyJ": 1500,
+    "woundsToDown": 2,
+    "nearMissRadiusM": 1.0,
+    "forfeitAfterIdlePhases": 2,
+    "roundBreakSeconds": 8,
+    "reconnectGraceSeconds": 60,
+    "roundWindDrift": 0.25
+  },
+  "player": {
+    "silhouette": {
+      "standing": {
+        "heightM": 1.75,
+        "widthM": 0.5,
+        "headM": 0.25
+      },
+      "crouch": {
+        "heightM": 0.95,
+        "widthM": 0.5,
+        "headM": 0.25
+      },
+      "prone": {
+        "heightM": 0.45,
+        "widthM": 0.55,
+        "headM": 0.25
+      }
+    },
+    "moveSpeedMps": 3.0,
+    "wound": {
+      "swayFactor": 1.4,
+      "moveSpeedFactor": 0.6
+    }
+  },
+  "bot": {
+    "$comment": "Difficulty is error on the bot's inputs, never on physics (GAME_PLAN PvE table).",
+    "thinkSeconds": [
+      8,
+      25
+    ],
+    "easy": {
+      "rangeErrorFrac": 0.08,
+      "windMode": "half-station",
+      "swayFireFactor": 1.0,
+      "spotChance": {
+        "standing": 0.9,
+        "crouch": 0.5,
+        "prone": 0.25
+      },
+      "positions": 3,
+      "relocateAfterFiring": false
+    },
+    "medium": {
+      "rangeErrorFrac": 0.03,
+      "windMode": "station",
+      "swayFireFactor": 0.35,
+      "spotChance": {
+        "standing": 0.97,
+        "crouch": 0.75,
+        "prone": 0.45
+      },
+      "positions": 0,
+      "relocateAfterFiring": true
+    },
+    "hard": {
+      "rangeErrorFrac": 0.01,
+      "windMode": "layered",
+      "swayFireFactor": 0.1,
+      "spotChance": {
+        "standing": 1.0,
+        "crouch": 0.9,
+        "prone": 0.65
+      },
+      "positions": 0,
+      "relocateAfterFiring": true
+    }
+  }
+}

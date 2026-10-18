@@ -1,0 +1,34 @@
+name: Asset previews
+
+# Candidate free assets for review: preview images (tools/asset-previews/urls*.json) go to the
+# `screens` branch under asset-previews/; the models and packs themselves (glbs.json, pages.json)
+# go to the `asset-candidates` prerelease so they can be inspected offline.
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/project-thread-e5f8vx]
+    paths: [tools/asset-previews/**, .github/workflows/asset-previews.yml]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: asset-previews
+  cancel-in-progress: true
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download candidates
+        env:
+          SKETCHFAB_API_TOKEN: ${{ secrets.SKETCHFAB_API_TOKEN }}
+        run: python3 tools/asset-previews/download.py "$RUNNER_TEMP/dl"
+      - name: Publish to the asset-candidates prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat "$RUNNER_TEMP/dl/download-report.json"
+          gh release view asset-candidates >/dev/null 2>&1 || gh release create asset-candidates --prerelease --title "Asset candidates" --notes "Free assets downloaded for inspection (not shipped)." --target "$GITHUB_SHA"
+          gh release upload asset-candidates "$RUNNER_TEMP"/dl/* --clobber
