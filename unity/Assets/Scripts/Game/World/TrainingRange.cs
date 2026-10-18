@@ -6,9 +6,9 @@ namespace SniperDuel.Game.World
 {
     /// <summary>
     /// Training Lane as a proper rifle range: gravel firing pads with rubber mats at every spot and
-    /// shooting benches under a canopy behind each line, concrete barricades for cover, steel gongs and
-    /// silhouettes on A-frames, earth side berms and a bare-earth backstop behind each end, a range
-    /// hut flying the red flag, wooded hills beyond.
+    /// shooting benches under a canopy behind each line, concrete barricades for cover, earth side
+    /// berms and a bare-earth backstop behind each end, a range hut flying the red flag, wooded hills
+    /// beyond. The targets are set out for practice by RangeTargets, every one of them live.
     /// </summary>
     public static class TrainingRange
     {
@@ -31,8 +31,6 @@ namespace SniperDuel.Game.World
 
             Step("firing lines");
             FiringLines(map, root, Y);
-            Step("targets");
-            Targets(root, Y);
             Step("berms");
             Berms(root, Y, length);
             Step("huts");
@@ -178,59 +176,6 @@ namespace SniperDuel.Game.World
             wood.Object("Benches", Library.Surface("weathered_planks", 1.5f, new Color(0.8f, 0.7f, 0.58f)), root);
             steel.Object("Range steel", Library.Plain(new Color(0.3f, 0.32f, 0.33f), 0.4f, 0.7f), root);
             roof.Object("Canopies", Library.Surface("corrugated_iron_02", 2, new Color(0.75f, 0.77f, 0.8f)), root);
-        }
-
-        /// <summary>
-        /// Steel: gongs and torso silhouettes hung from A-frames along both edges of the lane, and a row
-        /// in front of each backstop, all well outside the lines between the spots.
-        /// </summary>
-        static void Targets(Transform root, System.Func<float, float, float> Y)
-        {
-            var frame = new MeshBuilder();
-            var white = new MeshBuilder();
-            var orange = new MeshBuilder();
-            var stands = new List<(float x, float s, float facing)>();
-            for (int k = 1; k <= 5; k++)
-            {
-                stands.Add((-70, LineA + 100 * k - 30, -1));
-                stands.Add((70, LineB - 100 * k + 30, 1));
-            }
-            foreach (float x in new[] { -88f, -72f, 72f, 88f })
-            {
-                stands.Add((x, 660, -1));
-                stands.Add((x, -18, 1));
-            }
-            int n = 0;
-            foreach (var (x, s, facing) in stands)
-            {
-                float y = Y(x, s);
-                // Two legs each side splayed along the lane, a cross bar at 1.9 m.
-                var l = new Vector3(x - 1.2f, y + 1.9f, s);
-                var r = new Vector3(x + 1.2f, y + 1.9f, s);
-                foreach (var top in new[] { l, r })
-                {
-                    frame.Beam(top + new Vector3(0, -2.1f, -0.6f), top, 0.07f, 0.07f);
-                    frame.Beam(top + new Vector3(0, -2.1f, 0.6f), top, 0.07f, 0.07f);
-                }
-                frame.Beam(l, r, 0.08f, 0.08f);
-                // Alternate a round gong and a torso silhouette, hung on short chains.
-                bool gong = n++ % 2 == 0;
-                var paint = n % 3 == 0 ? orange : white;
-                for (int i = -1; i <= 1; i += 2)
-                {
-                    float hx = x + i * 0.55f;
-                    frame.Beam(new Vector3(hx, y + 1.9f, s), new Vector3(hx, y + 1.55f, s), 0.015f, 0.015f);
-                    if (gong) paint.Tube(new Vector3(hx, y + 1.25f, s - 0.01f), new Vector3(hx, y + 1.25f, s + 0.01f), 0.3f, 16);
-                    else
-                    {
-                        paint.Box(new Vector3(hx, y + 1.18f, s), new Vector3(0.45f, 0.72f, 0.012f));
-                        paint.Box(new Vector3(hx, y + 1.62f, s), new Vector3(0.16f, 0.16f, 0.012f));
-                    }
-                }
-            }
-            frame.Object("Target frames", Library.Plain(new Color(0.2f, 0.21f, 0.2f), 0.3f, 0.6f), root);
-            white.Object("Steel targets", Library.Plain(new Color(0.88f, 0.88f, 0.84f), 0.35f, 0.2f), root);
-            orange.Object("Steel targets orange", Library.Plain(new Color(0.95f, 0.42f, 0.08f), 0.35f, 0.2f), root);
         }
 
         /// <summary>

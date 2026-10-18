@@ -307,7 +307,7 @@ namespace SniperDuel.Game
 
             var map = Maps.ById(MatchMap);
             play.Text("title", map.Name.ToUpperInvariant());
-            play.Text("blurb", training ? "Steel plates down a range lane in layered wind. Just you and the targets, no bot and no clock. Nothing here touches your rating or career." : map.Blurb ?? "");
+            play.Text("blurb", training ? "Steel, paper, bottles, cans, clays and a mover down a range lane in layered wind. Just you and the targets, no bot and no clock. Nothing here touches your rating or career." : map.Blurb ?? "");
             play.Text("range", Catalog.MapInfo(map.Id).region);
             var c = map.Climate;
             play.Text("wind", $"{c.WindSpeedMps[0]:0}–{c.WindSpeedMps[1]:0} m/s");

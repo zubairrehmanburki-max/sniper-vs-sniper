@@ -52,6 +52,10 @@ namespace SniperDuel.Game
                 new Clip("Wood", Wood(23), Rate),
                 new Clip("Water", Splash(24), Rate),
                 new Clip("Ricochet", Ricochet(25), Rate),
+                new Clip("Glass", Glass(32), Rate),
+                new Clip("Tin", Tin(33), Rate),
+                new Clip("Clay", Clay(34), Rate),
+                new Clip("Pop", Pop(35), Rate),
                 new Clip("KillImpact", KillImpact(26), Rate),
                 new Clip("KillWhoosh", KillWhoosh(27), BedRate),
                 new Clip("KillDrone", KillDrone(28), BedRate),
@@ -703,6 +707,50 @@ namespace SniperDuel.Game
             Burst(d, Rate, 0, 2.2f, rng, 520, 2.5f, 0.0002f, 0.035f);
             Burst(d, Rate, 0, 1.6f, rng, 1250, 3f, 0.0001f, 0.02f);
             Grains(d, Rate, 0.004f, 0.15f, 0.6f, rng, 160, 2000, 5000, 0.05f, 0.7f);
+            return Finish(d, Rate);
+        }
+
+        /// <summary>A bottle bursting: a sharp crack, then the shards' bright tinkle raining down.</summary>
+        static float[] Glass(int seed)
+        {
+            var rng = new Rng(seed);
+            var d = Make(1.1f, Rate);
+            Burst(d, Rate, 0, 1.2f, rng, 4200, 1.5f, 0.00005f, 0.006f);
+            Ring(d, Rate, 0, 0.25f, rng, 0.3f, (3150, 0.03f, 1), (5230, 0.02f, 0.7f), (7480, 0.015f, 0.5f));
+            Grains(d, Rate, 0.01f, 0.9f, 0.6f, rng, 260, 3500, 9000, 0.25f, 3f);
+            return Finish(d, Rate, 0.1f);
+        }
+
+        /// <summary>A tin can: a thin, short clank and the can rattling away.</summary>
+        static float[] Tin(int seed)
+        {
+            var rng = new Rng(seed);
+            var d = Make(0.7f, Rate);
+            Ring(d, Rate, 0, 0.6f, rng, 0.4f, (1480, 0.05f, 1), (2950, 0.035f, 0.6f), (4400, 0.02f, 0.4f));
+            Burst(d, Rate, 0, 0.6f, rng, 2600, 1.2f, 0.0001f, 0.01f);
+            Ring(d, Rate, 0.22f, 0.2f, rng, 0.3f, (1520, 0.03f, 1), (3050, 0.02f, 0.5f));
+            Ring(d, Rate, 0.38f, 0.1f, rng, 0.3f, (1500, 0.025f, 1), (3000, 0.02f, 0.5f));
+            return Finish(d, Rate);
+        }
+
+        /// <summary>A clay pigeon breaking: a dry crack and grit.</summary>
+        static float[] Clay(int seed)
+        {
+            var rng = new Rng(seed);
+            var d = Make(0.6f, Rate);
+            Burst(d, Rate, 0, 1.4f, rng, 2200, 1.1f, 0.00005f, 0.008f);
+            Thump(d, Rate, 0, 0.2f, 500, 220, 0.003f, 0.012f);
+            Grains(d, Rate, 0.004f, 0.35f, 0.45f, rng, 240, 2000, 6000, 0.08f, 0.9f);
+            return Finish(d, Rate);
+        }
+
+        /// <summary>A balloon popping: one hard, bright snap.</summary>
+        static float[] Pop(int seed)
+        {
+            var rng = new Rng(seed);
+            var d = Make(0.35f, Rate);
+            NWave(d, Rate, 0, 0.6f, 1);
+            Burst(d, Rate, 0, 1.0f, rng, 1800, 0.7f, 0.00005f, 0.012f);
             return Finish(d, Rate);
         }
 

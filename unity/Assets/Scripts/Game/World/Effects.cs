@@ -230,6 +230,8 @@ namespace SniperDuel.Game.World
         float t;
         bool landed, impact;
         float water;
+        /// <summary>The target struck draws its own strike (glass, paper, clay): no spark or dust here.</summary>
+        public bool OwnStrike;
         readonly Vector3[] pts = new Vector3[Points];
 
         /// <summary>A round from `outcome`; `visible` draws the bullet and its trace, `impact` the strike where it lands.</summary>
@@ -367,7 +369,7 @@ namespace SniperDuel.Game.World
                 landed = true;
                 if (line != null) line.enabled = false;
                 if (shimmer != null) shimmer.enabled = false;
-                if (!impact) return;
+                if (!impact || (OwnStrike && o.Impact.Kind == ImpactKind.Target)) return;
                 var p = Library.ToUnity(o.Impact.Point);
                 bool splash = o.Verdict == Verdict.Miss && o.Impact.Kind != ImpactKind.Target && p.y <= water + 0.3f;
                 bool steel = o.Verdict == Verdict.Miss && o.Impact.Kind == ImpactKind.Target;

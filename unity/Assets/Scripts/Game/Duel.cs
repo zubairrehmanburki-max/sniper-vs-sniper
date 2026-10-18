@@ -141,9 +141,9 @@ namespace SniperDuel.Game
         Stance planStance;
         int botDelays;
 
-        /// <summary>Solo practice: steel plates down the lane, no bot, no clock, as many shots as you like.</summary>
+        /// <summary>Solo practice: a full range of targets down the lane, no bot, no clock, as many shots as you like.</summary>
         bool solo;
-        Plates? plates;
+        RangeTargets? range;
         int soloShots, soloHits, fields;
 
         /// <summary>The rifle the bot takes into a duel: the starter .308 when easy, the 6.5 Creedmoor at medium, the .338 when hard.</summary>
@@ -201,8 +201,8 @@ namespace SniperDuel.Game
             d.EnterPhase();
             if (solo)
             {
-                Trail.Mark("duel: plates");
-                d.plates = Plates.Create(arena.Root);
+                Trail.Mark("duel: targets");
+                d.range = RangeTargets.Create(arena.Root);
                 d.NewField();
             }
             else d.LookAtEnemy();
@@ -998,14 +998,14 @@ namespace SniperDuel.Game
 
         /// <summary>
         /// A practice shot: the round flies with the rifle, dials, wind and air of the session at
-        /// the plates. A hit rings the steel and swings the plate once the round gets there; with
-        /// every plate rung, a fresh field goes out.
+        /// the range. Once it gets there the target struck reacts (steel rings and swings, glass
+        /// bursts, paper takes a hole and a score); with every target hit, a fresh field goes out.
         /// </summary>
         void FireSolo(Aim aim)
         {
             var me = State.Players[Me];
             var fire = new FireInput { Yaw = aim.Yaw, Pitch = aim.Pitch, DialElevationMrad = elevMrad, DialWindageMrad = windMrad };
-            var o = Practice.ResolvePracticeShot(new ShotRequest
+            var (o, hit) = RangeHits.Shoot(new ShotRequest
             {
                 Map = map,
                 Conditions = Match.ActiveConditions(State),
@@ -1017,33 +1017,33 @@ namespace SniperDuel.Game
                 ShotIndex = soloShots + 1,
                 FireTime = time,
                 ColdBore = soloShots == 0,
-            }, plates!.Shapes, cfg);
+            }, range!.Field, range.Now, cfg);
             soloShots++;
-            World.Effects.Shot(o, true, arena);
+            var flight = World.Effects.Shot(o, true, arena);
+            flight.OwnStrike = hit != null && hit.Mark.Material != MarkMaterial.Steel;
             recoil = 0.004;
             Haptics.Recoil();
             Sound.FireMine();
             float tof = (float)o.Impact.T;
-            float range = (float)Math.Sqrt(Sq(o.Impact.Point.X - o.Eye.X) + Sq(o.Impact.Point.Z - o.Eye.Z));
-            bool steel = o.Impact.Kind == ImpactKind.Target && o.Impact.TargetId != null;
-            Sound.Landed(range, tof, steel ? Sound.Surface.Metal : Sound.SurfaceOf(o, map), o.Seed);
+            float distance = (float)Math.Sqrt(Sq(o.Impact.Point.X - o.Eye.X) + Sq(o.Impact.Point.Z - o.Eye.Z));
+            Sound.Landed(distance, tof, hit != null ? RangeTargets.SurfaceOf(hit.Mark) : Sound.SurfaceOf(o, map), o.Seed);
             resumeAt = time + tof;
             resume = () =>
             {
-                if (!steel || plates == null) return;
-                plates.Strike(o.Impact.TargetId!, o.Impact.Point, o.Impact.Energy);
+                if (hit == null || range == null) return;
+                Call(range.Strike(hit, o.Impact));
                 soloHits++;
-                Call("HIT");
-                if (plates.DownCount == plates.Count) Pause(2.5, NewField);
+                if (range.HitCount == range.Count) Pause(2.5, NewField);
             };
         }
 
-        /// <summary>Sets out a fresh field of plates at new, unannounced ranges and looks down the lane.</summary>
+        /// <summary>Sets out a fresh field at new, unannounced ranges (all in view lying down where you are) and looks down the lane.</summary>
         void NewField()
         {
-            if (plates == null) return;
+            if (range == null) return;
             fields++;
-            plates.Lay(map, Eye(), (int)(State.Seed ^ (uint)(fields * 7919)), cfg);
+            var me = State.Players[Me];
+            range.Lay(map, Combat.EyeOf(me.Position, Stance.Prone, cfg), (int)(State.Seed ^ (uint)(fields * 7919)));
             yaw = 0;
             pitch = 0;
         }
@@ -1052,13 +1052,14 @@ namespace SniperDuel.Game
         void Laser()
         {
             var d = Hits.Rangefind(Eye(), TrueAim(), Targets(), map.Ground, 3000, map.Cover);
+            if (solo && range != null && RangeHits.Rangefind(Eye(), TrueAim(), range.Field, range.Now) is double t && (d == null || t < d)) d = t;
             laserText = d.HasValue ? $"{d.Value:0} m" : "no return";
         }
 
         List<Silhouette> Targets()
         {
             var e = State.Players[Side.B];
-            return solo && plates != null ? new List<Silhouette>(plates.Shapes)
+            return solo ? new List<Silhouette>()
                 : new List<Silhouette> { Combat.SilhouetteFor("B", e.Position, e.Stance, Combat.FacingYaw(Side.B), cfg) };
         }
 
@@ -1248,7 +1249,7 @@ namespace SniperDuel.Game
             var b = State.Players[Side.B].Position;
             double range = Math.Max(20, Math.Sqrt(Sq(b.X - a.X) + Sq(b.Z - a.Z)));
             // In practice, whichever plate the scope is on.
-            if (solo && plates != null && plates.RangeNear(Eye(), yaw, pitch) is double near) range = Math.Max(20, near);
+            if (solo && this.range != null && RangeHits.RangeNear(Eye(), yaw, pitch, this.range.Field) is double near) range = Math.Max(20, near);
             double set = Math.Min(20000, ScopeDials.FocusMetres(focus));
             return Mathf.Clamp01((float)((Math.Abs(Math.Log(set / range)) - 0.12) / 0.8));
         }
@@ -1321,7 +1322,7 @@ namespace SniperDuel.Game
             rig.Raise = 1;
             rig.AimPoint = null;
             rig.Away = 0;
-            if (plates != null) Destroy(plates.gameObject);
+            if (range != null) Destroy(range.gameObject);
             if (ScopeDials.Turned?.Target == (object)this) ScopeDials.Turned = null;
         }
 
@@ -1365,9 +1366,9 @@ namespace SniperDuel.Game
             string score = $"{s.Players.A.Kills} – {s.Players.B.Kills}";
             if (solo)
             {
-                // Plates rung this field, and every shot and hit of the session.
+                // Targets hit this field, and every shot and hit of the session.
                 turn = "PRACTICE";
-                clock = plates != null ? $"{plates.DownCount}/{plates.Count}" : "--";
+                clock = range != null ? $"{range.HitCount}/{range.Count}" : "--";
                 score = $"{soloHits}/{soloShots} HITS";
             }
             Color turnColor = s.Actor == Me || solo ? new Color(0.95f, 0.70f, 0.24f) : new Color(0.90f, 0.28f, 0.23f);

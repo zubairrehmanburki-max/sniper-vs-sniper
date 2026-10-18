@@ -22,7 +22,7 @@ namespace SniperDuel.Game
     public sealed class Sound : MonoBehaviour
     {
         /// <summary>What a bullet hit, for the impact sound.</summary>
-        public enum Surface { None, Flesh, Dirt, Water, Concrete, Metal, Wood }
+        public enum Surface { None, Flesh, Dirt, Water, Concrete, Metal, Wood, Glass, Tin, Clay, Pop }
 
         const float SpeedOfSound = 343;
 
@@ -280,11 +280,15 @@ namespace SniperDuel.Game
                 Surface.Concrete => "Concrete",
                 Surface.Metal => "Metal",
                 Surface.Wood => "Wood",
+                Surface.Glass => "Glass",
+                Surface.Tin => "Tin",
+                Surface.Clay => "Clay",
+                Surface.Pop => "Pop",
                 _ => "Dirt",
             };
             Play(name, level, delay, Jitter(0.06f), far, cutoff);
             // Hard surfaces sometimes send the round whining off; the match seed keeps it fair to replay.
-            float chance = surface switch { Surface.Metal => 0.7f, Surface.Concrete => 0.45f, Surface.Dirt => 0.12f, _ => 0 };
+            float chance = surface switch { Surface.Metal => 0.7f, Surface.Tin => 0.3f, Surface.Concrete => 0.45f, Surface.Dirt => 0.12f, _ => 0 };
             float roll = ((seed * 2654435761u) >> 8) / 16777216f;
             if (roll < chance) Play("Ricochet", level * 0.8f, delay + 0.015f, 0.85f + 0.3f * roll / Mathf.Max(chance, 0.01f), far, cutoff);
         }

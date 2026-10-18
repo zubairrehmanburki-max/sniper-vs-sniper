@@ -552,27 +552,44 @@ namespace SniperDuel.Game
             yield return Shoot(dir, next, "Practice-Hud", 20);
             Destroy(duel.gameObject);
             yield return null;
-            // Through the scope on the third plate of a fresh field, struck in the chest a moment ago.
+            // Through the scope at every stand of a fresh field, then again just after each of its
+            // targets has been struck: steel swinging, glass and clay burst, holes in the paper.
             var map = arena!.Map;
             var spot = map.Spots.A[map.Spots.A.Count / 2];
             var eye = Combat.EyeOf(spot, Stance.Prone, Config);
-            var plates = Plates.Create(arena.Root);
-            plates.Lay(map, eye, 0x5eed, Config);
-            var shapes = plates.Shapes;
-            Debug.Log($"[Capture] practice plates: {string.Join(", ", shapes.Select(x => $"{x.Id} at {-x.Position.Z:0} m, x {x.Position.X:0}"))}");
-            if (shapes.Count > 2)
+            var range = RangeTargets.Create(arena.Root);
+            range.Lay(map, eye, 0x5eed);
+            var field = range.Field;
+            Debug.Log($"[Capture] range: {string.Join(", ", field.Stations.Select(st => $"{st.Kind} at {-(st.Position.Z - eye.Z):0} m, x {st.Position.X:0}"))}");
+            rig.Eye = Library.ToUnity(eye);
+            Time.captureDeltaTime = 1f / 10;
+            for (int i = 0; i < field.Stations.Count; i++)
             {
-                var p = shapes[2];
-                plates.Strike(p.Id, new Vec3(p.Position.X + 0.06, p.Position.Y + 0.5, p.Position.Z), 3000);
-                Frame("Scope");
-                rig.Eye = Library.ToUnity(eye);
-                var to = Library.ToUnity(new Vec3(p.Position.X, p.Position.Y + 0.6, p.Position.Z)) - rig.Eye;
-                rig.Yaw = Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg;
-                rig.Pitch = Mathf.Atan2(to.y, new Vector2(to.x, to.z).magnitude) * Mathf.Rad2Deg;
+                var st = field.Stations[i];
+                var marks = field.Marks.Where(m => m.Station == i).ToList();
+                double far = -(st.Position.Z - eye.Z);
+                double top = marks.Max(m => m.Position.Y + m.Parts.Max(p => p.Bounds().v1));
+                var aim = Library.ToUnity(new Vec3(st.Position.X, (st.Ground + top) / 2 + 0.1, st.Position.Z)) - rig.Eye;
+                rig.Yaw = Mathf.Atan2(aim.x, aim.z) * Mathf.Rad2Deg;
+                rig.Pitch = Mathf.Atan2(aim.y, new Vector2(aim.x, aim.z).magnitude) * Mathf.Rad2Deg;
+                Frame(far > 260 ? "Scope25" : "Scope");
                 ui.Show("Scope");
-                yield return Shoot(dir, next, "Practice-Scope", 8);
+                yield return Shoot(dir, next, $"Range-{st.Kind}", 3);
+                foreach (var m in marks)
+                {
+                    var part = m.Parts[0];
+                    var (u0, u1, v0, v1) = part.Bounds();
+                    double u = (u0 + u1) / 2, v = v0 + 0.45 * (v1 - v0);
+                    if (!part.Contains(u - part.U, v - part.V)) u = part.U;
+                    if (m.Mirrored) u = -u;
+                    var at = RangeHits.PointOn(m, u + 0.02, v, range.Now);
+                    var call = range.Strike(new MarkHit { Mark = m, Part = 0, U = u + 0.02, V = v, Score = 9 }, new Impact { Kind = ImpactKind.Target, Point = at, Energy = 2500 });
+                    Debug.Log($"[Capture] struck {m.Id} {m.Kind}: {call}");
+                }
+                yield return Shoot(dir, next, $"Range-{st.Kind}-Hit", 10);
             }
-            Destroy(plates.gameObject);
+            Debug.Log($"[Capture] range hit {range.HitCount}/{range.Count}");
+            Destroy(range.gameObject);
             ui.HideAll();
             Time.captureDeltaTime = 0;
         }
