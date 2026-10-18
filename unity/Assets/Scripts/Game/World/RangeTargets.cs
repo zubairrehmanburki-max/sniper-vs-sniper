@@ -434,13 +434,17 @@ namespace SniperDuel.Game.World
                 }
                 case "bullseye":
                 {
+                    // The card is a frame round the sheet with a plain back, so no two faces lie one
+                    // over the other: layered faces flicker at range on a depth buffer that isn't reversed.
+                    const float h = 0.275f, z = 0.001f, rim = 0.03f, c = 0.305f;
                     var b = new MeshBuilder();
-                    b.Box(new Vector3(0, 0.305f, 0.004f), new Vector3(0.61f, 0.61f, 0.006f));
+                    b.Box(new Vector3(0, c + h + rim / 2, 0.004f), new Vector3(0.61f, rim, 0.006f));
+                    b.Box(new Vector3(0, c - h - rim / 2, 0.004f), new Vector3(0.61f, rim, 0.006f));
+                    b.Box(new Vector3(-h - rim / 2, c, 0.004f), new Vector3(rim, 2 * h, 0.006f));
+                    b.Box(new Vector3(h + rim / 2, c, 0.004f), new Vector3(rim, 2 * h, 0.006f));
+                    b.Face(new Vector3(-h, c - h, 0.007f), new Vector3(h, c - h, 0.007f), new Vector3(h, c + h, 0.007f), new Vector3(-h, c + h, 0.007f), Vector3.forward);
                     Put(b, "Backer", card, body);
                     var p = new MeshBuilder();
-                    const float h = 0.275f;
-                    // Held a little proud of the backer: two millimetres z-fight at range.
-                    const float z = -0.015f;
                     p.Face(new Vector3(-h, 0.305f - h, z), new Vector3(-h, 0.305f + h, z), new Vector3(h, 0.305f + h, z), new Vector3(h, 0.305f - h, z), Vector2.zero, Vector2.one);
                     Put(p, "Paper", paper, body, false);
                     break;
