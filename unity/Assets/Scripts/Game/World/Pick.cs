@@ -17,6 +17,8 @@ namespace SniperDuel.Game.World
         static MeshFilter[]? filters;
         static Transform? listed;
         static float listedAt = -10;
+        /// <summary>What the last ray met, for the capture log.</summary>
+        public static string LastHit = "";
 
         /// <summary>
         /// Metres along the ray to the first drawn surface under the root, or null for open sky.
@@ -48,6 +50,7 @@ namespace SniperDuel.Game.World
             crossed.Sort((a, b) => a.at.CompareTo(b.at));
             float best = max;
             bool found = false;
+            LastHit = "sky";
             foreach (var (at, mf) in crossed)
             {
                 if (at >= best) break;
@@ -55,6 +58,7 @@ namespace SniperDuel.Game.World
                 {
                     best = t;
                     found = true;
+                    LastHit = $"{mf.name} ({mf.GetComponent<Renderer>().sharedMaterial?.name}) at {t:0.0} m";
                 }
             }
             return found ? best : (float?)null;

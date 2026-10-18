@@ -531,9 +531,11 @@ namespace SniperDuel.Game
                 for (int f = 0; f < 3; f++) yield return null;
                 duel.CaptureAim(yaw + dy, pitch + dp);
                 yield return Shoot(dir, next, $"Cross-{label}-Hip", 30);
+                Debug.Log($"[Capture] crosshair {label} hip: {duel.CaptureProbe()}");
                 duel.CaptureScope();
                 yield return Shoot(dir, next, $"Cross-{label}-Glide", 6);
                 yield return Shoot(dir, next, $"Cross-{label}-Scope", 34);
+                Debug.Log($"[Capture] crosshair {label} scope: {duel.CaptureProbe()}");
                 Debug.Log($"[Capture] crosshair {label}: hip fov {CameraRig.EyeFov}, scope fov {rig.Fov:0.###}");
                 Destroy(duel.gameObject);
                 yield return null;

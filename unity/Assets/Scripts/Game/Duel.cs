@@ -81,6 +81,14 @@ namespace SniperDuel.Game
 
         internal void CaptureScope() => SetScoped(true);
 
+        /// <summary>For the capture log: what the camera's centre meets, and the eye's aim.</summary>
+        internal string CaptureProbe()
+        {
+            var cam = rig.Cam.transform;
+            float d = Seen(cam.position, cam.forward);
+            return $"centre {d:0.0} m: {World.Pick.LastHit}; cam {cam.position} fwd {cam.forward:F4}; eye {Library.ToUnity(Eye())} aim {TrueAim().Yaw:F5}/{TrueAim().Pitch:F5}";
+        }
+
         /// <summary>The finger aiming by dragging the screen, and the screen root that holds it.</summary>
         int? lookPointer;
         VisualElement? lookRoot;
