@@ -58,6 +58,8 @@ namespace SniperDuel.Rules
         const double HalfWidth = 56;
         /// <summary>Nearest a stand comes to the backstop (lane metres).</summary>
         const double LastLane = 648;
+        /// <summary>Top of the straw-bale wall the clays lean on, m.</summary>
+        public const double BaleTop = 1.0;
         /// <summary>Top of the steel rail the animals stand on, m.</summary>
         public const double RailTop = 0.75;
         /// <summary>Angular gap kept between stands as the shooter sees them (rad): nothing hides behind anything.</summary>
@@ -216,10 +218,11 @@ namespace SniperDuel.Rules
         /// <summary>
         /// Clears the range and sets out a fresh field for a shooter at `eye`: every stand somewhere
         /// in its band of ranges, across the lane, each target in plain view of the eye (over the
-        /// ground and the cover, clear of every other stand). A stand that finds no such place is
+        /// ground and the cover, clear of every other stand, and of whatever `drawn` says the eye
+        /// can't see past: scenery the rules don't know). A stand that finds no such place is
         /// left out, so nothing is ever set out that can't be hit.
         /// </summary>
-        public static RangeField Lay(DuelMap map, Vec3 eye, int seed)
+        public static RangeField Lay(DuelMap map, Vec3 eye, int seed, Func<Vec3, Vec3, bool>? drawn = null)
         {
             var field = new RangeField();
             var rng = new System.Random(seed);
@@ -254,7 +257,7 @@ namespace SniperDuel.Rules
                     st.Position = new Vec3(x, st.Ground, z);
                     var kit = new Kit(st, field.Stations.Count, eye, new System.Random(rng.Next()));
                     Build(kit, spec.Kind);
-                    if (!Fits(map, eye, kit, field, seen, out var span)) continue;
+                    if (!Fits(map, eye, kit, field, seen, drawn, out var span)) continue;
                     field.Stations.Add(st);
                     field.Marks.AddRange(kit.Marks);
                     field.Props.AddRange(kit.Props);
@@ -266,7 +269,7 @@ namespace SniperDuel.Rules
         }
 
         /// <summary>The stand stands clear of the cover, every target shows to the eye, and nothing else is in the way.</summary>
-        static bool Fits(DuelMap map, Vec3 eye, Kit kit, RangeField field, List<(double y0, double y1, double p0, double p1)> seen, out (double y0, double y1, double p0, double p1) span)
+        static bool Fits(DuelMap map, Vec3 eye, Kit kit, RangeField field, List<(double y0, double y1, double p0, double p1)> seen, Func<Vec3, Vec3, bool>? drawn, out (double y0, double y1, double p0, double p1) span)
         {
             double y0 = double.MaxValue, y1 = double.MinValue, p0 = double.MaxValue, p1 = double.MinValue;
             void See(Vec3 p)
@@ -282,6 +285,7 @@ namespace SniperDuel.Rules
             blockers.AddRange(field.Props);
             blockers.AddRange(kit.Props);
             span = default;
+            var samples = new List<Vec3>();
             foreach (var b in kit.Props)
             {
                 foreach (var c in map.Cover)
@@ -304,7 +308,11 @@ namespace SniperDuel.Rules
                         // The middle and the top of every part must show (a fold of the ground may take the foot).
                         double um = (u0 + u1) / 2 + off - m.Offset(0);
                         foreach (double v in new[] { v0 + 0.4 * (v1 - v0), v1 - 0.15 * (v1 - v0) })
-                            if (!Clear(map, eye, RangeHits.PointOn(m, um, v), blockers)) return false;
+                        {
+                            var p = RangeHits.PointOn(m, um, v);
+                            if (!Clear(map, eye, p, blockers)) return false;
+                            samples.Add(p);
+                        }
                     }
                 }
             }
@@ -313,6 +321,10 @@ namespace SniperDuel.Rules
             y1 += 0.004;
             foreach (var s in seen)
                 if (y0 < s.y1 + Gap && y1 > s.y0 - Gap && p0 < s.p1 + Gap && p1 > s.p0 - Gap) return false;
+            // Last (it costs the most): nothing drawn that the rules don't know, a bush or a tuft, is in the way.
+            if (drawn != null)
+                foreach (var p in samples)
+                    if (!drawn(eye, p)) return false;
             span = (y0, y1, p0, p1);
             return true;
         }
@@ -400,10 +412,10 @@ namespace SniperDuel.Rules
                 }
                 case "clays":
                 {
-                    // Clay pigeons stood up on edge against an earth mound.
-                    k.Prop("mound", -1.6, 1.6, -0.3, 1.05, 0.06, 1.9, CoverLook.Rock);
+                    // Clay pigeons stood up on edge against a wall of straw bales, two high.
+                    k.Prop("bales", -1.6, 1.6, -0.3, BaleTop, 0.04, 0.6, CoverLook.Wood);
                     for (int i = 0; i < 5; i++)
-                        k.Add("clay", MarkMaterial.Clay, MarkReaction.Break, -1.1 + 0.55 * i + k.R(-0.08, 0.08), 0.5 + 0.18 * (i % 3) + k.R(0, 0.06), 0, false,
+                        k.Add("clay", MarkMaterial.Clay, MarkReaction.Break, -1.1 + 0.55 * i + k.R(-0.08, 0.08), 0.5 + 0.16 * (i % 3) + k.R(0, 0.05), 0, false,
                             MarkPart.Disc(0, 0.054, 0.108));
                     break;
                 }

@@ -145,7 +145,13 @@ namespace SniperDuel.Game.World
         public void Lay(DuelMap map, Vec3 proneEye, int seed)
         {
             Clear();
-            field = RangeLayout.Lay(map, proneEye, seed);
+            // The rules know the ground and the stands; a bush or a tall tuft only the drawn world knows.
+            var scene = transform.parent;
+            field = RangeLayout.Lay(map, proneEye, seed, (e, p) =>
+            {
+                Vector3 a = Library.ToUnity(e), d = Library.ToUnity(p) - a;
+                return Pick.Ray(scene, a, d, d.magnitude - 0.8f, transform) == null;
+            });
             holder = new GameObject("Field").transform;
             holder.SetParent(transform, false);
             var byStation = new List<List<Mark>>();
@@ -178,6 +184,14 @@ namespace SniperDuel.Game.World
             if (paper != null) Destroy(paper.mainTexture);
             if (shardMesh != null) Destroy(shardMesh);
             if (chipMesh != null) Destroy(chipMesh);
+        }
+
+        readonly Dictionary<Color, Material> straw = new Dictionary<Color, Material>();
+
+        Material Straw(Color tint)
+        {
+            if (!straw.TryGetValue(tint, out var m)) straw[tint] = m = Library.Plain(tint, 0.05f);
+            return m;
         }
 
         GameObject Put(MeshBuilder mb, string name, Material mat, Transform parent, bool shadows = true)
@@ -246,8 +260,26 @@ namespace SniperDuel.Game.World
                         timber.Box(new Vector3(u, 0.6f, 0.055f), new Vector3(0.05f, 1.8f, 0.09f));
                     break;
                 case "clays":
-                    dirt.Frustum(new Vector3(0, -0.3f, 0.98f), new Vector2(3.3f, 1.95f), new Vector3(0, 1.05f, 1.0f), new Vector2(3.15f, 1.8f));
+                {
+                    // Two rows of three straw bales, each a shade different, twine round them.
+                    var rng = new System.Random(index);
+                    float bale = (float)RangeLayout.BaleTop / 2;
+                    for (int row = 0; row < 2; row++)
+                        for (int i = 0; i < 3; i++)
+                        {
+                            var c = new Vector3(-1.0667f + 1.0667f * i, bale * row + bale / 2 - (row == 0 ? 0.15f : 0), 0.32f);
+                            var size = new Vector3(1.06f, bale + (row == 0 ? 0.3f : 0), 0.56f);
+                            var mb = new MeshBuilder();
+                            mb.Box(c, size);
+                            var tint = Color.Lerp(new Color(0.78f, 0.66f, 0.38f), new Color(0.7f, 0.6f, 0.36f), (float)rng.NextDouble());
+                            Put(mb, "Bale", Straw(tint), root);
+                            var twine = new MeshBuilder();
+                            foreach (float u in new[] { -0.28f, 0.28f })
+                                twine.Box(c + new Vector3(u, 0, 0), new Vector3(0.012f, size.y + 0.006f, size.z + 0.006f));
+                            Put(twine, "Twine", cardLine, root, false);
+                        }
                     break;
+                }
                 case "spinner":
                     foreach (float u in new[] { -0.29f, 0.29f })
                     {
@@ -407,7 +439,9 @@ namespace SniperDuel.Game.World
                     Put(b, "Backer", card, body);
                     var p = new MeshBuilder();
                     const float h = 0.275f;
-                    p.Face(new Vector3(-h, 0.305f - h, -0.001f), new Vector3(-h, 0.305f + h, -0.001f), new Vector3(h, 0.305f + h, -0.001f), new Vector3(h, 0.305f - h, -0.001f), Vector2.zero, Vector2.one);
+                    // Held a little proud of the backer: two millimetres z-fight at range.
+                    const float z = -0.015f;
+                    p.Face(new Vector3(-h, 0.305f - h, z), new Vector3(-h, 0.305f + h, z), new Vector3(h, 0.305f + h, z), new Vector3(h, 0.305f - h, z), Vector2.zero, Vector2.one);
                     Put(p, "Paper", paper, body, false);
                     break;
                 }
@@ -420,7 +454,7 @@ namespace SniperDuel.Game.World
                     var z = new MeshBuilder();
                     void Outline(float u0, float u1, float v0, float v1)
                     {
-                        const float w = 0.004f, f = -0.0025f;
+                        const float w = 0.006f, f = -0.012f;
                         z.Box(new Vector3((u0 + u1) / 2, v0, f), new Vector3(u1 - u0, w, 0.001f));
                         z.Box(new Vector3((u0 + u1) / 2, v1, f), new Vector3(u1 - u0, w, 0.001f));
                         z.Box(new Vector3(u0, (v0 + v1) / 2, f), new Vector3(w, v1 - v0, 0.001f));
@@ -478,8 +512,9 @@ namespace SniperDuel.Game.World
                         if (part.Shape == PartShape.Disc) Disc(mb, part, m.Kind == "gong" && part.W > 0.5 ? 0.02f : T);
                         else Plate(mb, part, T);
                     }
-                    bool animal = m.Kind is "chicken" or "pig" or "turkey" or "ram" or "prairie-dog";
-                    Put(mb, "Steel", animal ? frame : paint, body);
+                    // Match silhouettes are black; the little prairie dogs are painted so they show on the grass.
+                    bool animal = m.Kind is "chicken" or "pig" or "turkey" or "ram";
+                    Put(mb, "Steel", animal ? frame : m.Kind == "prairie-dog" ? orange : paint, body);
                     if (m.Reaction == MarkReaction.Swing)
                     {
                         // Chains from the bar to the top of the plate.
@@ -733,7 +768,7 @@ namespace SniperDuel.Game.World
                     dot.name = "Hole";
                     Destroy(dot.GetComponent<Collider>());
                     dot.transform.SetParent(l.Body, false);
-                    dot.transform.localPosition = new Vector3(local.x, local.y, -0.003f);
+                    dot.transform.localPosition = new Vector3(local.x, local.y, m.Kind == "bullseye" ? -0.02f : -0.016f);
                     dot.transform.localRotation = Quaternion.Euler(0, 0, Random.Range(0f, 360f));
                     dot.transform.localScale = Vector3.one * 0.016f;
                     var r = dot.GetComponent<MeshRenderer>();
@@ -755,7 +790,7 @@ namespace SniperDuel.Game.World
             mark.name = "Strike";
             Destroy(mark.GetComponent<Collider>());
             mark.transform.SetParent(l.Body, false);
-            mark.transform.localPosition = new Vector3(local.x, local.y, -0.008f);
+            mark.transform.localPosition = new Vector3(local.x, local.y, -0.022f);
             mark.transform.localRotation = Quaternion.Euler(0, 0, Random.Range(0f, 360f));
             mark.transform.localScale = new Vector3(0.05f, 0.04f, 1);
             var r = mark.GetComponent<MeshRenderer>();
