@@ -30,6 +30,12 @@ namespace SniperDuel.Game.World
         /// it, so the screen's centre is what the scope opens on.
         /// </summary>
         public Vector3? AimPoint;
+        /// <summary>
+        /// Between the shoulder and the eye while the rifle comes up or goes down: 1 at the
+        /// shoulder, 0 at the eye. The camera glides along, still looking at AimPoint, so the point
+        /// under the crosshair stays in the middle of the screen all the way into the scope.
+        /// </summary>
+        public float Away;
         /// <summary>The player's own body, hidden whenever the camera is at the eye.</summary>
         public GameObject? Body;
         /// <summary>Over-the-shoulder offset in the camera's frame: right, up, back (metres).</summary>
@@ -87,15 +93,18 @@ namespace SniperDuel.Game.World
                 var rot = Quaternion.Euler(-Pitch, Yaw, 0);
                 // Level the offset with the yaw only, so looking up or down doesn't swing the camera
                 // into the deck.
-                var pos = ThirdPerson ? Eye + Quaternion.Euler(0, Yaw, 0) * ShoulderOffset : Eye;
+                float away = ThirdPerson ? 1 : Away;
+                var pos = Vector3.Lerp(Eye, Eye + Quaternion.Euler(0, Yaw, 0) * ShoulderOffset, away);
                 Cam.transform.position = pos;
-                Cam.transform.rotation = ThirdPerson && AimPoint is Vector3 at && (at - pos).sqrMagnitude > 1
+                Cam.transform.rotation = away > 0 && AimPoint is Vector3 at && (at - pos).sqrMagnitude > 1
                     ? Quaternion.LookRotation(at - pos) : rot;
                 Cam.fieldOfView = Fov;
             }
-            if (Body != null) Body.SetActive(Current != Mode.Eye || ThirdPerson);
+            // Gliding in, the body stays until the camera is nearly at the eye, then the rifle takes over.
+            bool behind = ThirdPerson || Away > 0.35f;
+            if (Body != null) Body.SetActive(Current != Mode.Eye || behind);
             // First person: the rifle in front of the eye until the scope takes over.
-            bool rifle = Current == Mode.Eye && !ThirdPerson && Raise < 0.999f;
+            bool rifle = Current == Mode.Eye && !behind && Raise < 0.999f;
             if (rifle && viewmodel == null)
             {
                 viewmodel = Viewmodel.Create(Cam.transform, RifleModel);

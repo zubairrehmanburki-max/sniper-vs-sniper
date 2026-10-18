@@ -654,7 +654,9 @@ namespace SniperDuel.Game
             DropLook();
             DropFire();
             DropStick();
+            crossAt = null;
             if (on) AimAtCrosshair();
+            else sightInv = 0; // measured afresh for the way back out
             scoped = false;
             raising = on ? 1 : -1;
             Sound.Raise(on);
@@ -1102,7 +1104,11 @@ namespace SniperDuel.Game
             yaw = y - lastSway.Right / 1000;
             pitch = Math.Max(-0.3, Math.Min(0.3, p - lastSway.Up / 1000 - recoil));
             sightInv = sightAim = 1 / to.magnitude;
+            crossAt = at;
         }
+
+        /// <summary>The point that was under the crosshair when the rifle started up, until it is at the eye.</summary>
+        Vector3? crossAt;
 
         // ---- frame ---------------------------------------------------------
 
@@ -1173,7 +1179,11 @@ namespace SniperDuel.Game
             rig.Pitch = (float)(aim.Pitch * Mathf.Rad2Deg);
             rig.Fov = ShownFov(dt);
             rig.ThirdPerson = !scoped && raising == 0 && raise <= 0;
-            rig.AimPoint = rig.ThirdPerson ? SightPoint(aim, dt) : (Vector3?)null;
+            // Raising, the camera glides from the shoulder to the eye on the point that was under the
+            // crosshair; lowering, back out on the point the scope was on.
+            rig.Away = raising != 0 ? 1 - Mathf.SmoothStep(0, 1, raise) : 0;
+            rig.AimPoint = raising > 0 && crossAt is Vector3 c ? c
+                : rig.ThirdPerson || raising < 0 ? SightPoint(aim, dt) : (Vector3?)null;
             rig.Raise = scoped ? 1 : raise;
             rig.Kick = (float)recoil;
             ScopeEye(dt);
@@ -1302,6 +1312,7 @@ namespace SniperDuel.Game
             PostFx.Defocus(0);
             rig.Raise = 1;
             rig.AimPoint = null;
+            rig.Away = 0;
             if (plates != null) Destroy(plates.gameObject);
             if (ScopeDials.Turned?.Target == (object)this) ScopeDials.Turned = null;
         }
