@@ -586,7 +586,7 @@ namespace SniperDuel.Game
                     var call = range.Strike(new MarkHit { Mark = m, Part = 0, U = u + 0.02, V = v, Score = 9 }, new Impact { Kind = ImpactKind.Target, Point = at, Energy = 2500 });
                     Debug.Log($"[Capture] struck {m.Id} {m.Kind}: {call}");
                 }
-                yield return Shoot(dir, next, $"Range-{st.Kind}-Hit", 10);
+                yield return Shoot(dir, next, $"Range-{st.Kind}-Hit", 6);
             }
             Debug.Log($"[Capture] range hit {range.HitCount}/{range.Count}");
             Destroy(range.gameObject);
