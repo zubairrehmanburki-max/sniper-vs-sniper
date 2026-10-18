@@ -62,6 +62,12 @@ namespace SniperDuel.Game
         /// <summary>Side focus (parallax) knob position, 0 to ScopeDials.FocusMax; starts near, so the far bridge is soft until it is set.</summary>
         double focus = 2;
         string laserText = "--- m";
+        /// <summary>
+        /// How far the line of sight runs before it meets something, kept as 1/metres so it eases
+        /// evenly near and far; the shoulder camera aims its crosshair at that point.
+        /// </summary>
+        float sightInv, sightAim;
+        float sightClock;
 
         /// <summary>The finger aiming by dragging the screen, and the screen root that holds it.</summary>
         int? lookPointer;
@@ -1022,11 +1028,44 @@ namespace SniperDuel.Game
         /// <summary>The laser rangefinder: measures along the line of sight and shows it. It never dials anything.</summary>
         void Laser()
         {
-            var e = State.Players[Side.B];
-            var targets = solo && plates != null ? new List<Silhouette>(plates.Shapes)
-                : new List<Silhouette> { Combat.SilhouetteFor("B", e.Position, e.Stance, Combat.FacingYaw(Side.B), cfg) };
-            var d = Hits.Rangefind(Eye(), TrueAim(), targets, map.Ground, 3000, map.Cover);
+            var d = Hits.Rangefind(Eye(), TrueAim(), Targets(), map.Ground, 3000, map.Cover);
             laserText = d.HasValue ? $"{d.Value:0} m" : "no return";
+        }
+
+        List<Silhouette> Targets()
+        {
+            var e = State.Players[Side.B];
+            return solo && plates != null ? new List<Silhouette>(plates.Shapes)
+                : new List<Silhouette> { Combat.SilhouetteFor("B", e.Position, e.Stance, Combat.FacingYaw(Side.B), cfg) };
+        }
+
+        /// <summary>
+        /// The point the eye's line of sight lands on, in Unity space. The shoulder camera sits off to
+        /// the side, so looking parallel to the eye its centre would fall beside the true aim and the
+        /// scope would open somewhere else; aimed at this point, the white crosshair is exactly where
+        /// the scope zooms in. Measured a few times a second; past the ground and the targets (open
+        /// sky) it settles on the enemy's range, where the far structures stand.
+        /// </summary>
+        Vector3 SightPoint(Aim aim, float dt)
+        {
+            sightClock -= dt;
+            if (sightClock <= 0 || sightInv <= 0)
+            {
+                sightClock = 0.1f;
+                var eye = Eye();
+                double far = 600;
+                if (!solo)
+                {
+                    var e = State.Players[Side.B].Position;
+                    far = Math.Max(50, Math.Sqrt((e.X - eye.X) * (e.X - eye.X) + (e.Z - eye.Z) * (e.Z - eye.Z)));
+                }
+                var d = Hits.Rangefind(eye, aim, Targets(), map.Ground, 3000, map.Cover) ?? far;
+                sightAim = 1 / (float)Math.Max(5, d);
+                if (sightInv <= 0) sightInv = sightAim;
+            }
+            sightInv = Mathf.Lerp(sightInv, sightAim, 1 - Mathf.Exp(-dt * 12));
+            var dir = Quaternion.Euler(-(float)(aim.Pitch * Mathf.Rad2Deg), (float)(aim.Yaw * Mathf.Rad2Deg), 0) * Vector3.forward;
+            return Library.ToUnity(Eye()) + dir / sightInv;
         }
 
         // ---- frame ---------------------------------------------------------
@@ -1098,6 +1137,7 @@ namespace SniperDuel.Game
             rig.Pitch = (float)(aim.Pitch * Mathf.Rad2Deg);
             rig.Fov = ShownFov(dt);
             rig.ThirdPerson = !scoped && raising == 0 && raise <= 0;
+            rig.AimPoint = rig.ThirdPerson ? SightPoint(aim, dt) : (Vector3?)null;
             rig.Raise = scoped ? 1 : raise;
             rig.Kick = (float)recoil;
             ScopeEye(dt);
@@ -1311,12 +1351,30 @@ namespace SniperDuel.Game
                 b.style.opacity = open ? 1 : 0.35f;
             }
             Marker(hud);
+            Crosshair(hud);
 
             var scope = ui.Get("Scope");
             scope.Text("lrf", laserText);
             scope.Text("solution", hintTimer > 0 ? hint : "");
             scope.Show("solution", hintTimer > 0);
             if (scope.Has("fireBtn")) scope["fireBtn"].style.opacity = firePointer != null && fireCancel ? 0.35f : can ? 1 : 0.5f;
+        }
+
+        /// <summary>
+        /// The white crosshair sits on the middle of the screen, where the shoulder camera looks at
+        /// the line of sight's point. The layout's own spot is the middle of the safe area, which the
+        /// notch pushes off centre.
+        /// </summary>
+        void Crosshair(UiScreen hud)
+        {
+            if (!hud.Has("crosshair")) return;
+            var cross = hud["crosshair"];
+            var root = cross.panel?.visualTree;
+            if (root == null || cross.parent == null) return;
+            var at = cross.parent.WorldToLocal(root.worldBound.center);
+            cross.style.left = at.x;
+            cross.style.top = at.y;
+            cross.style.translate = new Translate(Length.Percent(-50), Length.Percent(-50));
         }
 
         /// <summary>The enemy marker over their head, wherever they are on screen; hidden when behind or off it.</summary>

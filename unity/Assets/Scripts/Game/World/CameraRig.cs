@@ -25,6 +25,11 @@ namespace SniperDuel.Game.World
         /// lying at the edge with the river beyond; the scope puts it back at the eye.
         /// </summary>
         public bool ThirdPerson;
+        /// <summary>
+        /// Over the shoulder, the point the eye's line of sight lands on: the camera looks straight at
+        /// it, so the screen's centre is what the scope opens on.
+        /// </summary>
+        public Vector3? AimPoint;
         /// <summary>The player's own body, hidden whenever the camera is at the eye.</summary>
         public GameObject? Body;
         /// <summary>Over-the-shoulder offset in the camera's frame: right, up, back (metres).</summary>
@@ -81,9 +86,11 @@ namespace SniperDuel.Game.World
             {
                 var rot = Quaternion.Euler(-Pitch, Yaw, 0);
                 // Level the offset with the yaw only, so looking up or down doesn't swing the camera
-                // into the deck; at 600 m the 0.8 m height shifts the aim point by under 0.1°.
-                Cam.transform.position = ThirdPerson ? Eye + Quaternion.Euler(0, Yaw, 0) * ShoulderOffset : Eye;
-                Cam.transform.rotation = rot;
+                // into the deck.
+                var pos = ThirdPerson ? Eye + Quaternion.Euler(0, Yaw, 0) * ShoulderOffset : Eye;
+                Cam.transform.position = pos;
+                Cam.transform.rotation = ThirdPerson && AimPoint is Vector3 at && (at - pos).sqrMagnitude > 1
+                    ? Quaternion.LookRotation(at - pos) : rot;
                 Cam.fieldOfView = Fov;
             }
             if (Body != null) Body.SetActive(Current != Mode.Eye || ThirdPerson);
