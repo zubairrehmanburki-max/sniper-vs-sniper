@@ -224,8 +224,10 @@ namespace SniperDuel.Game.World
                 string n = r.name.ToLowerInvariant();
                 if (n.StartsWith("reticle") || n.StartsWith("scoperender"))
                 {
-                    // The asset's own scope picture; the game draws its own.
+                    // The asset's own scope picture; the game draws its own. Its materials go too,
+                    // or their full-size textures stay loaded.
                     r.enabled = false;
+                    r.sharedMaterials = new Material[0];
                     continue;
                 }
                 if (n.StartsWith("base")) body = r;

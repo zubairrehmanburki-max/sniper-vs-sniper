@@ -166,7 +166,9 @@ namespace SniperDuel.Game.World
         /// <summary>Gives each skin a URP Lit material built from its imported one.</summary>
         void Dress(Transform model, bool hd, Color tint)
         {
-            foreach (var r in model.GetComponentsInChildren<SkinnedMeshRenderer>())
+            // The detailed soldiers' gear can be plain meshes too: dressed the same, or their
+            // imported materials keep the full-size textures loaded.
+            foreach (var r in hd ? model.GetComponentsInChildren<Renderer>() : model.GetComponentsInChildren<SkinnedMeshRenderer>())
             {
                 // On the same URP Lit template as the structures: the imported glTF materials draw
                 // nothing on some renderers. The old soldier is tinted olive drab; the detailed one
@@ -199,7 +201,7 @@ namespace SniperDuel.Game.World
                     mats[i] = mat;
                 }
                 r.sharedMaterials = mats;
-                skins.Add(r);
+                if (r is SkinnedMeshRenderer skin) skins.Add(skin);
             }
         }
 

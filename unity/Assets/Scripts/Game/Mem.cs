@@ -31,10 +31,26 @@ namespace SniperDuel.Game
                     string.Join(", ", kinds.Select(g => $"{g.kind} {g.n}x {g.bytes / MB:0} MB")) + "; biggest textures: " +
                     string.Join(", ", sized.OrderByDescending(t => t.bytes).Take(12).Select(t => $"{t.name} {t.bytes / MB:0.0}")) + "; biggest model textures: " +
                     string.Join(", ", Resources.FindObjectsOfTypeAll<Texture>().Where(t => Kind(t.name) == "model textures").OrderByDescending(Bytes).Take(40)
-                        .Select(t => $"{t.name} {t.width}x{t.height} {t.graphicsFormat} {Bytes(t) / MB:0.0}"));
+                        .Select(t => $"{t.name} {t.width}x{t.height} {t.graphicsFormat} {Bytes(t) / MB:0.0}")) + "; materials holding full-size model textures: " +
+                    string.Join(", ", Holders().Take(30));
             }
             Debug.Log($"[Memory] {what}: reserved {Profiler.GetTotalReservedMemoryLong() / MB:0} MB, allocated {Profiler.GetTotalAllocatedMemoryLong() / MB:0} MB, " +
                 $"managed {Profiler.GetMonoHeapSizeLong() / MB:0} MB, textures {Texture.currentTextureMemory / MB:0} MB{more}");
+        }
+
+        /// <summary>Materials that still point at an imported model texture of 1 MB or more (not a lean copy).</summary>
+        static IEnumerable<string> Holders()
+        {
+            foreach (var m in Resources.FindObjectsOfTypeAll<Material>())
+                foreach (var id in m.GetTexturePropertyNameIDs())
+                {
+                    var t = m.GetTexture(id);
+                    if (t != null && Kind(t.name) == "model textures" && !t.name.EndsWith("(lean)") && Bytes(t) >= 1024 * 1024)
+                    {
+                        yield return $"{m.name} ({t.name})";
+                        break;
+                    }
+                }
         }
 
         static string Kind(string name)
