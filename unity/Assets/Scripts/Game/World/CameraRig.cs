@@ -93,6 +93,7 @@ namespace SniperDuel.Game.World
             {
                 viewmodel = Viewmodel.Create(Cam.transform, RifleModel);
                 if (RifleFinish is Color finish) Figure.PaintRifle(viewmodel.gameObject, finish);
+                Arena.TrimSoon();
             }
             if (viewmodel != null)
             {

@@ -185,6 +185,24 @@ namespace SniperDuel.Game.World
             return false;
         }
 
+        static bool trimDue;
+        static AsyncOperation? trimming;
+
+        /// <summary>
+        /// Asks for a <see cref="Trim"/> once the frame is done: soldiers, rifles and the
+        /// first-person arms are made mid-match, and the models they load (full-size textures and
+        /// all) would otherwise stay cached until the next map.
+        /// </summary>
+        public static void TrimSoon() => trimDue = true;
+
+        /// <summary>Runs the trim asked for, unless one is still going.</summary>
+        public static void TrimIfDue()
+        {
+            if (!trimDue || trimming != null && !trimming.isDone) return;
+            trimDue = false;
+            trimming = Trim();
+        }
+
         /// <summary>Places (or re-poses) the enemy figure at a rules position, facing the other side.</summary>
         public Figure PlaceEnemy(Vec3 position, Stance stance, Side enemySide)
         {
@@ -192,6 +210,7 @@ namespace SniperDuel.Game.World
             Enemy = Figure.Create(stance, 1.8f, Root, new Color(0.62f, 0.64f, 0.52f), false, EnemySoldier, EnemyRifle);
             Enemy.transform.position = Library.ToUnity(position);
             Enemy.transform.rotation = Quaternion.Euler(0, enemySide == Side.A ? 0 : 180, 0);
+            TrimSoon();
             return Enemy;
         }
 
@@ -207,6 +226,7 @@ namespace SniperDuel.Game.World
             Player.name = "Player";
             Player.transform.position = Library.ToUnity(position);
             Player.transform.rotation = Quaternion.Euler(0, side == Side.A ? 0 : 180, 0);
+            TrimSoon();
             return Player;
         }
 

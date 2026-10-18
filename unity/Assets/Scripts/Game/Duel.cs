@@ -1063,6 +1063,7 @@ namespace SniperDuel.Game
             frames++;
             if (frames <= 3 || frames == 5 || frames == 10 || frames == 30 || frames == 60 || frames % 300 == 0)
                 Trail.Mark($"{(solo ? "practice" : "duel")} frame {frames}, {time:0} s");
+            World.Arena.TrimIfDue();
             if (paused) return;
             float dt = Mathf.Min(0.1f, Time.deltaTime);
             time += dt;
