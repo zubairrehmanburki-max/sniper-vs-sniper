@@ -55,6 +55,13 @@ namespace SniperDuel.EditorTools
                 water.SetColor("_BaseColor", new Color(0.05f, 0.11f, 0.12f));
                 EditorUtility.SetDirty(water);
             }
+            // The open-water shader (Assets/Shaders/Water.shader): depth colour, Fresnel reflection, sun glint, shore foam.
+            var surface = Template("WaterSurface", "SniperDuel/Water");
+            if (surface != null)
+            {
+                surface.SetTexture("_BumpMap", AssetDatabase.LoadAssetAtPath<Texture2D>(Gen + "/water_normal.png"));
+                EditorUtility.SetDirty(surface);
+            }
             var cloth = Template("Cloth", "Universal Render Pipeline/Lit");
             if (cloth != null)
             {
