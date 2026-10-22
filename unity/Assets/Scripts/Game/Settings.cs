@@ -189,7 +189,8 @@ namespace SniperDuel.Game
                 urp.msaaSampleCount = !aa || q < 2 ? 1 : q == 2 ? 2 : 4;
                 int s = Shadows;
                 urp.shadowDistance = s switch { 0 => 0f, 1 => 80f, 2 => 150f, _ => q == 3 ? 300f : 220f };
-                urp.shadowCascadeCount = s switch { 0 => 1, 1 => 1, 2 => 2, _ => q == 3 ? 4 : 2 };
+                urp.shadowCascadeCount = s switch { 0 => 1, 1 => 1, 2 => 2, _ => 4 };
+                urp.mainLightShadowmapResolution = s switch { 0 or 1 => 1024, 2 => 2048, _ => q == 3 ? 4096 : 2048 };
                 shadowReach = -1;
                 // Ambient occlusion draws the scene a second time for its normals: HIGH and up only.
                 Feature(urp, "SSAO", q >= 2);

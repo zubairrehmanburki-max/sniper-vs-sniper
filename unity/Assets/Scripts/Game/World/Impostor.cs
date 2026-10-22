@@ -340,6 +340,7 @@ namespace SniperDuel.Game.World
             readonly List<Vector3> v = new List<Vector3>();
             readonly List<Vector3> n = new List<Vector3>();
             readonly List<Vector2> uv = new List<Vector2>();
+            readonly List<Vector2> sway = new List<Vector2>();
             readonly List<int> t = new List<int>();
 
             /// <summary>
@@ -350,14 +351,27 @@ namespace SniperDuel.Game.World
             {
                 this.card = card;
                 size = height / Mathf.Max(0.1f, card.Height);
-                mat = card.Mat;
-                if (tint is Color c)
-                {
-                    mat = new Material(card.Mat) { name = card.Mat.name + " tinted" };
-                    mat.SetColor("_BaseColor", c);
-                }
+                mat = Swaying(card.Mat, tint);
             }
             public int Count { get; private set; }
+
+            /// <summary>The card's picture on the wind-swayed foliage shader (the plain cut-out if that is missing), tinted.</summary>
+            static Material Swaying(Material card, Color? tint)
+            {
+                var foliage = Resources.Load<Material>("Materials/Foliage");
+                Material m;
+                if (foliage != null && foliage.shader != null && foliage.shader.isSupported)
+                {
+                    m = new Material(foliage) { name = card.name + " swaying" };
+                    m.SetTexture("_BaseMap", card.GetTexture("_BaseMap"));
+                    m.SetFloat("_Cutoff", card.GetFloat("_Cutoff"));
+                    m.SetColor("_BaseColor", card.GetColor("_BaseColor"));
+                }
+                else if (tint != null) m = new Material(card) { name = card.name + " tinted" };
+                else return card;
+                if (tint is Color c) m.SetColor("_BaseColor", c);
+                return m;
+            }
 
             /// <summary>Plants one at `foot` (its lowest point on the ground), turned and scaled.</summary>
             public void Add(Vector3 foot, float yawDeg, float scale, bool mirror)
@@ -379,6 +393,9 @@ namespace SniperDuel.Game.World
                     for (int q = 0; q < 4; q++) n.Add(nm);
                     float u0 = mirror ? 1 : 0, u1 = 1 - u0;
                     uv.Add(new Vector2(u0, 0)); uv.Add(new Vector2(u0, 1)); uv.Add(new Vector2(u1, 1)); uv.Add(new Vector2(u1, 0));
+                    // The three quads of one plant move together.
+                    var sw = new Vector2(side * 0.06f, yawDeg * 0.37f);
+                    for (int q = 0; q < 4; q++) sway.Add(sw);
                     t.Add(i); t.Add(i + 1); t.Add(i + 2);
                     t.Add(i); t.Add(i + 2); t.Add(i + 3);
                 }
@@ -392,8 +409,13 @@ namespace SniperDuel.Game.World
                 m.SetVertices(v);
                 m.SetNormals(n);
                 m.SetUVs(0, uv);
+                m.SetUVs(1, sway);
                 m.SetTriangles(t, 0);
                 m.RecalculateBounds();
+                // Room for the tops to sway without the field being culled at the frame edge.
+                var bounds = m.bounds;
+                bounds.Expand(2);
+                m.bounds = bounds;
                 var go = new GameObject(name);
                 go.transform.SetParent(parent, false);
                 go.AddComponent<MeshFilter>().sharedMesh = m;
