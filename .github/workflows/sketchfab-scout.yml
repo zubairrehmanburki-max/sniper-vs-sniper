@@ -4,6 +4,11 @@ name: Sketchfab scout
 # skeleton details, published to the `screens` branch under sketchfab-scout/ for picking.
 on:
   workflow_dispatch:
+    inputs:
+      set:
+        description: Query set (blank = soldiers/rifles/props, graphics = anatomy and scenery)
+        type: string
+        default: ''
   push:
     branches: [claude/project-thread-ux5zt1]
     paths: [tools/sketchfab/scout.py, .github/workflows/sketchfab-scout.yml]
@@ -23,6 +28,7 @@ jobs:
       - name: Search Sketchfab
         env:
           SKETCHFAB_API_TOKEN: ${{ secrets.SKETCHFAB_API_TOKEN }}
+          SCOUT_SET: ${{ inputs.set }}
         run: |
           if [ -z "$SKETCHFAB_API_TOKEN" ]; then echo "::error::SKETCHFAB_API_TOKEN is not set"; exit 1; fi
           python3 tools/sketchfab/scout.py "$RUNNER_TEMP/scout"
