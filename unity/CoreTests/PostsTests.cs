@@ -53,7 +53,9 @@ namespace SniperDuel.Tests
                         Assert.That(p.Spot.Y, Is.EqualTo(map.Ground(p.Spot.X, p.Spot.Z)).Within(1e-6), $"{map.Id} {p.Id} floats or sinks");
                         var w = p.Walk;
                         Assert.That(p.Spot.X >= w.XMin - 1e-6 && p.Spot.X <= w.XMax + 1e-6 && -p.Spot.Z >= w.SMin - 1e-6 && -p.Spot.Z <= w.SMax + 1e-6, $"{map.Id} {p.Id} starts outside its walk area");
-                        // The whole walk area is one level: no stepping off a roof into the street.
+                        // A roof or platform's walk area is one level: no stepping off into the street.
+                        // (Hillside posts on the cover maps simply follow the slope.)
+                        if (map.Terrain != null && w.XMax - w.XMin <= 30)
                         foreach (var (x, s) in new[] { (w.XMin, w.SMin), (w.XMin, w.SMax), (w.XMax, w.SMin), (w.XMax, w.SMax) })
                             Assert.That(Math.Abs(map.Ground(x, -s) - p.Spot.Y), Is.LessThan(4), $"{map.Id} {p.Id} walk corner ({x}, {s})");
                         foreach (var link in p.Links) Assert.That(Maps.PostIndex(map, side, link), Is.GreaterThanOrEqualTo(0), $"{map.Id} {p.Id} links to missing {link}");

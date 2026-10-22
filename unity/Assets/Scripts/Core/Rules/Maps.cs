@@ -674,12 +674,35 @@ namespace SniperDuel.Rules
                 cover.Add(Block($"B-cover-{i}", x, s, w, 1.6, h, ground, material, material == CoverMaterial.Soft ? CoverLook.Wood : CoverLook.Rock));
                 spots.B.Add(new Vec3(x + (i % 2 == 0 ? -1.9 : 1.9), ground(x, -(s + 1.9)), -(s + 1.9)));
             }
+            // Variable distance: a boulder field down in the gully, a rock band low on B's slope, and
+            // shelves out on both valley sides (B's near the summit).
+            var extra = new (string id, double x, double s, double h, double w)[]
+            {
+                ("post-A-gully-0", -36.5, 265, 1.3, 2.6), ("post-A-gully-1", -23.5, 266, 1.1, 2.4),
+                ("post-A-flank-0", -166.5, 66, 1.2, 2.4), ("post-A-flank-1", -153.5, 67, 1.0, 2.2),
+                ("post-B-band-0", 13.5, 714, 1.2, 2.4), ("post-B-band-1", 26.5, 713, 1.4, 2.8),
+                ("post-B-summit-0", 153.5, 1094, 1.1, 2.2), ("post-B-summit-1", 166.5, 1093, 1.3, 2.6),
+            };
+            foreach (var e in extra) cover.Add(Block(e.id, e.x, e.s, e.w, 1.6, e.h, ground, CoverMaterial.Hard, CoverLook.Rock));
+            var zones = new PerSide<Zone>(new Zone(-60, 60, 0, 95, 95), new Zone(-60, 60, 1000, 1095, 1000));
+            var posts = new PerSide<List<Post>>(new List<Post>
+            {
+                new Post { Id = "A-shoulder", Name = "Shoulder", Spot = new Vec3(spots.A[0].X, ground(spots.A[0].X, spots.A[0].Z), spots.A[0].Z), Walk = zones.A, Group = "A-shoulder", Links = new[] { "A-gully", "A-flank" } },
+                MakePost(ground, Side.A, "A-gully", "Gully boulders", -30, 261, -30, 257, 12, 4, "A-shoulder"),
+                MakePost(ground, Side.A, "A-flank", "West shelf", -160, 62, -160, 58, 12, 4, "A-shoulder"),
+            }, new List<Post>
+            {
+                new Post { Id = "B-slope", Name = "Upper slope", Spot = new Vec3(spots.B[0].X, ground(spots.B[0].X, spots.B[0].Z), spots.B[0].Z), Walk = zones.B, Group = "B-slope", Links = new[] { "B-band", "B-summit" } },
+                MakePost(ground, Side.B, "B-band", "Rock band", 20, 718, 20, 722, 12, 4, "B-slope"),
+                MakePost(ground, Side.B, "B-summit", "Summit shelf", 160, 1097, 160, 1101, 12, 4, "B-slope"),
+            });
             return new DuelMap
             {
                 Id = "alpine-ridge",
                 Name = "Alpine Ridge",
                 LaneLength = 1100,
-                Zones = new PerSide<Zone>(new Zone(-60, 60, 0, 95, 95), new Zone(-60, 60, 1000, 1095, 1000)),
+                Zones = zones,
+                Posts = posts,
                 Ground = ground,
                 Cover = cover,
                 Spots = spots,

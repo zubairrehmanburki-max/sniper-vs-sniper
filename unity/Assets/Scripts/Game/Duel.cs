@@ -795,6 +795,7 @@ namespace SniperDuel.Game
                 var post = Match.PostOf(s, Me);
                 var spot = post?.Spot ?? map.Spots[Me][solo ? map.Spots[Me].Count / 2 : 0];
                 Apply(MatchInput.PlaceAt(Me, spot, Match.ClampStance(s, Stance.Prone, cfg), time));
+                laserText = "--- m";
                 if (post != null)
                 {
                     // The enemy is somewhere on the far side, out in the open: find them.
@@ -1148,12 +1149,24 @@ namespace SniperDuel.Game
             pitch = 0;
         }
 
-        /// <summary>The laser rangefinder: measures along the line of sight and shows it. It never dials anything.</summary>
+        /// <summary>The round whose one laser reading has been taken (a duel allows one a round), else 0.</summary>
+        int laserRound;
+
+        /// <summary>
+        /// The laser rangefinder: measures along the line of sight and shows it. It never dials
+        /// anything. In a duel it gives one reading a round (a shot that finds nothing doesn't count).
+        /// </summary>
         void Laser()
         {
+            if (!solo && laserRound == State.Round)
+            {
+                Call("One laser reading a round: judge the rest by eye.");
+                return;
+            }
             var d = Hits.Rangefind(Eye(), TrueAim(), Targets(), map.Ground, 3000, map.Cover);
             if (solo && range != null && RangeHits.Rangefind(Eye(), TrueAim(), range.Field, range.Now) is double t && (d == null || t < d)) d = t;
             laserText = d.HasValue ? $"{d.Value:0} m" : "no return";
+            if (d.HasValue) laserRound = State.Round;
         }
 
         List<Silhouette> Targets()
@@ -1514,6 +1527,7 @@ namespace SniperDuel.Game
             Crosshair(hud);
 
             scope.Text("lrf", laserText);
+            if (scope.Has("lrfBtn")) scope["lrfBtn"].style.opacity = solo || laserRound != State.Round ? 1 : 0.35f;
             scope.Text("solution", hintTimer > 0 ? hint : "");
             scope.Show("solution", hintTimer > 0);
             if (scope.Has("fireBtn")) scope["fireBtn"].style.opacity = firePointer != null && fireCancel ? 0.35f : can ? 1 : 0.5f;
