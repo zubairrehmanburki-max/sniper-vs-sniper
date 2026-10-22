@@ -108,7 +108,13 @@ namespace SniperDuel.Game.World
         static Dictionary<string, Transform> Find(Transform root)
         {
             var byName = new Dictionary<string, Transform>();
-            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            // The skin's own bones first, so a mesh node sharing a joint's name can't stand in for it.
+            var all = new List<Transform>();
+            foreach (var skin in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+                foreach (var b in skin.bones)
+                    if (b != null) all.Add(b);
+            all.AddRange(root.GetComponentsInChildren<Transform>(true));
+            foreach (var t in all)
             {
                 string n = Suffix.Replace(t.name, "");
                 if (!byName.ContainsKey(n)) byName[n] = t;
@@ -135,6 +141,7 @@ namespace SniperDuel.Game.World
                 (p("Neck") - p("Hips")).magnitude + (p("RightLeg") - p("RightUpLeg")).magnitude + (p("LeftLeg") - p("LeftUpLeg")).magnitude;
             float now = Size(S);
             if (now > 1e-4f) root.localScale *= Size(F) / now;
+            Debug.Log($"[RealBones] skeleton size {now:F3} -> {Size(F):F3}, scale {root.localScale.x:F4}");
 
             // The whole skeleton turned so its trunk and hips line up with the figure's.
             static Quaternion Frame(Vector3 up, Vector3 right)
@@ -157,6 +164,7 @@ namespace SniperDuel.Game.World
                     if (from.sqrMagnitude < 1e-8f || to.sqrMagnitude < 1e-8f) continue;
                     s[j].rotation = Quaternion.FromToRotation(from, to) * s[j].rotation;
                 }
+            Debug.Log($"[RealBones] posed: head off by {(S("Head") - F("Head")).magnitude:F3} m, right hand {(S("RightHand") - F("RightHand")).magnitude:F3} m, right foot {(s.ContainsKey("RightFoot") && fig.Bones.ContainsKey("RightFoot") ? (S("RightFoot") - F("RightFoot")).magnitude : -1):F3} m");
         }
 
         static Dictionary<string, Material> mats = new Dictionary<string, Material>();
@@ -238,6 +246,10 @@ namespace SniperDuel.Game.World
                 return best;
             }
 
+            var body = Vector3.zero;
+            foreach (var pr in probes) body += pr.C;
+            body /= probes.Count;
+
             var gathered = new Dictionary<Anatomy.Part, Gather>();
             int source = 0, tris = 0;
             var held = new List<GameObject>();
@@ -250,7 +262,13 @@ namespace SniperDuel.Game.World
                     if (skin.sharedMesh == null) continue;
                     mesh = new Mesh();
                     skin.BakeMesh(mesh, false);
-                    m = skin.transform.localToWorldMatrix;
+                    // Unity versions differ on whether the bake carries the renderer's scale:
+                    // take whichever placement lands the mesh round the body.
+                    var b = mesh.bounds;
+                    var full = skin.transform.localToWorldMatrix;
+                    var unscaled = Matrix4x4.TRS(skin.transform.position, skin.transform.rotation, Vector3.one);
+                    m = (full.MultiplyPoint3x4(b.center) - body).sqrMagnitude <= (unscaled.MultiplyPoint3x4(b.center) - body).sqrMagnitude ? full : unscaled;
+                    Debug.Log($"[RealBones] {skin.name}: bake {b.size}, body {body}, at {m.MultiplyPoint3x4(b.center)} size {m.MultiplyVector(b.size)}, lossy {skin.transform.lossyScale}");
                 }
                 else
                 {
