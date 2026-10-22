@@ -291,6 +291,11 @@ namespace SniperDuel.EditorTools
                 return;
             }
             ti.maxTextureSize = 2048;
+            // Pictures unpacked from the Sketchfab GLBs (tools/unity-assets/unpack_images.py):
+            // compressed here instead of on the phone at every map load (Library.Lean). 1024 px
+            // as Lean made them; rifles and arms keep 2048 for the first-person view.
+            if (assetPath.Contains("/TP/Models/") && name.Contains("_img"))
+                ti.maxTextureSize = name.StartsWith("rifle_") || name.StartsWith("arms_") || name.StartsWith("fps_") ? 2048 : 1024;
             if (name.Contains("_nor_gl") || name.Contains("_normal")) ti.textureType = TextureImporterType.NormalMap;
             if (name.Contains("_arm") || name.Contains("_rough") || name.Contains("_ao") || name.Contains("_metal") || name.Contains("_mask")) ti.sRGBTexture = false;
             if (assetPath.Contains("/Textures/") || assetPath.Contains("/Generated/")) ti.wrapMode = TextureWrapMode.Repeat;
