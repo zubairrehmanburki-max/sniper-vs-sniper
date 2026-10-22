@@ -47,11 +47,11 @@ namespace SniperDuel.Game.World
             if (air.Mist && water > -999) list.Add(Mist(root, mid, water, (float)map.LaneLength));
             if (air.Dust) list.Add(Dust(root, mid, (float)map.LaneLength, (x, s) => (float)ground(x, -s)));
             drifting = list.ToArray();
-            // Birds circle well off to one side of the lane, high enough never to cross a shot.
+            // Birds circle well out past the widest firing posts (±240 m), high enough never to cross a shot.
             var rng = new System.Random(map.Id.GetHashCode());
             float side = rng.NextDouble() < 0.5 ? -1 : 1;
-            float baseY = Mathf.Max(water, (float)ground(side * 160, -mid)) + 45;
-            Flock.Create(root, new Vector3(side * (160 + (float)rng.NextDouble() * 80), baseY, mid + ((float)rng.NextDouble() - 0.5f) * 200),
+            float baseY = Mathf.Max(water, (float)ground(side * 420, -mid)) + 70;
+            Flock.Create(root, new Vector3(side * (420 + (float)rng.NextDouble() * 80), baseY, mid + ((float)rng.NextDouble() - 0.5f) * 200),
                 air.Birds, air.Gulls, rng.Next());
         }
 
