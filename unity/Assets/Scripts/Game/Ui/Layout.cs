@@ -35,22 +35,37 @@ namespace SniperDuel.Game.Ui
         public VisualElement this[string id] =>
             binds.TryGetValue(id, out var e) ? e : throw new KeyNotFoundException($"{Name}: no element data-bind=\"{id}\"");
 
+        // The HUD sets the same few elements every frame: each label is looked up once, and a value
+        // that hasn't changed is left alone instead of re-styling the element.
+        readonly Dictionary<string, Label?> labels = new Dictionary<string, Label?>();
+
+        /// <summary>True while the screen is the one on show.</summary>
+        public bool Visible => Root.style.display != DisplayStyle.None;
+
         /// <summary>Sets the text of a bound element (its first text run).</summary>
         public void Text(string id, string text)
         {
-            if (!binds.TryGetValue(id, out var e)) return;
-            var label = e as Label ?? e.Q<Label>();
-            if (label != null) label.text = text;
+            if (!labels.TryGetValue(id, out var label) || label != null && label.parent == null)
+            {
+                if (!binds.TryGetValue(id, out var e)) return;
+                labels[id] = label = e as Label ?? e.Q<Label>();
+            }
+            if (label != null && label.text != text) label.text = text;
         }
 
         public void Show(string id, bool visible)
         {
-            if (binds.TryGetValue(id, out var e)) e.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!binds.TryGetValue(id, out var e)) return;
+            // Checked against the element itself: other code shows and hides some elements too.
+            var want = visible ? DisplayStyle.Flex : DisplayStyle.None;
+            if (e.style.display.keyword == StyleKeyword.Undefined && e.style.display.value == want) return;
+            e.style.display = want;
         }
 
         public void Color(string id, Color c)
         {
             if (!binds.TryGetValue(id, out var e)) return;
+            if (e.style.color.keyword == StyleKeyword.Undefined && e.style.color.value == c) return;
             e.style.color = c;
             foreach (var l in e.Query<Label>().ToList()) l.style.color = c;
         }

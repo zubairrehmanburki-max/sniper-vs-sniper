@@ -29,18 +29,39 @@ namespace SniperDuel.Game
 
         // ---- graphics ------------------------------------------------------
 
-        /// <summary>Index into QualityNames.</summary>
-        public static int Quality { get => GetInt("gfx.quality", 2, 0, 3); set => Set("gfx.quality", value); }
+        /// <summary>Index into QualityNames. The default suits the phone (<see cref="Tier"/>).</summary>
+        public static int Quality { get => GetInt("gfx.quality", Tier, 0, 3); set => Set("gfx.quality", value); }
         /// <summary>Index into FrameRates.</summary>
         public static int FrameRate { get => GetInt("gfx.fps", 1, 0, 2); set => Set("gfx.fps", value); }
-        /// <summary>URP render scale, 0.5–1.</summary>
-        public static float RenderScale { get => GetFloat("gfx.scale", 1f, 0.5f, 1f); set => Set("gfx.scale", value); }
+        /// <summary>
+        /// URP render scale, 0.5–1. The world is drawn at this share of the screen's pixels and
+        /// scaled up; the HUD and menus stay sharp. Phones' screens are dense enough that 0.75–0.9
+        /// costs little detail and roughly halves the pixel work.
+        /// </summary>
+        public static float RenderScale { get => GetFloat("gfx.scale", Tier switch { 0 => 0.75f, 1 => 0.8f, _ => 0.9f }, 0.5f, 1f); set => Set("gfx.scale", value); }
         /// <summary>Index into ShadowNames.</summary>
-        public static int Shadows { get => GetInt("gfx.shadows", 3, 0, 3); set => Set("gfx.shadows", value); }
+        public static int Shadows { get => GetInt("gfx.shadows", Tier switch { 0 => 1, 1 => 2, _ => 3 }, 0, 3); set => Set("gfx.shadows", value); }
         public static bool WaterReflections { get => GetBool("gfx.reflections", true); set => Set("gfx.reflections", value); }
         public static bool AntiAliasing { get => GetBool("gfx.aa", true); set => Set("gfx.aa", value); }
-        /// <summary>Caps menus at 30 fps.</summary>
-        public static bool BatterySaver { get => GetBool("gfx.saver", false); set => Set("gfx.saver", value); }
+        /// <summary>Caps menus at 30 fps (on unless turned off: the menus are a slow drift over the map).</summary>
+        public static bool BatterySaver { get => GetBool("gfx.saver", true); set => Set("gfx.saver", value); }
+
+        /// <summary>
+        /// The phone's class, for the defaults of a fresh install: 0 for phones with 3 GB or less
+        /// (iPhone XR, XS), 1 for 4 GB (iPhone 11, 12, 13), 2 for 6 GB and more (the Pros, 14 and
+        /// later). Desktop and the CI capture count as 2. Index into QualityNames.
+        /// </summary>
+        public static int Tier
+        {
+            get
+            {
+                if (tier >= 0) return tier;
+                int mb = SystemInfo.systemMemorySize;
+                tier = !Application.isMobilePlatform ? 2 : mb < 3500 ? 0 : mb < 5500 ? 1 : 2;
+                return tier;
+            }
+        }
+        static int tier = -1;
 
         // ---- controls ------------------------------------------------------
 
@@ -159,14 +180,19 @@ namespace SniperDuel.Game
             QualitySettings.vSyncCount = 0;
             QualitySettings.realtimeReflectionProbes = WaterReflections;
 
+            // One anti-aliasing pass, never two: multisampling on HIGH and ULTRA (edges of geometry,
+            // cheap on the phone's tile memory), the SMAA post pass on LOW and MEDIUM instead.
+            bool aa = AntiAliasing;
             if (GraphicsSettings.currentRenderPipeline is UniversalRenderPipelineAsset urp)
             {
                 urp.renderScale = RenderScale;
-                urp.msaaSampleCount = q switch { 0 => 1, 1 => 2, _ => 4 };
+                urp.msaaSampleCount = !aa || q < 2 ? 1 : q == 2 ? 2 : 4;
                 int s = Shadows;
                 urp.shadowDistance = s switch { 0 => 0f, 1 => 80f, 2 => 150f, _ => q == 3 ? 300f : 220f };
-                urp.shadowCascadeCount = s switch { 0 => 1, 1 => 1, 2 => 2, _ => 4 };
+                urp.shadowCascadeCount = s switch { 0 => 1, 1 => 1, 2 => 2, _ => q == 3 ? 4 : 2 };
                 shadowReach = -1;
+                // Ambient occlusion draws the scene a second time for its normals: HIGH and up only.
+                Feature(urp, "SSAO", q >= 2);
             }
             else
             {
@@ -177,8 +203,13 @@ namespace SniperDuel.Game
             if (cam != null)
             {
                 var data = cam.GetUniversalAdditionalCameraData();
-                if (data != null) data.antialiasing = AntiAliasing ? AntialiasingMode.SubpixelMorphologicalAntiAliasing : AntialiasingMode.None;
+                if (data != null)
+                {
+                    data.antialiasing = aa && q < 2 ? AntialiasingMode.SubpixelMorphologicalAntiAliasing : AntialiasingMode.None;
+                    data.antialiasingQuality = AntialiasingQuality.Medium;
+                }
             }
+            World.PostFx.Quality(q);
             ApplyFrameRate();
 
             AudioListener.volume = MasterVolume;
@@ -187,6 +218,19 @@ namespace SniperDuel.Game
             Sound.AmbienceVolume = AmbienceVolume;
             Sound.Clicks = MenuClicks;
             Haptics.Enabled = HapticsOn;
+        }
+
+        /// <summary>Turns a renderer feature of the pipeline (by name, as the build made it) on or off.</summary>
+        static void Feature(UniversalRenderPipelineAsset urp, string name, bool on)
+        {
+            var list = typeof(UniversalRenderPipelineAsset).GetField("m_RendererDataList", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.GetValue(urp) as ScriptableRendererData[];
+            if (list == null) return;
+            foreach (var data in list)
+            {
+                if (data == null) continue;
+                foreach (var f in data.rendererFeatures)
+                    if (f != null && f.name == name && f.isActive != on) f.SetActive(on);
+            }
         }
 
         static float shadowReach = -1;

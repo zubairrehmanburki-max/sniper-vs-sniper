@@ -16,6 +16,7 @@ namespace SniperDuel.Game.World
         static ColorAdjustments? grade;
         static Vignette? vignette;
         static DepthOfField? dof;
+        static Bloom? bloom;
         static float scope = -1, xray, flash, defocus;
         static Color glass = Color.white;
         static float glassExposure;
@@ -24,8 +25,7 @@ namespace SniperDuel.Game.World
         {
             var data = cam.GetUniversalAdditionalCameraData();
             data.renderPostProcessing = true;
-            data.antialiasing = AntialiasingMode.SubpixelMorphologicalAntiAliasing;
-            data.antialiasingQuality = AntialiasingQuality.High;
+            // Anti-aliasing is set by Settings.Apply (multisampling or SMAA, by quality).
 
             var go = new GameObject("PostFx");
             go.transform.SetParent(parent, false);
@@ -36,14 +36,16 @@ namespace SniperDuel.Game.World
 
             var tone = profile.Add<Tonemapping>(true);
             tone.mode.Override(TonemappingMode.ACES);
-            var bloom = profile.Add<Bloom>(true);
+            bloom = profile.Add<Bloom>(true);
             bloom.threshold.Override(1.1f);
             bloom.intensity.Override(0.55f);
             bloom.scatter.Override(0.65f);
             // A centimetre-sized polished surface up close (the kill cam round) can return a huge
             // specular value; clamp what feeds the bloom so it can never blow out into a white disc.
             bloom.clamp.Override(12f);
-            bloom.highQualityFiltering.Override(true);
+            // High-quality (bicubic) upsampling only on ULTRA (Quality): on a phone it costs more
+            // than it shows.
+            bloom.highQualityFiltering.Override(false);
             grade = profile.Add<ColorAdjustments>(true);
             scope = 0;
             vignette = profile.Add<Vignette>(true);
@@ -53,6 +55,12 @@ namespace SniperDuel.Game.World
             dof.mode.Override(DepthOfFieldMode.Off);
             Apply();
             return volume;
+        }
+
+        /// <summary>The graphics preset (index into Settings.QualityNames): ULTRA gets the finer bloom.</summary>
+        public static void Quality(int q)
+        {
+            if (bloom != null) bloom.highQualityFiltering.Override(q >= 3);
         }
 
         /// <summary>
