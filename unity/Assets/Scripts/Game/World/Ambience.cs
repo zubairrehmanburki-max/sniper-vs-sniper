@@ -44,8 +44,8 @@ namespace SniperDuel.Game.World
             float water = (float)(map.Water ?? -1000);
             var ground = map.Terrain ?? map.Ground;
             var list = new System.Collections.Generic.List<ParticleSystem> { Motes(root, air) };
-            if (air.Mist && water > -999) list.Add(Mist(root, mid, water, (float)map.LaneLength));
-            if (air.Dust) list.Add(Dust(root, mid, (float)map.LaneLength, (x, s) => (float)ground(x, -s)));
+            if (air.Mist && water > -999) list.Add(Mist(root, mid, water, (float)map.LaneLength, map));
+            if (air.Dust) list.Add(Dust(root, mid, (float)map.LaneLength, (x, s) => (float)ground(x, -s), map));
             drifting = list.ToArray();
             // Birds circle well out past the widest firing posts (±240 m), high enough never to cross a shot.
             var rng = new System.Random(map.Id.GetHashCode());
@@ -107,7 +107,7 @@ namespace SniperDuel.Game.World
         }
 
         /// <summary>Low banks of mist lying on the water, very faint, drifting downwind.</summary>
-        static ParticleSystem Mist(Transform root, float mid, float water, float lane)
+        static ParticleSystem Mist(Transform root, float mid, float water, float lane, DuelMap map)
         {
             var ps = Emitter(root, "Mist", Effects.SmokeMaterial);
             ps.transform.position = new Vector3(0, water + 3, mid);
@@ -131,13 +131,13 @@ namespace SniperDuel.Game.World
             r.renderMode = ParticleSystemRenderMode.HorizontalBillboard;
             r.sortingFudge = 50;
             Fade(ps, 0.3f, 0.7f);
-            ps.gameObject.AddComponent<ClearLane>().HalfWidth = 60;
+            Clear(ps, 60, map);
             ps.Play();
             return ps;
         }
 
         /// <summary>Gusts lifting a veil of sand off the desert floor in the middle distance.</summary>
-        static ParticleSystem Dust(Transform root, float mid, float lane, System.Func<float, float, float> ground)
+        static ParticleSystem Dust(Transform root, float mid, float lane, System.Func<float, float, float> ground, DuelMap map)
         {
             var ps = Emitter(root, "Dust", Effects.SmokeMaterial);
             ps.transform.position = new Vector3(0, ground(0, mid) + 1, mid);
@@ -161,7 +161,7 @@ namespace SniperDuel.Game.World
             size.enabled = true;
             size.size = new ParticleSystem.MinMaxCurve(1, AnimationCurve.EaseInOut(0, 0.5f, 1, 1.6f));
             Fade(ps, 0.25f, 0.6f);
-            ps.gameObject.AddComponent<ClearLane>().HalfWidth = 40;
+            Clear(ps, 40, map);
             ps.Play();
             return ps;
         }
@@ -208,10 +208,21 @@ namespace SniperDuel.Game.World
             }
         }
 
-        /// <summary>Takes out any particle that drifts into the lane between the spots, so no mist or dust ever veils a shot.</summary>
+        static void Clear(ParticleSystem ps, float halfWidth, DuelMap map)
+        {
+            var c = ps.gameObject.AddComponent<ClearLane>();
+            c.HalfWidth = halfWidth;
+            c.Map = map;
+        }
+
+        /// <summary>
+        /// Takes out any particle that drifts into the lane, or across the sight line between any
+        /// pair of posts, so no mist or dust ever veils a shot.
+        /// </summary>
         sealed class ClearLane : MonoBehaviour
         {
             public float HalfWidth;
+            public DuelMap? Map;
             ParticleSystem ps = null!;
             ParticleSystem.Particle[] buffer = new ParticleSystem.Particle[0];
             float next;
@@ -229,7 +240,9 @@ namespace SniperDuel.Game.World
                 for (int i = 0; i < n; i++)
                 {
                     // A particle's reach is half its size: none may hang over the lane.
-                    if (Mathf.Abs(buffer[i].position.x) < HalfWidth + buffer[i].GetCurrentSize(ps) / 2)
+                    var at = buffer[i].position;
+                    float reach = buffer[i].GetCurrentSize(ps) / 2;
+                    if (Mathf.Abs(at.x) < HalfWidth + reach || Map != null && Biomes.InSightLine(Map, at.x, at.z, 15 + reach))
                     {
                         buffer[i].remainingLifetime = 0;
                         changed = true;
