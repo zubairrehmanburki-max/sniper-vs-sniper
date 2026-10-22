@@ -7,7 +7,8 @@ namespace SniperDuel.Game.World
     /// The life in the air that makes a still scene read as a real place: specks of dust or pollen
     /// drifting through the sunlight round the camera, birds wheeling over the valley (gulls over
     /// the sea and the harbour), low mist lying on the marsh and the sea, and gusts lifting sand off
-    /// the desert floor. All of it drifts with the lane wind and stays clear of the firing spots.
+    /// the desert floor. All of it drifts with the lane wind and stays clear of the firing spots;
+    /// the plants sway with the same wind (SetWind feeds the Foliage shader).
     /// </summary>
     public static class Ambience
     {
@@ -57,6 +58,11 @@ namespace SniperDuel.Game.World
         /// <summary>Lets the dust, mist and motes drift with the lane wind (Unity world m/s).</summary>
         public static void SetWind(Vector3 wind)
         {
+            // The plants' sway (Foliage shader) follows the same wind.
+            var flat = new Vector2(wind.x, wind.z);
+            float speed = flat.magnitude;
+            var dir = speed > 0.01f ? flat / speed : Vector2.right;
+            Shader.SetGlobalVector("_SniperWind", new Vector4(dir.x, dir.y, speed, 0));
             foreach (var ps in drifting)
             {
                 if (ps == null) continue;

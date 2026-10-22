@@ -62,6 +62,13 @@ namespace SniperDuel.EditorTools
                 surface.SetTexture("_BumpMap", AssetDatabase.LoadAssetAtPath<Texture2D>(Gen + "/water_normal.png"));
                 EditorUtility.SetDirty(surface);
             }
+            // Plant pictures that sway in the wind (Assets/Shaders/Foliage.shader).
+            var foliage = Template("Foliage", "SniperDuel/Foliage");
+            if (foliage != null)
+            {
+                foliage.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
+                EditorUtility.SetDirty(foliage);
+            }
             var cloth = Template("Cloth", "Universal Render Pipeline/Lit");
             if (cloth != null)
             {
