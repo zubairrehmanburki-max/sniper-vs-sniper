@@ -130,7 +130,7 @@ namespace SniperDuel.Game.World
         /// Gear at a firing spot: ammo, binoculars, a crate and a can beside the shooter, and road
         /// barriers either side where there is room (not on a tower's small roof).
         /// </summary>
-        public static List<Bounds> Kit(Vector3 spot, float facingDeg, Transform parent, bool barriers = true)
+        public static List<Bounds> Kit(Vector3 spot, float facingDeg, Transform parent, bool barriers = true, bool roomy = true)
         {
             var root = new GameObject("Kit").transform;
             root.SetParent(parent, false);
@@ -146,6 +146,7 @@ namespace SniperDuel.Game.World
             }
             Put("ammo_box", new Vector3(0.9f, 0, -0.6f), 20);
             Put("binoculars", new Vector3(-0.7f, 0, -0.3f), -40);
+            if (!roomy) return placed;
             Put("old_military_crate", new Vector3(2.2f, 0, -2.1f), 8);
             Put("metal_jerrycan_green", new Vector3(-2.4f, 0, -2.5f), 70);
             if (!barriers) return placed;

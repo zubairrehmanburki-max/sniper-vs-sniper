@@ -55,6 +55,7 @@ namespace SniperDuel.Game.World
             if (map.Water.HasValue) Land.Water(map, root);
             Step("structures");
             Structures.Build(map, root);
+            arena.Blocks.AddRange(PostPlatforms.Build(map, root));
             Step("dressing");
             Dressing.Build(map, root);
             // Desert, harbor, alpine and range maps get their own terrain dressing.
@@ -129,8 +130,12 @@ namespace SniperDuel.Game.World
             for (int i = 0; i < 2; i++)
             {
                 var side = i == 0 ? Side.A : Side.B;
-                foreach (var spot in map.Spots[side])
-                    arena.Blocks.AddRange(Dressing.Kit(Library.ToUnity(spot), side == Side.A ? 0 : 180, root, !OnSmallTower(map, spot)));
+                foreach (var spot in Maps.FiringSpots(map, side))
+                {
+                    // Posts get the small kit: no road barriers, and on a tiny platform nothing that would hang off it.
+                    bool post = !map.Spots[side].Exists(p => Geometry.HorizontalDistance(p, spot) < 1);
+                    arena.Blocks.AddRange(Dressing.Kit(Library.ToUnity(spot), side == Side.A ? 0 : 180, root, !post && !OnSmallTower(map, spot), !post || PostRoom(map, side, spot) > 2.6));
+                }
             }
             Step("shadows");
             ShadowsNearSpots(map, root);
@@ -188,8 +193,8 @@ namespace SniperDuel.Game.World
         static void ShadowsNearSpots(DuelMap map, Transform root)
         {
             var spots = new List<Vector3>();
-            foreach (var p in map.Spots[Side.A]) spots.Add(Library.ToUnity(p));
-            foreach (var p in map.Spots[Side.B]) spots.Add(Library.ToUnity(p));
+            foreach (var p in Maps.FiringSpots(map, Side.A)) spots.Add(Library.ToUnity(p));
+            foreach (var p in Maps.FiringSpots(map, Side.B)) spots.Add(Library.ToUnity(p));
             int off = 0;
             foreach (var r in root.GetComponentsInChildren<MeshRenderer>(true))
             {
@@ -204,6 +209,13 @@ namespace SniperDuel.Game.World
                 off++;
             }
             Debug.Log($"[Arena] {map.Id}: shadows off for {off} small far renderers");
+        }
+
+        /// <summary>How far the walk area of the post starting at `spot` reaches back from it, m.</summary>
+        static double PostRoom(DuelMap map, Side side, Vec3 spot)
+        {
+            var post = map.Posts?[side].Find(p => Geometry.HorizontalDistance(p.Spot, spot) < 1);
+            return post == null ? 99 : System.Math.Min(post.Walk.SMax - post.Walk.SMin, post.Walk.XMax - post.Walk.XMin);
         }
 
         /// <summary>True when a spot is on a tower roof too small for the kit's road barriers.</summary>

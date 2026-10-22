@@ -93,6 +93,8 @@ export interface GameConfig {
     /** Online: how long a dropped player's seat is held before they forfeit, s. */
     reconnectGraceSeconds: number;
     roundWindDrift: number;
+    /** Variable posts: trips to another structure each player may make per round. */
+    relocationsPerRound: number;
   };
   player: {
     silhouette: Record<Stance, { heightM: number; widthM: number; headM: number }>;

@@ -186,6 +186,8 @@ namespace SniperDuel.Rules
         /// <summary>Online: how long a dropped player's seat is held before they forfeit, s.</summary>
         public double ReconnectGraceSeconds;
         public double RoundWindDrift;
+        /// <summary>Variable posts: trips to another structure each player may make per round.</summary>
+        public int RelocationsPerRound;
     }
 
     public sealed class SilhouetteSize

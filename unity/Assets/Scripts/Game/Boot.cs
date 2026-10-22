@@ -288,6 +288,7 @@ namespace SniperDuel.Game
                     yield return new WaitForEndOfFrame();
                 }
             }
+            if (arena != null) yield return CapturePosts(dir, () => ++n);
             // The downloaded soldiers and rifles side by side, high over the river: every outfit's
             // soldier as posed in a duel, then every rifle model in the armoury.
             if (arena != null)
@@ -416,6 +417,7 @@ namespace SniperDuel.Game
                     yield return null;
                     yield return new WaitForEndOfFrame();
                 }
+                if (arena != null) yield return CapturePosts(dir, () => ++n);
             }
             // Solo practice on the range lane (the last map built): the HUD from a live session,
             // then a plate through the scope at 12x after a hit.
@@ -453,6 +455,36 @@ namespace SniperDuel.Game
                 Seed = 0x5eed,
                 ShotIndex = 1,
             }, new List<Silhouette>(), Config);
+        }
+
+        /// <summary>
+        /// The variable-distance posts on the current map: from each of A's posts, the view down the
+        /// lane at 1x; each of B's posts as A sees it from the first post at about 12x; and the
+        /// whole layout from high up.
+        /// </summary>
+        IEnumerator CapturePosts(string dir, Func<int> next)
+        {
+            var map = arena!.Map;
+            if (map.Posts == null) yield break;
+            string id = map.Id;
+            IEnumerator View(string label, Vector3 from, Vector3 to, float fov)
+            {
+                Frame("");
+                rig.Current = CameraRig.Mode.Director;
+                rig.Cam.fieldOfView = fov;
+                rig.Cam.transform.position = from;
+                rig.Cam.transform.LookAt(to);
+                yield return Shoot(dir, next, label, 6);
+            }
+            Vector3 Eye(Vec3 p, Stance st) => Library.ToUnity(Combat.EyeOf(p, st, Config));
+            var far = map.Posts.B[0].Spot;
+            foreach (var p in map.Posts.A)
+                yield return View($"Post-{id}-{p.Id}", Eye(p.Spot, Stance.Crouch), Eye(far, Stance.Crouch), 50);
+            var from = Eye(map.Posts.A[0].Spot, Stance.Crouch);
+            foreach (var p in map.Posts.B)
+                yield return View($"Post-{id}-{p.Id}-Zoom", from, Eye(p.Spot, Stance.Crouch) + Vector3.down * 3, (float)Config.Scope.EyeFovDeg / 8);
+            float lane = (float)map.LaneLength;
+            yield return View($"Post-{id}-Air", new Vector3(-700, 520, lane * 0.5f - 520), new Vector3(0, 0, lane * 0.5f), 50);
         }
 
         static IEnumerator Shoot(string dir, Func<int> next, string label, int frames = 4)

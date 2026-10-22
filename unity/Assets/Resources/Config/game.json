@@ -194,7 +194,8 @@
     "forfeitAfterIdlePhases": 2,
     "roundBreakSeconds": 8,
     "reconnectGraceSeconds": 60,
-    "roundWindDrift": 0.25
+    "roundWindDrift": 0.25,
+    "relocationsPerRound": 2
   },
   "player": {
     "silhouette": {

@@ -133,7 +133,7 @@ namespace SniperDuel.Game.World
             foreach (var side in new[] { SniperDuel.Rules.Side.A, SniperDuel.Rules.Side.B })
             {
                 float dir = side == SniperDuel.Rules.Side.A ? 1 : -1;
-                foreach (var p in map.Spots[side])
+                foreach (var p in SniperDuel.Rules.Maps.FiringSpots(map, side))
                 {
                     float ahead = (s - (float)-p.Z) * dir;
                     if (Mathf.Abs(x - (float)p.X) < 2.5f && ahead > -1 && ahead < 35) return true;
@@ -167,7 +167,7 @@ namespace SniperDuel.Game.World
         /// </summary>
         public static Vector2? NearSpot(SniperDuel.Rules.DuelMap map, System.Random rng, float rMin, float rMax, bool inFront = false)
         {
-            var spots = map.Spots[rng.Next(2) == 0 ? SniperDuel.Rules.Side.A : SniperDuel.Rules.Side.B];
+            var spots = SniperDuel.Rules.Maps.FiringSpots(map, rng.Next(2) == 0 ? SniperDuel.Rules.Side.A : SniperDuel.Rules.Side.B);
             if (spots.Count == 0) return null;
             var p = spots[rng.Next(spots.Count)];
             float t = (float)rng.NextDouble();
