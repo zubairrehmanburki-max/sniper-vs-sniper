@@ -158,6 +158,7 @@ namespace SniperDuel.Game.World
             Impostor.Forget();
             Figure.Forget();
             Scenery.Forget();
+            Pick.Forget();
             System.GC.Collect();
             return Resources.UnloadUnusedAssets();
         }
