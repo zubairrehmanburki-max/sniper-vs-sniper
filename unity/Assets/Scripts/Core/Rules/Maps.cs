@@ -222,6 +222,7 @@ namespace SniperDuel.Rules
         /// <summary>Post id pairs ("A-id|B-id") never rolled together (too short a trip, or the same ship twice).</summary>
         public HashSet<string> NoPairs = new HashSet<string>();
         internal List<PostPair>? PairCache;
+        internal PerSide<List<Vec3>>? SpotCache;
     }
 
     public static class Maps
@@ -975,13 +976,21 @@ namespace SniperDuel.Rules
         public static int PostIndex(DuelMap map, Side side, string id) => map.Posts?[side].FindIndex(p => p.Id == id) ?? -1;
 
         /// <summary>Every place a side may start a round from: the classic spots and any posts.</summary>
-        public static List<Vec3> FiringSpots(DuelMap map, Side side)
+        public static IReadOnlyList<Vec3> FiringSpots(DuelMap map, Side side)
         {
-            var all = new List<Vec3>(map.Spots[side]);
-            if (map.Posts != null)
-                foreach (var p in map.Posts[side])
-                    if (!all.Exists(q => Geometry.HorizontalDistance(q, p.Spot) < 1)) all.Add(p.Spot);
-            return all;
+            if (map.SpotCache == null)
+            {
+                List<Vec3> For(Side s)
+                {
+                    var all = new List<Vec3>(map.Spots[s]);
+                    if (map.Posts != null)
+                        foreach (var p in map.Posts[s])
+                            if (!all.Exists(q => Geometry.HorizontalDistance(q, p.Spot) < 1)) all.Add(p.Spot);
+                    return all;
+                }
+                map.SpotCache = new PerSide<List<Vec3>>(For(Side.A), For(Side.B));
+            }
+            return map.SpotCache[side];
         }
 
         /// <summary>A walkable area `halfX` across and `halfS` along the lane round (x, s), front edge toward the enemy.</summary>

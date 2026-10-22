@@ -72,7 +72,7 @@ namespace SniperDuel.Game.World
         {
             float best = float.MaxValue;
             foreach (var side in new[] { Side.A, Side.B })
-                foreach (var p in map.Spots[side])
+                foreach (var p in Maps.FiringSpots(map, side))
                     best = Mathf.Min(best, new Vector2(x - (float)p.X, s + (float)p.Z).magnitude);
             return best;
         }

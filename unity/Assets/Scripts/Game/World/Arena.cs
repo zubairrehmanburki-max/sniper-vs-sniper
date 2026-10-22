@@ -129,7 +129,7 @@ namespace SniperDuel.Game.World
             for (int i = 0; i < 2; i++)
             {
                 var side = i == 0 ? Side.A : Side.B;
-                foreach (var spot in map.Spots[side])
+                foreach (var spot in Maps.FiringSpots(map, side))
                     arena.Blocks.AddRange(Dressing.Kit(Library.ToUnity(spot), side == Side.A ? 0 : 180, root, !OnSmallTower(map, spot)));
             }
             Step("shadows");

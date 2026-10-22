@@ -38,6 +38,17 @@
 <button data-on="prone" data-bind="proneBtn" aria-label="Prone" style="width: 88px; height: 36px; border-radius: 18px; border: 1px solid rgba(237,239,232,0.35); background: rgba(10,12,11,0.55); font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 14px; letter-spacing: 0.14em; color: #EDEFE8">PRONE</button>
 </div>
 
+<div data-bind="relocateBtn" data-hidden style="position: absolute; right: 24px; top: 228px; display: flex; flex-direction: column; align-items: center; gap: 2px">
+<button data-on="relocate" aria-label="Move to another post" style="width: 88px; height: 36px; border-radius: 18px; border: 1px solid #F2B33D; background: rgba(10,12,11,0.55); font-family: 'Barlow Condensed', sans-serif; font-weight: 800; letter-spacing: 0.14em; color: #EDEFE8; font-size: 14px">MOVE</button>
+<span data-bind="relocateLeft" style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 0.14em; color: #C9CDC2">2 LEFT</span>
+</div>
+
+<div data-bind="postList" data-hidden style="position: absolute; right: 124px; top: 150px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px">
+<button data-on="post0" data-bind="post0" style="height: 36px; padding: 0 16px; border-radius: 18px; border: 1px solid rgba(237,239,232,0.35); background: rgba(10,12,11,0.72); font-family: 'Barlow Condensed', sans-serif; font-weight: 800; letter-spacing: 0.14em; color: #EDEFE8; font-size: 13px">POST</button>
+<button data-on="post1" data-bind="post1" style="height: 36px; padding: 0 16px; border-radius: 18px; border: 1px solid rgba(237,239,232,0.35); background: rgba(10,12,11,0.72); font-family: 'Barlow Condensed', sans-serif; font-weight: 800; letter-spacing: 0.14em; color: #EDEFE8; font-size: 13px">POST</button>
+<button data-on="post2" data-bind="post2" style="height: 36px; padding: 0 16px; border-radius: 18px; border: 1px solid rgba(237,239,232,0.35); background: rgba(10,12,11,0.72); font-family: 'Barlow Condensed', sans-serif; font-weight: 800; letter-spacing: 0.14em; color: #EDEFE8; font-size: 13px">POST</button>
+</div>
+
 <div style="position: absolute; right: 24px; bottom: 38px; display: flex; flex-direction: column; align-items: center; gap: 6px">
 <button data-on="scope" data-bind="scopeBtn" aria-label="Scope in" style="width: 88px; height: 88px; border-radius: 50%; border: 3px solid #F2B33D; background: rgba(10,12,11,0.62); display: grid; place-items: center"><svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="#EDEFE8" stroke-width="2.4" aria-hidden="true"><circle cx="20" cy="20" r="15"></circle><path d="M20 3v34M3 20h34"></path></svg></button>
 <span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 13px; letter-spacing: 0.14em">SCOPE IN</span>
