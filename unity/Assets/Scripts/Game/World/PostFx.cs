@@ -20,6 +20,9 @@ namespace SniperDuel.Game.World
         static Vignette? vignette;
         static Look look = new Look();
         static DepthOfField? dof;
+        static Bloom? bloom;
+        static FilmGrain? grain;
+        static ChromaticAberration? fringe;
         static float scope = -1, xray, flash, defocus;
         static Color glass = Color.white;
         static float glassExposure;
@@ -28,8 +31,7 @@ namespace SniperDuel.Game.World
         {
             var data = cam.GetUniversalAdditionalCameraData();
             data.renderPostProcessing = true;
-            data.antialiasing = AntialiasingMode.SubpixelMorphologicalAntiAliasing;
-            data.antialiasingQuality = AntialiasingQuality.High;
+            // Anti-aliasing is set by Settings.Apply (multisampling or SMAA, by quality).
 
             var go = new GameObject("PostFx");
             go.transform.SetParent(parent, false);
@@ -40,24 +42,26 @@ namespace SniperDuel.Game.World
 
             var tone = profile.Add<Tonemapping>(true);
             tone.mode.Override(TonemappingMode.ACES);
-            var bloom = profile.Add<Bloom>(true);
+            bloom = profile.Add<Bloom>(true);
             bloom.threshold.Override(1.1f);
             bloom.intensity.Override(0.55f);
             bloom.scatter.Override(0.65f);
             // A centimetre-sized polished surface up close (the kill cam round) can return a huge
             // specular value; clamp what feeds the bloom so it can never blow out into a white disc.
             bloom.clamp.Override(12f);
-            bloom.highQualityFiltering.Override(true);
+            // High-quality (bicubic) upsampling only on ULTRA (Quality): on a phone it costs more
+            // than it shows.
+            bloom.highQualityFiltering.Override(false);
             grade = profile.Add<ColorAdjustments>(true);
             balance = profile.Add<WhiteBalance>(true);
             toning = profile.Add<SplitToning>(true);
             smh = profile.Add<ShadowsMidtonesHighlights>(true);
             // A fine film grain and a hair of lens fringing at the frame edge: the camera, not a render.
-            var grain = profile.Add<FilmGrain>(true);
+            grain = profile.Add<FilmGrain>(true);
             grain.type.Override(FilmGrainLookup.Thin1);
             grain.intensity.Override(0.14f);
             grain.response.Override(0.85f);
-            var fringe = profile.Add<ChromaticAberration>(true);
+            fringe = profile.Add<ChromaticAberration>(true);
             fringe.intensity.Override(0.06f);
             scope = 0;
             vignette = profile.Add<Vignette>(true);
@@ -67,6 +71,17 @@ namespace SniperDuel.Game.World
             dof.mode.Override(DepthOfFieldMode.Off);
             Apply();
             return volume;
+        }
+
+        /// <summary>
+        /// The graphics preset (index into Settings.QualityNames): ULTRA gets the finer bloom; LOW
+        /// leaves out the grain and fringing (two more full-screen passes on the oldest phones).
+        /// </summary>
+        public static void Quality(int q)
+        {
+            if (bloom != null) bloom.highQualityFiltering.Override(q >= 3);
+            if (grain != null) grain.active = q >= 1;
+            if (fringe != null) fringe.active = q >= 1;
         }
 
         /// <summary>

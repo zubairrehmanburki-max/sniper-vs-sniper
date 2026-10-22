@@ -181,8 +181,10 @@ namespace SniperDuel.EditorTools
                 pipeline = UniversalRenderPipelineAsset.Create(renderer);
                 AssetDatabase.CreateAsset(pipeline, pipelinePath);
             }
+            // Starting values; Settings.Apply sets anti-aliasing, scale and shadows from the
+            // player's options (defaults by phone class) before the first frame.
             pipeline.supportsHDR = true;
-            pipeline.msaaSampleCount = 4;
+            pipeline.msaaSampleCount = 2;
             pipeline.renderScale = 1f;
             pipeline.shadowDistance = 220f;
             pipeline.shadowCascadeCount = 4;
@@ -191,8 +193,10 @@ namespace SniperDuel.EditorTools
             // with four cascades, ~26 m with two.
             pipeline.cascade4Split = new Vector3(0.04f, 0.12f, 0.35f);
             pipeline.cascade2Split = 0.12f;
+            // Depth for SSAO, the water shader and the scope's depth of field. No shader reads the
+            // opaque colour copy, so it isn't made (it cost a full-screen copy every frame).
             pipeline.supportsCameraDepthTexture = true;
-            pipeline.supportsCameraOpaqueTexture = true;
+            pipeline.supportsCameraOpaqueTexture = false;
             EditorUtility.SetDirty(pipeline);
 
             GraphicsSettings.defaultRenderPipeline = pipeline;
@@ -215,8 +219,9 @@ namespace SniperDuel.EditorTools
         {
             var type = typeof(UniversalRendererData).Assembly.GetType("UnityEngine.Rendering.Universal.ScreenSpaceAmbientOcclusion");
             if (type == null) { Debug.LogWarning("[Build] no SSAO feature in this URP"); return; }
-            foreach (var f in renderer.rendererFeatures) if (f != null && f.GetType() == type) return;
-            var feature = (ScriptableRendererFeature)ScriptableObject.CreateInstance(type);
+            ScriptableRendererFeature? existing = null;
+            foreach (var f in renderer.rendererFeatures) if (f != null && f.GetType() == type) existing = f;
+            var feature = existing ?? (ScriptableRendererFeature)ScriptableObject.CreateInstance(type);
             feature.name = "SSAO";
             const BindingFlags Any = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
             var settingsField = type.GetField("m_Settings", Any);
@@ -233,10 +238,20 @@ namespace SniperDuel.EditorTools
                 Set("Radius", 0.45f);
                 Set("Falloff", 900f);
                 Set("Downsample", true);
+                // Normals rebuilt from depth rather than a second pass over the whole scene for a
+                // normals texture: millions of triangles fewer each frame, for a slightly softer look.
+                Set("Source", 0);
+                Set("NormalSamples", 1);
                 settingsField!.SetValue(feature, settings);
                 var names = new System.Collections.Generic.List<string>();
                 foreach (var f in settings.GetType().GetFields(Any)) names.Add($"{f.Name}={f.GetValue(settings)}");
                 Debug.Log("[Build] SSAO " + string.Join(", ", names));
+            }
+            if (existing != null)
+            {
+                EditorUtility.SetDirty(existing);
+                AssetDatabase.SaveAssets();
+                return;
             }
             AssetDatabase.AddObjectToAsset(feature, renderer);
             renderer.rendererFeatures.Add(feature);
@@ -281,6 +296,11 @@ namespace SniperDuel.EditorTools
                 return;
             }
             ti.maxTextureSize = 2048;
+            // Pictures unpacked from the Sketchfab GLBs (tools/unity-assets/unpack_images.py):
+            // compressed here instead of on the phone at every map load (Library.Lean). 1024 px
+            // as Lean made them; rifles and arms keep 2048 for the first-person view.
+            if (assetPath.Contains("/TP/Models/") && name.Contains("_img"))
+                ti.maxTextureSize = name.StartsWith("rifle_") || name.StartsWith("arms_") || name.StartsWith("fps_") ? 2048 : 1024;
             if (name.Contains("_nor_gl") || name.Contains("_normal")) ti.textureType = TextureImporterType.NormalMap;
             if (name.Contains("_arm") || name.Contains("_rough") || name.Contains("_ao") || name.Contains("_metal") || name.Contains("_mask")) ti.sRGBTexture = false;
             if (assetPath.Contains("/Textures/") || assetPath.Contains("/Generated/")) ti.wrapMode = TextureWrapMode.Repeat;

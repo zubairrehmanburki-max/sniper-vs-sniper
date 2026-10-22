@@ -164,11 +164,7 @@ namespace SniperDuel.Game
             var d = new GameObject("Duel").AddComponent<Duel>();
             d.cfg = cfg;
             d.solo = solo;
-            if (solo && arena.Enemy != null)
-            {
-                Destroy(arena.Enemy.gameObject);
-                arena.Enemy = null;
-            }
+            if (solo) arena.ClearEnemy();
             d.recoilRecovery = kit.RecoilRecovery;
             arena.PlayerTint = kit.Outfit;
             arena.PlayerFinish = kit.Finish;
@@ -179,6 +175,12 @@ namespace SniperDuel.Game
             ScopeStyle.Use(baseRifle);
             // The bot's rifle by how good it is: the old Mosin, the SV-98, the Timberwolf.
             arena.EnemyRifle = bot switch { BotDifficulty.Easy => "rifle_mosin", BotDifficulty.Hard => "rifle_timberwolf", _ => "rifle_sv98m" };
+            // The bot in all three stances, made now rather than each time it moves.
+            if (!solo)
+            {
+                Trail.Mark("duel: enemy figures");
+                arena.PrepareEnemy();
+            }
             // The figure is re-made in this duel's outfit and finish on the first frame.
             if (arena.Player != null)
             {
@@ -1381,7 +1383,10 @@ namespace SniperDuel.Game
             var u = Library.ToUnity(mid);
             float windAngle = Mathf.Atan2(u.x, u.z) * Mathf.Rad2Deg - heading;
 
-            foreach (var screen in new[] { ui.Get("Hud"), ui.Get("Scope") })
+            var hud = ui.Get("Hud");
+            var scope = ui.Get("Scope");
+            // Only the screen on show is written; the other catches up the frame it opens.
+            foreach (var screen in hud.Visible ? scope.Visible ? Both(hud, scope) : One(hud) : scope.Visible ? One(scope) : NoScreens)
             {
                 screen.Text("turn", turn);
                 screen.Color("turn", turnColor);
@@ -1392,13 +1397,12 @@ namespace SniperDuel.Game
                 if (screen.Has("windArrow")) screen["windArrow"].style.rotate = new Rotate(Angle.Degrees(windAngle));
             }
 
-            var hud = ui.Get("Hud");
             hud.Text("hint", hint);
             hud.Show("hintBox", hintTimer > 0);
             var stance = State.Players[Me].Stance;
             bool mayMove = MayMove();
             if (hud.Has("stick")) hud["stick"].style.opacity = mayMove ? 1 : 0.35f;
-            foreach (var (id, st) in new[] { ("standBtn", Stance.Standing), ("crouchBtn", Stance.Crouch), ("proneBtn", Stance.Prone) })
+            foreach (var (id, st) in StanceButtons)
             {
                 if (!hud.Has(id)) continue;
                 var b = hud[id];
@@ -1410,12 +1414,17 @@ namespace SniperDuel.Game
             Marker(hud);
             Crosshair(hud);
 
-            var scope = ui.Get("Scope");
             scope.Text("lrf", laserText);
             scope.Text("solution", hintTimer > 0 ? hint : "");
             scope.Show("solution", hintTimer > 0);
             if (scope.Has("fireBtn")) scope["fireBtn"].style.opacity = firePointer != null && fireCancel ? 0.35f : can ? 1 : 0.5f;
         }
+
+        static readonly (string id, Stance stance)[] StanceButtons = { ("standBtn", Stance.Standing), ("crouchBtn", Stance.Crouch), ("proneBtn", Stance.Prone) };
+        static readonly UiScreen[] NoScreens = new UiScreen[0];
+        readonly UiScreen[] one = new UiScreen[1], both = new UiScreen[2];
+        UiScreen[] One(UiScreen a) { one[0] = a; return one; }
+        UiScreen[] Both(UiScreen a, UiScreen b) { both[0] = a; both[1] = b; return both; }
 
         /// <summary>
         /// The white crosshair sits on the middle of the screen, where the shoulder camera looks at

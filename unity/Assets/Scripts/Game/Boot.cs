@@ -65,8 +65,6 @@ namespace SniperDuel.Game
                 if (s.Has("heart")) ScopeGauges.AttachHeart(s["heart"]);
                 if (s.Has("fireRing")) ScopeGauges.AttachBreathRing(s["fireRing"]);
             };
-            try { BuildArena("twin-bridges"); }
-            catch (Exception e) { Debug.LogException(e); }
         }
 
         IEnumerator Start()
@@ -74,13 +72,36 @@ namespace SniperDuel.Game
             string? capture = Arg("-capture-all");
             if (capture != null)
             {
+                try { BuildArena("twin-bridges"); }
+                catch (Exception e) { Debug.LogException(e); }
                 // The menus filled from a fresh profile, as a new install sees them.
                 yield return CaptureAll(capture, Flow.Create(Config, ui, rig, arena));
                 yield break;
             }
-            Flow.Create(Config, ui, rig, arena);
+            // The title first, then the menu's map built over the next frames with the imported
+            // originals let go between its heavy steps (building it in one go held them all at once:
+            // several hundred MB more at the start-up peak, and a frozen black screen meanwhile).
             Frame("Title");
             ui.Show("Title");
+            Trail.Mark("building the menu map");
+            var map = Maps.ById("twin-bridges");
+            Arena? built = null;
+            var steps = Arena.Building(map, a => built = a);
+            while (true)
+            {
+                bool more;
+                try { more = steps.MoveNext(); }
+                catch (Exception e) { Debug.LogException(e); break; }
+                if (!more) break;
+                yield return steps.Current;
+            }
+            if (built != null)
+            {
+                arena = built;
+                try { Pose(map); }
+                catch (Exception e) { Debug.LogException(e); }
+            }
+            Flow.Create(Config, ui, rig, arena);
             // The flow owns the map from here; holding it too would keep it in memory after a switch.
             arena = null;
             yield return Arena.Trim();
@@ -91,6 +112,13 @@ namespace SniperDuel.Game
         {
             var map = Maps.ById(mapId);
             arena = Arena.Build(map);
+            Pose(map);
+        }
+
+        /// <summary>The menu's scene on a built map: both soldiers prone on their first spots, the camera on the enemy.</summary>
+        void Pose(DuelMap map)
+        {
+            if (arena == null) return;
             var a = map.Spots.A[0];
             var b = map.Spots.B[0];
             rig.MenuFocus = Library.ToUnity(a);
