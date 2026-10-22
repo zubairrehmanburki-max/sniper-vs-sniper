@@ -268,7 +268,6 @@ namespace SniperDuel.Game.World
                     var full = skin.transform.localToWorldMatrix;
                     var unscaled = Matrix4x4.TRS(skin.transform.position, skin.transform.rotation, Vector3.one);
                     m = (full.MultiplyPoint3x4(b.center) - body).sqrMagnitude <= (unscaled.MultiplyPoint3x4(b.center) - body).sqrMagnitude ? full : unscaled;
-                    Debug.Log($"[RealBones] {skin.name}: bake {b.size}, body {body}, at {m.MultiplyPoint3x4(b.center)} size {m.MultiplyVector(b.size)}, lossy {skin.transform.lossyScale}");
                 }
                 else
                 {
