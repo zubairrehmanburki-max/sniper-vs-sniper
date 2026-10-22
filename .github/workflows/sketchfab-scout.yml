@@ -40,4 +40,6 @@ jobs:
           git worktree add -B screens ../screens origin/screens
           rm -rf ../screens/sketchfab-scout && mkdir -p ../screens/sketchfab-scout
           cp -r "$RUNNER_TEMP/scout/report.json" "$RUNNER_TEMP/scout/thumbs" ../screens/sketchfab-scout/
-          cd ../screens && git add -A && git commit -qm "Sketchfab scout for $GITHUB_SHA" && git push -q origin screens
+          cd ../screens && git add -A && git commit -qm "Sketchfab scout for $GITHUB_SHA"
+          # Screen captures from other branches push here too: rebase onto theirs and retry.
+          for i in 1 2 3 4 5; do git push -q origin screens && exit 0; git pull -q --rebase origin screens; done; exit 1
