@@ -366,6 +366,8 @@ namespace SniperDuel.Game.World
                     m.SetFloat("_Bump1", 0.75f);
                     m.SetFloat("_Bump2", 0.45f);
                     m.SetFloat("_FoamDepth", 0.8f);
+                    // Silty water under a bright sky: hold the sky's mirror back so the river keeps its colour.
+                    m.SetFloat("_Reflect", 0.65f);
                     break;
                 case "oil-rigs":
                     // Open North Sea: deep slate water, long swell, brisk chop, foam round the rig legs.
@@ -393,7 +395,8 @@ namespace SniperDuel.Game.World
                     m.SetFloat("_Bump2", 0.3f);
                     m.SetVector("_Flow1", new Vector4(0.08f, 0.12f, 0, 0));
                     m.SetVector("_Flow2", new Vector4(-0.12f, 0.07f, 0, 0));
-                    m.SetFloat("_FoamDepth", 0.25f);
+                    // Reeds and stakes stand in still water: no foam, which only read as white specks.
+                    m.SetFloat("_FoamDepth", 0);
                     break;
                 case "harbor-rooftops":
                     // Dock water: dark, oily green, sheltered.

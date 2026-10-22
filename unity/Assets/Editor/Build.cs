@@ -189,9 +189,9 @@ namespace SniperDuel.EditorTools
             pipeline.shadowDistance = 220f;
             pipeline.shadowCascadeCount = 4;
             pipeline.mainLightShadowmapResolution = 4096;
-            // Most of the first cascade where the prone camera looks: the ground and kit within ~9 m.
+            // Most of the first cascade where the prone camera looks: the ground and kit within ~9 m
+            // with four cascades, ~26 m with two.
             pipeline.cascade4Split = new Vector3(0.04f, 0.12f, 0.35f);
-            // With two cascades (MEDIUM shadows) the near one still covers the prone foreground.
             pipeline.cascade2Split = 0.12f;
             // Depth for SSAO, the water shader and the scope's depth of field. No shader reads the
             // opaque colour copy, so it isn't made (it cost a full-screen copy every frame).
