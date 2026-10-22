@@ -14,6 +14,23 @@ namespace SniperDuel.Game.World
         const int Res = 1025;
         const float MinY = -20, MaxY = 220;
 
+        /// <summary>
+        /// Past this distance the terrain draws its pre-blended low-detail picture instead of the
+        /// tiled scans. To the bare eye a 7 m texture repeated a hundred times turns into stripes on
+        /// the far slopes; the blend reads as one natural surface. Through the scope the far ground
+        /// is magnified, so it gets the full detail out to the horizon (Scoped).
+        /// </summary>
+        const float BareEyeBasemap = 400, ScopedBasemap = 2500;
+
+        /// <summary>Switches the far terrain detail for the scope (0 bare eye, 1 through the scope).</summary>
+        public static void Scoped(float amount)
+        {
+            var t = Terrain.activeTerrain;
+            if (t == null) return;
+            float want = amount > 0.5f ? ScopedBasemap : BareEyeBasemap;
+            if (t.basemapDistance != want) t.basemapDistance = want;
+        }
+
         public static Terrain Build(DuelMap map, Transform parent)
         {
             var ground = map.Terrain ?? map.Ground;
@@ -61,6 +78,8 @@ namespace SniperDuel.Game.World
                 }
             }
             data.SetAlphamaps(0, 0, alpha);
+            // 2 m per texel for the far blend (BareEyeBasemap): sharp enough that its edge doesn't show.
+            data.baseMapResolution = 2048;
 
             var go = Terrain.CreateTerrainGameObject(data);
             go.name = "Terrain";
@@ -69,7 +88,7 @@ namespace SniperDuel.Game.World
             var terrain = go.GetComponent<Terrain>();
             terrain.materialTemplate = new Material(Library.Template("Terrain"));
             terrain.heightmapPixelError = soil.PixelError;
-            terrain.basemapDistance = 600;
+            terrain.basemapDistance = BareEyeBasemap;
             // Instanced terrain needs shader variants the template material doesn't carry, so the
             // build strips them and the terrain draws nothing; the plain path uses the template's.
             terrain.drawInstanced = false;

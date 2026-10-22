@@ -51,6 +51,7 @@ namespace SniperDuel.Game.World
         /// </summary>
         public static void ScopeHaze(float scope)
         {
+            Land.Scoped(scope);
             if (hazeDensity <= 0) return;
             RenderSettings.fogDensity = hazeDensity * Mathf.Lerp(1, 0.8f, Mathf.Clamp01(scope));
         }
@@ -140,7 +141,9 @@ namespace SniperDuel.Game.World
             // Thin mountain air is clearer: far ranges stay distinct layers, each hazier than the one in
             // front, instead of melting into one pale wall.
             float thin = Mathf.Lerp(1, 0.62f, Mathf.InverseLerp(1500, 2400, (float)map.Climate.AltitudeM));
-            hazeDensity = (kind == SkyKind.Clear ? 0.00045f : 0.0006f) * thin;
+            // City air is thicker: the far towers should fade blue-grey in layers, not stand crisp to the horizon.
+            float city = map.Id == "twin-bridges" || map.Id == "harbor-rooftops" ? 1.35f : 1;
+            hazeDensity = (kind == SkyKind.Clear ? 0.00045f : 0.0006f) * thin * city;
             RenderSettings.fogDensity = hazeDensity;
             RenderSettings.fogColor = fog;
 
