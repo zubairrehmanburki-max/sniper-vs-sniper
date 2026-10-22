@@ -19,6 +19,7 @@ Shader "SniperDuel/Water"
         _Flow1 ("Swell drift (m/s)", Vector) = (0.25, 0.45, 0, 0)
         _Flow2 ("Chop drift (m/s)", Vector) = (-0.5, 0.3, 0, 0)
         _Roughness ("Reflection roughness", Range(0, 1)) = 0.08
+        _Reflect ("Reflection strength", Range(0, 1)) = 0.8
         _SunPower ("Glint sharpness", Float) = 900
         _SunStrength ("Glint strength", Float) = 6
         _FoamDepth ("Foam band depth (m)", Float) = 0.6
@@ -64,6 +65,7 @@ Shader "SniperDuel/Water"
                 float4 _Flow1;
                 float4 _Flow2;
                 half _Roughness;
+                half _Reflect;
                 float _SunPower;
                 half _SunStrength;
                 float _FoamDepth;
@@ -121,7 +123,7 @@ Shader "SniperDuel/Water"
                 body *= SampleSH(half3(0, 1, 0)) + sun.color * lit * saturate(dot(half3(0, 1, 0), sun.direction)) * 0.35;
 
                 half nv = saturate(dot(n, v));
-                half fresnel = 0.02 + 0.98 * pow(1 - nv, 5);
+                half fresnel = (0.02 + 0.98 * pow(1 - nv, 5)) * _Reflect;
                 half3 r = reflect(-v, n);
                 // Keep reflections above the horizon so the far water mirrors the sky, not the ground.
                 r.y = abs(r.y);
@@ -134,7 +136,9 @@ Shader "SniperDuel/Water"
 
                 // Foam where the water thins against something standing in it, broken up by the waves.
                 half foamNoise = saturate(n.x * 6 + n.z * 4 + 0.5);
-                half foam = saturate(1 - thickness / max(0.01, _FoamDepth)) * step(0.35, foamNoise + 0.3 * (1 - thickness / max(0.01, _FoamDepth)));
+                // _FoamDepth 0: no foam (still marsh water).
+                half shore = _FoamDepth > 0 ? saturate(1 - thickness / _FoamDepth) : 0;
+                half foam = shore * step(0.35, foamNoise + 0.3 * shore);
                 colour = lerp(colour, _FoamColor.rgb * (SampleSH(half3(0, 1, 0)) + sun.color * lit * 0.6), foam * 0.85);
 
                 // Shallow water lets the bed show through; deep water and grazing views are opaque.
