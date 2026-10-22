@@ -1,6 +1,6 @@
-Processor: AMD EPYC 9V45 96-Core Processor, 4 core(s) @ 4303 MHz 
-Available Memory: 15983 MB 
-Linux Kernel and distribution: Linux 7.0 Ubuntu 24.04 64bit
+Processor: AMD EPYC 9V74 80-Core Processor, 4 core(s) @ 2873 MHz 
+Available Memory: 15989 MB 
+Linux Kernel and distribution: Linux 6.17 Ubuntu 24.04 64bit
 System Language: C
 Keyboard Layout: us
 Selected window backend: x11 
@@ -26,7 +26,7 @@ _ARB_query_buffer_object GL_ARB_robust_buffer_access_behavior GL_ARB_robustness 
 RB_texture_compression_bptc GL_ARB_texture_compression_rgtc GL_ARB_texture_cube_map_array GL_ARB_texture_filter_anisotropic GL_ARB_texture_filter_minmax GL_ARB_texture_float GL_ARB_texture_gather GL_ARB_texture_mirror_clamp_to_edge GL_ARB_texture_multisample GL_ARB_texture_non_power_of_two GL_ARB_texture_query_levels GL_ARB_texture_query_lod GL_ARB_texture_rectangle GL_ARB_texture_rg GL_ARB_texture_rgb10_a2ui GL_ARB_texture_stencil8 GL_ARB_texture_storage GL_ARB_texture_storage_multisample GL_ARB_texture_swizzle GL_ARB_texture_view GL_ARB_timer_query GL_ARB_transform_feedback2 GL_ARB_transform_feedback3 GL_ARB_transform_feedback_instanced GL_ARB_transform_feedback_overflow_query GL_ARB_uniform_buffer_object GL_ARB_vertex_array_bgra GL_ARB_vertex_array_object GL_ARB_vertex_attrib_64bit GL_ARB_vertex_attrib_binding GL_ARB_vertex_buffer_object GL_ARB_vertex_shader GL_ARB_vertex_type_10f_11f_11f_rev GL_ARB_vertex_type_2_10_10_10_rev GL_ARB_viewport_array GL_ARM_shader_framebuffer_fetch_depth_stencil GL_ATI_blend
 _equation_separate GL_ATI_meminfo GL_ATI_texture_float GL_ATI_texture_mirror_once GL_EXT_EGL_image_storage GL_EXT_EGL_image_storage_compression GL_EXT_EGL_sync GL_EXT_abgr GL_EXT_blend_equation_separate GL_EXT_debug_label GL_EXT_draw_buffers2 GL_EXT_draw_instanced GL_EXT_framebuffer_blit GL_EXT_framebuffer_multisample GL_EXT_framebuffer_multisample_blit_scaled GL_EXT_framebuffer_object GL_EXT_framebuffer_sRGB GL_EXT_memory_object GL_EXT_memory_object_fd GL_EXT_packed_depth_stencil GL_EXT_packed_float GL_EXT_pixel_buffer_object GL_EXT_polygon_offset_clamp GL_EXT_provoking_vertex GL_EXT_shader_clock GL_EXT_shader_framebuffer_fetch GL_EXT_shader_framebuffer_fetch_non_coherent GL_EXT_shader_image_load_formatted GL_EXT_shader_integer_mix GL_EXT_texture_array GL_EXT_texture_compression_dxt1 GL_EXT_texture_compression_rgtc GL_EXT_texture_compression_s3tc GL_EXT_texture_filter_anisotropic GL_EXT_texture_filter_minmax GL_EXT_texture_integer GL_EXT_texture_mirror_clamp GL_EXT_texture_sRGB GL_EXT_texture_sRGB_R8 GL_EXT
 _texture_sRGB_RG8 GL_EXT_texture_sRGB_decode GL_EXT_texture_shadow_lod GL_EXT_texture_shared_exponent GL_EXT_texture_snorm GL_EXT_texture_storage GL_EXT_texture_swizzle GL_EXT_timer_query GL_EXT_transform_feedback GL_EXT_vertex_array_bgra GL_EXT_vertex_attrib_64bit GL_IBM_multimode_draw_arrays GL_INTEL_shader_atomic_float_minmax GL_KHR_blend_equation_advanced GL_KHR_blend_equation_advanced_coherent GL_KHR_context_flush_control GL_KHR_debug GL_KHR_no_error GL_KHR_parallel_shader_compile GL_KHR_robust_buffer_access_behavior GL_KHR_robustness GL_KHR_texture_compression_astc_ldr GL_KHR_texture_compression_astc_sliced_3d GL_MESA_framebuffer_flip_y GL_MESA_pack_invert GL_MESA_shader_integer_functions GL_MESA_texture_signed_rgba GL_NVX_gpu_memory_info GL_NV_alpha_to_coverage_dither_control GL_NV_conditional_render GL_NV_copy_image GL_NV_depth_clamp GL_NV_packed_depth_stencil GL_NV_shader_atomic_float GL_NV_texture_barrier GL_OES_EGL_image GL_OVR_multiview GL_OVR_multiview2 GL_S3_s3tc
-OPENGL LOG: Creating OpenGL 4.5 graphics device ; Context level  <OpenGL 4.5> ; Context handle 238836480
+OPENGL LOG: Creating OpenGL 4.5 graphics device ; Context level  <OpenGL 4.5> ; Context handle 629774928
 ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
 ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
 ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
@@ -48,8 +48,8 @@ ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
 FMOD failed to initialize the output device.: "Error initializing output device. " (60)
 FMOD failed to initialize any audio devices, running on emulated software output with no sound. Please check your audio drivers and/or hardware for malfunction.
 Begin MonoManager ReloadAssembly
-- Loaded All Assemblies, in  0.059 seconds
-- Finished resetting the current domain, in  0.002 seconds
+- Loaded All Assemblies, in  0.094 seconds
+- Finished resetting the current domain, in  0.003 seconds
 [Physics::Module] Selected backend.
 [Physics::Module] Name: PhysX
 [Physics::Module] Id: 0xf2b8ea05
@@ -65,7 +65,7 @@ Desktop is 1864 x 860 @ 0 Hz
 Could not fetch DPI for display (screen): Couldn't get DPI
 Could not fetch DPI for display (screen): Couldn't get DPI
 Could not fetch DPI for display (screen): Couldn't get DPI
-UnloadTime: 0.362541 ms
+UnloadTime: 0.322770 ms
 [Skyline] 71404 vertices, 2 helipads
 [Estuary] 3114 trees, 462 shrubs
 [Arena] twin-bridges: shadows off for 180 small far renderers
@@ -112,20 +112,20 @@ Desktop is 1864 x 860 @ 0 Hz
 Could not fetch DPI for display (screen): Couldn't get DPI
 Could not fetch DPI for display (screen): Couldn't get DPI
 Unloading 1864 unused Assets to reduce memory usage. Loaded Objects now: 6678.
-Total: 23.913907 ms (FindLiveObjects: 0.457482 ms CreateObjectMapping: 0.049244 ms MarkObjects: 2.799605 ms  DeleteObjects: 20.607305 ms)
+Total: 29.372593 ms (FindLiveObjects: 0.530990 ms CreateObjectMapping: 0.149202 ms MarkObjects: 4.350899 ms  DeleteObjects: 24.341022 ms)
 
 [Memory] menu, twin-bridges: reserved 448 MB, allocated 283 MB, managed 18 MB, textures 299 MB, 221 meshes with 975,161 vertices, 342 textures (368 MB by size), 302 materials; textures by kind: surface normal 50x 104 MB, other 201x 100 MB, surface mask 21x 65 MB, surface colour 21x 36 MB, weathered 3x 16 MB, repacked masks 14x 16 MB, render targets 26x 13 MB, sky 1x 11 MB, plant pictures 5x 7 MB; biggest textures: BaseMap-Hidden/Universal Render Pipeline/Terrain/Lit (Basemap Gen)-_MainTex 21.3, TempBuffer 2 2048x2048 16.0, kloofendal_48d_partly_cloudy_puresky_4k 10.7, concrete_wall_008_diff_2k (weathered) 5.3, concrete_wall_008_diff_2k (weathered) 5.3, concrete_wall_008_diff_2k (weathered) 5.3, SplatAlpha 0 5.3, asphalt_02_mask 5.3, coast_sand_rocks_02_mask 5.3, concrete_pavers_02_mask 5.3, concrete_wall_008_mask 5.3, corrugated_iron_02_mask 5.3; biggest model textures: ; materials holding full-size model textures: 
-[Impostor] island_tree_02 try 0: (4.21, 3.41, 4.07) m, 68295 solid px, 81106 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] island_tree_03 try 0: (2.97, 2.62, 2.91) m, 57057 solid px, 70290 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_02 try 0: (4.21, 3.41, 4.07) m, 68304 solid px, 81109 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_03 try 0: (2.97, 2.62, 2.91) m, 57062 solid px, 70294 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/01-Title.png
-[Impostor] island_tree_01 try 0: (4.76, 5.03, 4.82) m, 80444 solid px, 98122 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] tree_small_02 try 0: (2.92, 4.56, 4.29) m, 57993 solid px, 76009 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] shrub_02 try 0: (6.57, 2.55, 2.54) m, 3712 solid px, 7508 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_01 try 0: (4.76, 5.03, 4.82) m, 80430 solid px, 98109 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] tree_small_02 try 0: (2.92, 4.56, 4.29) m, 58016 solid px, 75999 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] shrub_02 try 0: (6.57, 2.55, 2.54) m, 3718 solid px, 7507 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Memory] 0 model textures made lean in 0 ms
 Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
 [Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/02-Lobby.png
 Unloading 140 unused Assets to reduce memory usage. Loaded Objects now: 6707.
-Total: 12.154469 ms (FindLiveObjects: 0.510060 ms CreateObjectMapping: 0.073539 ms MarkObjects: 11.325843 ms  DeleteObjects: 0.244775 ms)
+Total: 13.398982 ms (FindLiveObjects: 0.512902 ms CreateObjectMapping: 0.078126 ms MarkObjects: 12.496100 ms  DeleteObjects: 0.311353 ms)
 
 [Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/03-Play.png
 [Capture] /home/runner/work/sniper-vs-sniper/sniper-vs-sniper/shots/04-Loadout.png
@@ -146,38 +146,10 @@ Total: 12.154469 ms (FindLiveObjects: 0.510060 ms CreateObjectMapping: 0.073539 
 [Capture] enemy at (0.00, 24.00, 638.00) bounds (-0.01, 24.32, 638.14) size (0.68, 0.56, 2.70)
 [RealBones] skeleton size 14.465 -> 1.283, scale 0.0887
 [RealBones] posed: head off by 0.010 m, right hand 0.045 m, right foot 0.023 m
-[RealBones] Object_6: bake (0.64, 0.68, 0.30), body (0.00, 24.32, 638.27), at (-0.01, 24.30, 637.89) size (-0.64, -0.29, -0.68), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_7: bake (0.64, 1.01, 0.23), body (0.00, 24.32, 638.27), at (-0.03, 24.24, 638.95) size (-0.64, -0.22, -1.02), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_8: bake (0.10, 0.13, 0.08), body (0.00, 24.32, 638.27), at (0.00, 24.33, 638.55) size (-0.10, -0.08, -0.13), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_9: bake (0.01, 0.02, 0.03), body (0.00, 24.32, 638.27), at (0.00, 24.24, 638.62) size (-0.01, -0.03, -0.02), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_10: bake (0.05, 0.57, 0.11), body (0.00, 24.32, 638.27), at (0.00, 24.34, 638.25) size (-0.05, -0.10, -0.57), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_11: bake (0.27, 0.34, 0.18), body (0.00, 24.32, 638.27), at (0.00, 24.32, 638.21) size (-0.27, -0.18, -0.35), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_12: bake (0.05, 0.17, 0.07), body (0.00, 24.32, 638.27), at (0.00, 24.24, 638.18) size (-0.05, -0.07, -0.17), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_13: bake (0.19, 0.27, 0.08), body (0.00, 24.32, 638.27), at (0.00, 24.24, 638.23) size (-0.19, -0.08, -0.28), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_14: bake (0.08, 0.59, 0.14), body (0.00, 24.32, 638.27), at (0.00, 24.35, 638.23) size (-0.08, -0.13, -0.60), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_15: bake (0.04, 0.03, 0.04), body (0.00, 24.32, 638.27), at (0.00, 24.33, 637.97) size (-0.04, -0.04, -0.03), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_16: bake (0.14, 0.21, 0.23), body (0.00, 24.32, 638.27), at (0.00, 24.40, 637.88) size (-0.14, -0.23, -0.22), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_17: bake (0.05, 0.03, 0.04), body (0.00, 24.32, 638.27), at (0.00, 24.30, 637.93) size (-0.05, -0.04, -0.03), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_18: bake (0.13, 0.10, 0.10), body (0.00, 24.32, 638.27), at (0.00, 24.32, 637.94) size (-0.13, -0.10, -0.10), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_19: bake (0.05, 0.03, 0.04), body (0.00, 24.32, 638.27), at (0.00, 24.30, 637.93) size (-0.05, -0.04, -0.03), lossy (0.00, 0.00, 0.00)
 [RealBones] 67540 triangles over 67 bones, 0 kept whole
 [Capture] enemy at (0.00, 24.00, 638.00) bounds (-0.01, 24.32, 638.14) size (0.68, 0.56, 2.70)
 [RealBones] skeleton size 14.465 -> 1.283, scale 0.0887
 [RealBones] posed: head off by 0.010 m, right hand 0.045 m, right foot 0.023 m
-[RealBones] Object_6: bake (0.64, 0.68, 0.30), body (0.00, 24.32, 638.27), at (-0.01, 24.30, 637.89) size (-0.64, -0.29, -0.68), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_7: bake (0.64, 1.01, 0.23), body (0.00, 24.32, 638.27), at (-0.03, 24.24, 638.95) size (-0.64, -0.22, -1.02), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_8: bake (0.10, 0.13, 0.08), body (0.00, 24.32, 638.27), at (0.00, 24.33, 638.55) size (-0.10, -0.08, -0.13), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_9: bake (0.01, 0.02, 0.03), body (0.00, 24.32, 638.27), at (0.00, 24.24, 638.62) size (-0.01, -0.03, -0.02), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_10: bake (0.05, 0.57, 0.11), body (0.00, 24.32, 638.27), at (0.00, 24.34, 638.25) size (-0.05, -0.10, -0.57), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_11: bake (0.27, 0.34, 0.18), body (0.00, 24.32, 638.27), at (0.00, 24.32, 638.21) size (-0.27, -0.18, -0.35), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_12: bake (0.05, 0.17, 0.07), body (0.00, 24.32, 638.27), at (0.00, 24.24, 638.18) size (-0.05, -0.07, -0.17), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_13: bake (0.19, 0.27, 0.08), body (0.00, 24.32, 638.27), at (0.00, 24.24, 638.23) size (-0.19, -0.08, -0.28), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_14: bake (0.08, 0.59, 0.14), body (0.00, 24.32, 638.27), at (0.00, 24.35, 638.23) size (-0.08, -0.13, -0.60), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_15: bake (0.04, 0.03, 0.04), body (0.00, 24.32, 638.27), at (0.00, 24.33, 637.97) size (-0.04, -0.04, -0.03), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_16: bake (0.14, 0.21, 0.23), body (0.00, 24.32, 638.27), at (0.00, 24.40, 637.88) size (-0.14, -0.23, -0.22), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_17: bake (0.05, 0.03, 0.04), body (0.00, 24.32, 638.27), at (0.00, 24.30, 637.93) size (-0.05, -0.04, -0.03), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_18: bake (0.13, 0.10, 0.10), body (0.00, 24.32, 638.27), at (0.00, 24.32, 637.94) size (-0.13, -0.10, -0.10), lossy (0.00, 0.00, 0.00)
-[RealBones] Object_19: bake (0.05, 0.03, 0.04), body (0.00, 24.32, 638.27), at (0.00, 24.30, 637.93) size (-0.05, -0.04, -0.03), lossy (0.00, 0.00, 0.00)
 [RealBones] 67540 triangles over 67 bones, 0 kept whole
 [Viewmodel] gloved: arms (-0.03, 0.05, 0.04) size (0.49, 0.33, 0.79), carbine (0.06, 0.06, 0.17) size (0.12, 0.44, 1.08), rifle (0.06, 0.13, 0.28) size (0.13, 0.24, 1.30)
 [Viewmodel] hands and rifle, eyepiece at (0.04, 0.18, 0.20)
@@ -251,12 +223,12 @@ Total: 12.154469 ms (FindLiveObjects: 0.510060 ms CreateObjectMapping: 0.073539 
 [Capture] Move-Crouch: figure bounds (1.27, 2.02, 1.98)
 [Capture] Move-CrouchWalk: figure bounds (1.30, 2.02, 2.33)
 [Capture] Move-Prone: figure bounds (1.13, 1.58, 2.85)
-[Capture] Move-Crawl: figure bounds (1.17, 1.56, 2.87)
+[Capture] Move-Crawl: figure bounds (1.16, 1.57, 2.87)
 Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 4572 unused Assets to reduce memory usage. Loaded Objects now: 3839.
-Total: 19.521596 ms (FindLiveObjects: 0.656189 ms CreateObjectMapping: 0.154951 ms MarkObjects: 10.864555 ms  DeleteObjects: 7.845701 ms)
+Total: 38.725098 ms (FindLiveObjects: 0.501415 ms CreateObjectMapping: 0.142732 ms MarkObjects: 25.957846 ms  DeleteObjects: 12.122424 ms)
 
-[Memory] map unloaded: reserved 448 MB, allocated 171 MB, managed 44 MB, textures 72 MB, 131 meshes with 105,799 vertices, 220 textures (97 MB by size), 206 materials; textures by kind: other 158x 28 MB, surface normal 13x 17 MB, repacked masks 12x 16 MB, render targets 26x 15 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: kloofendal_48d_partly_cloudy_puresky_4k 10.7, _CameraTargetAttachment_1677x773_B10G11R11_UFloatPack32_Tex2D 4.9, Reflections 4.0, Reflections 4.0, Studio 1.5, arms_sniper_1k_img7_metal (mask) 1.3, arms_sniper_1k_img4_metal (mask) 1.3, arms_sniper_1k_img1_metal (mask) 1.3, rifle_l115a3_hd_1k_img18_metal (mask) 1.3, rifle_l115a3_hd_1k_img14_metal (mask) 1.3, rifle_l115a3_hd_1k_img10_metal (mask) 1.3, rifle_l115a3_hd_1k_img6_metal (mask) 1.3; biggest model textures: ; materials holding full-size model textures: 
+[Memory] map unloaded: reserved 448 MB, allocated 255 MB, managed 38 MB, textures 72 MB, 131 meshes with 105,799 vertices, 220 textures (97 MB by size), 206 materials; textures by kind: other 158x 28 MB, surface normal 13x 17 MB, repacked masks 12x 16 MB, render targets 26x 15 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: kloofendal_48d_partly_cloudy_puresky_4k 10.7, _CameraTargetAttachment_1677x773_B10G11R11_UFloatPack32_Tex2D 4.9, Reflections 4.0, Reflections 4.0, Studio 1.5, arms_sniper_1k_img7_metal (mask) 1.3, arms_sniper_1k_img4_metal (mask) 1.3, arms_sniper_1k_img1_metal (mask) 1.3, rifle_l115a3_hd_1k_img18_metal (mask) 1.3, rifle_l115a3_hd_1k_img14_metal (mask) 1.3, rifle_l115a3_hd_1k_img10_metal (mask) 1.3, rifle_l115a3_hd_1k_img6_metal (mask) 1.3; biggest model textures: ; materials holding full-size model textures: 
 [Library] missing model shrub_03
 [Library] missing model shrub_04
 [Wilds] Shore plants: 17008 plants, 26 pictures
@@ -299,44 +271,44 @@ Total: 19.521596 ms (FindLiveObjects: 0.656189 ms CreateObjectMapping: 0.154951 
 Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
 [Sound] watchtowers: 29 clips, 8.1 MB of PCM
 Unloading 2974 unused Assets to reduce memory usage. Loaded Objects now: 9766.
-Total: 282.763468 ms (FindLiveObjects: 0.817910 ms CreateObjectMapping: 0.111556 ms MarkObjects: 17.614863 ms  DeleteObjects: 264.218849 ms)
+Total: 548.916568 ms (FindLiveObjects: 1.074027 ms CreateObjectMapping: 0.161400 ms MarkObjects: 25.081122 ms  DeleteObjects: 522.599258 ms)
 
-[Memory] map watchtowers: reserved 621 MB, allocated 353 MB, managed 72 MB, textures 350 MB, 407 meshes with 1,565,194 vertices, 380 textures (425 MB by size), 436 materials; textures by kind: surface normal 49x 108 MB, other 191x 98 MB, surface mask 16x 62 MB, repacked masks 30x 40 MB, plant pictures 27x 36 MB, surface colour 16x 33 MB, render targets 38x 18 MB, weathered 2x 11 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: BaseMap-Hidden/Universal Render Pipeline/Terrain/Lit (Basemap Gen)-_MainTex 21.3, TempBuffer 13 2048x2048 16.0, kloofendal_38d_partly_cloudy_puresky_4k 10.7, concrete_wall_008_diff_2k (weathered) 5.3, concrete_wall_008_diff_2k (weathered) 5.3, SplatAlpha 0 5.3, brown_mud_leaves_01_mask 5.3, coast_sand_01_mask 5.3, concrete_wall_008_mask 5.3, corrugated_iron_02_mask 5.3, forest_ground_04_mask 5.3, leafy_grass_mask 5.3; biggest model textures: ; materials holding full-size model textures: 
-[Impostor] island_tree_02 try 0: (4.21, 3.41, 4.07) m, 67510 solid px, 81315 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] island_tree_03 try 0: (2.97, 2.62, 2.91) m, 67209 solid px, 83684 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] island_tree_01 try 0: (4.76, 5.03, 4.82) m, 80223 solid px, 96911 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] tree_small_02 try 0: (2.92, 4.56, 4.29) m, 58920 solid px, 78287 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] shrub_01 try 0: (2.59, 0.40, 0.22) m, 2546 solid px, 3411 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] shrub_02 try 0: (6.57, 2.55, 2.54) m, 3202 solid px, 5414 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#0 try 0: (0.18, 0.14, 0.16) m, 20329 solid px, 27482 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#1 try 0: (0.28, 0.17, 0.28) m, 24777 solid px, 33528 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#2 try 0: (0.19, 0.18, 0.20) m, 23322 solid px, 31449 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#3 try 0: (0.15, 0.29, 0.13) m, 10774 solid px, 13546 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#4 try 0: (0.16, 0.32, 0.16) m, 9055 solid px, 11792 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#5 try 0: (0.15, 0.24, 0.13) m, 17263 solid px, 20986 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#6 try 0: (0.17, 0.10, 0.19) m, 13046 solid px, 18460 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#7 try 0: (0.19, 0.14, 0.20) m, 28676 solid px, 36539 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#8 try 0: (0.22, 0.22, 0.22) m, 41337 solid px, 50130 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#9 try 0: (0.32, 0.15, 0.33) m, 37299 solid px, 46505 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Memory] map watchtowers: reserved 687 MB, allocated 435 MB, managed 56 MB, textures 350 MB, 407 meshes with 1,565,194 vertices, 380 textures (425 MB by size), 436 materials; textures by kind: surface normal 49x 108 MB, other 191x 98 MB, surface mask 16x 62 MB, repacked masks 30x 40 MB, plant pictures 27x 36 MB, surface colour 16x 33 MB, render targets 38x 18 MB, weathered 2x 11 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: BaseMap-Hidden/Universal Render Pipeline/Terrain/Lit (Basemap Gen)-_MainTex 21.3, TempBuffer 13 2048x2048 16.0, kloofendal_38d_partly_cloudy_puresky_4k 10.7, concrete_wall_008_diff_2k (weathered) 5.3, concrete_wall_008_diff_2k (weathered) 5.3, SplatAlpha 0 5.3, brown_mud_leaves_01_mask 5.3, coast_sand_01_mask 5.3, concrete_wall_008_mask 5.3, corrugated_iron_02_mask 5.3, forest_ground_04_mask 5.3, leafy_grass_mask 5.3; biggest model textures: ; materials holding full-size model textures: 
+[Impostor] island_tree_02 try 0: (4.21, 3.41, 4.07) m, 67507 solid px, 81312 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_03 try 0: (2.97, 2.62, 2.91) m, 67207 solid px, 83700 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_01 try 0: (4.76, 5.03, 4.82) m, 80217 solid px, 96915 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] tree_small_02 try 0: (2.92, 4.56, 4.29) m, 58912 solid px, 78280 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] shrub_01 try 0: (2.59, 0.40, 0.22) m, 2549 solid px, 3411 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] shrub_02 try 0: (6.57, 2.55, 2.54) m, 3202 solid px, 5410 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#0 try 0: (0.18, 0.14, 0.16) m, 20345 solid px, 27478 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#1 try 0: (0.28, 0.17, 0.28) m, 24790 solid px, 33529 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#2 try 0: (0.19, 0.18, 0.20) m, 23313 solid px, 31442 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#3 try 0: (0.15, 0.29, 0.13) m, 10760 solid px, 13543 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#4 try 0: (0.16, 0.32, 0.16) m, 9060 solid px, 11794 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#5 try 0: (0.15, 0.24, 0.13) m, 17261 solid px, 20985 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#6 try 0: (0.17, 0.10, 0.19) m, 13038 solid px, 18460 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#7 try 0: (0.19, 0.14, 0.20) m, 28680 solid px, 36541 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#8 try 0: (0.22, 0.22, 0.22) m, 41307 solid px, 50120 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#9 try 0: (0.32, 0.15, 0.33) m, 37317 solid px, 46502 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Post-watchtowers-A-tower
-[Impostor] grass_medium_01#10 try 0: (0.28, 0.14, 0.26) m, 33926 solid px, 42166 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#10 try 0: (0.28, 0.14, 0.26) m, 33940 solid px, 42183 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_01#11 try 0: (0.02, 0.08, 0.03) m, 6247 solid px, 7414 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_01#12 try 0: (0.07, 0.11, 0.07) m, 5907 solid px, 8137 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Post-watchtowers-A-hide
-[Impostor] grass_medium_02#0 try 0: (0.12, 0.16, 0.12) m, 12673 solid px, 17023 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_02#1 try 0: (0.18, 0.18, 0.20) m, 14758 solid px, 19447 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_02#0 try 0: (0.12, 0.16, 0.12) m, 12678 solid px, 17024 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_02#1 try 0: (0.18, 0.18, 0.20) m, 14754 solid px, 19452 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Post-watchtowers-A-pump
-[Impostor] grass_medium_02#2 try 0: (0.91, 0.41, 0.43) m, 5348 solid px, 9203 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] fern_02#0 try 0: (0.99, 0.43, 0.89) m, 42046 solid px, 43749 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_02#2 try 0: (0.91, 0.41, 0.43) m, 5327 solid px, 9205 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] fern_02#0 try 0: (0.99, 0.43, 0.89) m, 42056 solid px, 43750 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Post-watchtowers-A-mast
-[Impostor] fern_02#1 try 0: (0.87, 0.35, 0.77) m, 35431 solid px, 37070 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] fern_02#2 try 0: (0.55, 0.29, 0.61) m, 34758 solid px, 36354 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] fern_02#3 try 0: (0.57, 0.21, 0.59) m, 41345 solid px, 42642 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] fern_02#1 try 0: (0.87, 0.35, 0.77) m, 35434 solid px, 37073 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] fern_02#2 try 0: (0.55, 0.29, 0.61) m, 34754 solid px, 36353 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] fern_02#3 try 0: (0.57, 0.21, 0.59) m, 41337 solid px, 42641 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Memory] 0 model textures made lean in 0 ms
 Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
 [Capture] Post-watchtowers-B-tower-Zoom
 Unloading 327 unused Assets to reduce memory usage. Loaded Objects now: 9719.
-Total: 13.756774 ms (FindLiveObjects: 0.533866 ms CreateObjectMapping: 0.058528 ms MarkObjects: 12.790793 ms  DeleteObjects: 0.373397 ms)
+Total: 10.630686 ms (FindLiveObjects: 0.649826 ms CreateObjectMapping: 0.062814 ms MarkObjects: 9.461397 ms  DeleteObjects: 0.456148 ms)
 
 [Capture] Post-watchtowers-B-hide-Zoom
 [Capture] Post-watchtowers-B-pump-Zoom
@@ -344,9 +316,9 @@ Total: 13.756774 ms (FindLiveObjects: 0.533866 ms CreateObjectMapping: 0.058528 
 [Capture] Post-watchtowers-Air
 Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 628 unused Assets to reduce memory usage. Loaded Objects now: 3843.
-Total: 11.960974 ms (FindLiveObjects: 0.365785 ms CreateObjectMapping: 0.039089 ms MarkObjects: 8.857755 ms  DeleteObjects: 2.698124 ms)
+Total: 27.224068 ms (FindLiveObjects: 0.476879 ms CreateObjectMapping: 0.071827 ms MarkObjects: 20.398510 ms  DeleteObjects: 6.276572 ms)
 
-[Memory] map unloaded: reserved 503 MB, allocated 184 MB, managed 36 MB, textures 72 MB, 134 meshes with 106,051 vertices, 220 textures (97 MB by size), 206 materials; textures by kind: other 158x 28 MB, surface normal 13x 17 MB, repacked masks 12x 16 MB, render targets 26x 15 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: kloofendal_38d_partly_cloudy_puresky_4k 10.7, _CameraTargetAttachment_1677x773_B10G11R11_UFloatPack32_Tex2D 4.9, Reflections 4.0, Reflections 4.0, Studio 1.5, arms_sniper_1k_img7_metal (mask) 1.3, arms_sniper_1k_img4_metal (mask) 1.3, arms_sniper_1k_img1_metal (mask) 1.3, rifle_l115a3_hd_1k_img18_metal (mask) 1.3, rifle_l115a3_hd_1k_img14_metal (mask) 1.3, rifle_l115a3_hd_1k_img10_metal (mask) 1.3, rifle_l115a3_hd_1k_img6_metal (mask) 1.3; biggest model textures: ; materials holding full-size model textures: 
+[Memory] map unloaded: reserved 491 MB, allocated 196 MB, managed 51 MB, textures 72 MB, 134 meshes with 106,051 vertices, 220 textures (97 MB by size), 206 materials; textures by kind: other 158x 28 MB, surface normal 13x 17 MB, repacked masks 12x 16 MB, render targets 26x 15 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: kloofendal_38d_partly_cloudy_puresky_4k 10.7, _CameraTargetAttachment_1677x773_B10G11R11_UFloatPack32_Tex2D 4.9, Reflections 4.0, Reflections 4.0, Studio 1.5, arms_sniper_1k_img7_metal (mask) 1.3, arms_sniper_1k_img4_metal (mask) 1.3, arms_sniper_1k_img1_metal (mask) 1.3, rifle_l115a3_hd_1k_img18_metal (mask) 1.3, rifle_l115a3_hd_1k_img14_metal (mask) 1.3, rifle_l115a3_hd_1k_img10_metal (mask) 1.3, rifle_l115a3_hd_1k_img6_metal (mask) 1.3; biggest model textures: ; materials holding full-size model textures: 
 [Arena] oil-rigs: shadows off for 0 small far renderers
 [Arena] oil-rigs: 633,893 triangles; heaviest:
   110,616 dutch_ship_large_01 (3 meshes)
@@ -386,9 +358,9 @@ Total: 11.960974 ms (FindLiveObjects: 0.365785 ms CreateObjectMapping: 0.039089 
 Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
 [Sound] oil-rigs: 29 clips, 8.1 MB of PCM
 Unloading 2199 unused Assets to reduce memory usage. Loaded Objects now: 8254.
-Total: 290.018849 ms (FindLiveObjects: 0.686624 ms CreateObjectMapping: 0.095602 ms MarkObjects: 19.572412 ms  DeleteObjects: 269.664010 ms)
+Total: 576.450307 ms (FindLiveObjects: 0.907470 ms CreateObjectMapping: 0.148881 ms MarkObjects: 44.778389 ms  DeleteObjects: 530.614866 ms)
 
-[Memory] map oil-rigs: reserved 423 MB, allocated 198 MB, managed 70 MB, textures 263 MB, 436 meshes with 736,017 vertices, 350 textures (319 MB by size), 453 materials; textures by kind: surface normal 48x 95 MB, other 208x 86 MB, surface mask 14x 47 MB, repacked masks 23x 31 MB, surface colour 14x 25 MB, render targets 32x 16 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: BaseMap-Hidden/Universal Render Pipeline/Terrain/Lit (Basemap Gen)-_MainTex 21.3, qwantani_dusk_1_puresky_4k 10.7, aerial_beach_01_mask 5.3, brown_mud_leaves_01_mask 5.3, corrugated_iron_02_mask 5.3, metal_plate_mask 5.3, rocky_terrain_02_mask 5.3, rusty_metal_02_mask 5.3, rusty_painted_metal_mask 5.3, sparse_grass_mask 5.3, aerial_beach_01_nor_gl_2k 5.3, brown_mud_leaves_01_nor_gl_2k 5.3; biggest model textures: ; materials holding full-size model textures: 
+[Memory] map oil-rigs: reserved 455 MB, allocated 198 MB, managed 54 MB, textures 263 MB, 436 meshes with 736,017 vertices, 350 textures (319 MB by size), 453 materials; textures by kind: surface normal 48x 95 MB, other 208x 86 MB, surface mask 14x 47 MB, repacked masks 23x 31 MB, surface colour 14x 25 MB, render targets 32x 16 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: BaseMap-Hidden/Universal Render Pipeline/Terrain/Lit (Basemap Gen)-_MainTex 21.3, qwantani_dusk_1_puresky_4k 10.7, aerial_beach_01_mask 5.3, brown_mud_leaves_01_mask 5.3, corrugated_iron_02_mask 5.3, metal_plate_mask 5.3, rocky_terrain_02_mask 5.3, rusty_metal_02_mask 5.3, rusty_painted_metal_mask 5.3, sparse_grass_mask 5.3, aerial_beach_01_nor_gl_2k 5.3, brown_mud_leaves_01_nor_gl_2k 5.3; biggest model textures: ; materials holding full-size model textures: 
 [Capture] Post-oil-rigs-A-heli
 [Capture] Post-oil-rigs-A-jacket
 [Capture] Post-oil-rigs-A-ship
@@ -398,9 +370,9 @@ Total: 290.018849 ms (FindLiveObjects: 0.686624 ms CreateObjectMapping: 0.095602
 [Capture] Post-oil-rigs-Air
 Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 662 unused Assets to reduce memory usage. Loaded Objects now: 3854.
-Total: 17.245241 ms (FindLiveObjects: 0.358024 ms CreateObjectMapping: 0.039288 ms MarkObjects: 12.939660 ms  DeleteObjects: 3.908079 ms)
+Total: 20.913926 ms (FindLiveObjects: 0.506093 ms CreateObjectMapping: 0.185435 ms MarkObjects: 15.948804 ms  DeleteObjects: 4.273054 ms)
 
-[Memory] map unloaded: reserved 423 MB, allocated 175 MB, managed 70 MB, textures 72 MB, 134 meshes with 106,051 vertices, 230 textures (97 MB by size), 206 materials; textures by kind: other 168x 28 MB, surface normal 13x 17 MB, repacked masks 12x 16 MB, render targets 26x 15 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: qwantani_dusk_1_puresky_4k 10.7, _CameraTargetAttachment_1677x773_B10G11R11_UFloatPack32_Tex2D 4.9, Reflections 4.0, Reflections 4.0, Studio 1.5, arms_sniper_1k_img7_metal (mask) 1.3, arms_sniper_1k_img4_metal (mask) 1.3, arms_sniper_1k_img1_metal (mask) 1.3, rifle_l115a3_hd_1k_img18_metal (mask) 1.3, rifle_l115a3_hd_1k_img14_metal (mask) 1.3, rifle_l115a3_hd_1k_img10_metal (mask) 1.3, rifle_l115a3_hd_1k_img6_metal (mask) 1.3; biggest model textures: ; materials holding full-size model textures: 
+[Memory] map unloaded: reserved 455 MB, allocated 191 MB, managed 54 MB, textures 72 MB, 134 meshes with 106,051 vertices, 230 textures (97 MB by size), 206 materials; textures by kind: other 168x 28 MB, surface normal 13x 17 MB, repacked masks 12x 16 MB, render targets 26x 15 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: qwantani_dusk_1_puresky_4k 10.7, _CameraTargetAttachment_1677x773_B10G11R11_UFloatPack32_Tex2D 4.9, Reflections 4.0, Reflections 4.0, Studio 1.5, arms_sniper_1k_img7_metal (mask) 1.3, arms_sniper_1k_img4_metal (mask) 1.3, arms_sniper_1k_img1_metal (mask) 1.3, rifle_l115a3_hd_1k_img18_metal (mask) 1.3, rifle_l115a3_hd_1k_img14_metal (mask) 1.3, rifle_l115a3_hd_1k_img10_metal (mask) 1.3, rifle_l115a3_hd_1k_img6_metal (mask) 1.3; biggest model textures: ; materials holding full-size model textures: 
 [Wilds] Veld: 79922 plants, 38 pictures
 [Wilds] Lane stones: 16000 stones
 [Wilds] Spot pebbles: 16000 stones
@@ -443,51 +415,51 @@ Total: 17.245241 ms (FindLiveObjects: 0.358024 ms CreateObjectMapping: 0.039288 
 Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
 [Sound] dry-valley: 29 clips, 8.5 MB of PCM
 Unloading 2341 unused Assets to reduce memory usage. Loaded Objects now: 9838.
-Total: 261.063844 ms (FindLiveObjects: 0.826163 ms CreateObjectMapping: 0.103174 ms MarkObjects: 20.254579 ms  DeleteObjects: 239.879728 ms)
+Total: 497.081632 ms (FindLiveObjects: 1.032636 ms CreateObjectMapping: 0.154049 ms MarkObjects: 24.525506 ms  DeleteObjects: 471.368620 ms)
 
-[Memory] map dry-valley: reserved 642 MB, allocated 399 MB, managed 48 MB, textures 382 MB, 306 meshes with 3,137,454 vertices, 459 textures (441 MB by size), 483 materials; textures by kind: surface normal 67x 121 MB, other 236x 101 MB, repacked masks 45x 60 MB, plant pictures 39x 52 MB, surface mask 11x 45 MB, surface colour 12x 24 MB, render targets 38x 18 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: BaseMap-Hidden/Universal Render Pipeline/Terrain/Lit (Basemap Gen)-_MainTex 21.3, kloofendal_48d_partly_cloudy_puresky_4k 10.7, SplatAlpha 0 5.3, coast_sand_01_mask 5.3, concrete_wall_008_mask 5.3, corrugated_iron_02_mask 5.3, gravelly_sand_mask 5.3, rock_boulder_dry_mask 5.3, rocky_trail_mask 5.3, rusty_metal_02_mask 5.3, weathered_planks_mask 5.3, coast_sand_01_nor_gl_2k 5.3; biggest model textures: ; materials holding full-size model textures: 
-[Impostor] wild_rooibos_bush#0 try 0: (1.18, 0.54, 0.84) m, 38913 solid px, 42476 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] wild_rooibos_bush#1 try 0: (0.43, 0.45, 0.47) m, 89665 solid px, 94264 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] wild_rooibos_bush#2 try 0: (0.33, 0.42, 0.38) m, 82664 solid px, 86079 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] wild_rooibos_bush#3 try 0: (0.28, 0.31, 0.17) m, 60260 solid px, 62998 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] didelta_spinosa#0 try 0: (2.12, 2.07, 1.86) m, 90848 solid px, 97740 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] didelta_spinosa#1 try 0: (1.27, 1.30, 1.57) m, 62389 solid px, 67555 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] didelta_spinosa#2 try 0: (0.82, 0.94, 1.06) m, 51343 solid px, 55660 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] searsia_lucida#0 try 0: (3.22, 2.34, 2.84) m, 63023 solid px, 75446 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] searsia_lucida#1 try 0: (1.51, 1.68, 1.25) m, 68885 solid px, 81245 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] searsia_lucida#2 try 0: (0.66, 0.74, 0.48) m, 47092 solid px, 54553 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] searsia_lucida#3 try 0: (0.38, 0.79, 0.32) m, 30413 solid px, 36658 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_02#0 try 0: (0.12, 0.16, 0.12) m, 11944 solid px, 16206 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_02#1 try 0: (0.18, 0.18, 0.20) m, 14680 solid px, 19487 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_02#2 try 0: (0.91, 0.41, 0.43) m, 6110 solid px, 11226 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#0 try 0: (0.18, 0.14, 0.16) m, 19672 solid px, 26459 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#1 try 0: (0.28, 0.17, 0.28) m, 24533 solid px, 33120 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Memory] map dry-valley: reserved 642 MB, allocated 391 MB, managed 58 MB, textures 382 MB, 306 meshes with 3,137,454 vertices, 459 textures (441 MB by size), 483 materials; textures by kind: surface normal 67x 121 MB, other 236x 101 MB, repacked masks 45x 60 MB, plant pictures 39x 52 MB, surface mask 11x 45 MB, surface colour 12x 24 MB, render targets 38x 18 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: BaseMap-Hidden/Universal Render Pipeline/Terrain/Lit (Basemap Gen)-_MainTex 21.3, kloofendal_48d_partly_cloudy_puresky_4k 10.7, SplatAlpha 0 5.3, coast_sand_01_mask 5.3, concrete_wall_008_mask 5.3, corrugated_iron_02_mask 5.3, gravelly_sand_mask 5.3, rock_boulder_dry_mask 5.3, rocky_trail_mask 5.3, rusty_metal_02_mask 5.3, weathered_planks_mask 5.3, coast_sand_01_nor_gl_2k 5.3; biggest model textures: ; materials holding full-size model textures: 
+[Impostor] wild_rooibos_bush#0 try 0: (1.18, 0.54, 0.84) m, 38920 solid px, 42487 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] wild_rooibos_bush#1 try 0: (0.43, 0.45, 0.47) m, 89678 solid px, 94327 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] wild_rooibos_bush#2 try 0: (0.33, 0.42, 0.38) m, 82654 solid px, 86210 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] wild_rooibos_bush#3 try 0: (0.28, 0.31, 0.17) m, 60267 solid px, 62994 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] didelta_spinosa#0 try 0: (2.12, 2.07, 1.86) m, 90833 solid px, 97737 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] didelta_spinosa#1 try 0: (1.27, 1.30, 1.57) m, 62363 solid px, 67551 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] didelta_spinosa#2 try 0: (0.82, 0.94, 1.06) m, 51349 solid px, 55655 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] searsia_lucida#0 try 0: (3.22, 2.34, 2.84) m, 63006 solid px, 75451 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] searsia_lucida#1 try 0: (1.51, 1.68, 1.25) m, 68899 solid px, 81247 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] searsia_lucida#2 try 0: (0.66, 0.74, 0.48) m, 47052 solid px, 54565 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] searsia_lucida#3 try 0: (0.38, 0.79, 0.32) m, 30436 solid px, 36655 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_02#0 try 0: (0.12, 0.16, 0.12) m, 11945 solid px, 16206 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_02#1 try 0: (0.18, 0.18, 0.20) m, 14676 solid px, 19488 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_02#2 try 0: (0.91, 0.41, 0.43) m, 6104 solid px, 11218 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#0 try 0: (0.18, 0.14, 0.16) m, 19665 solid px, 26465 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#1 try 0: (0.28, 0.17, 0.28) m, 24525 solid px, 33118 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Post-dry-valley-A-bench
-[Impostor] grass_medium_01#2 try 0: (0.19, 0.18, 0.20) m, 23911 solid px, 32097 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#3 try 0: (0.15, 0.29, 0.13) m, 11068 solid px, 13666 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#4 try 0: (0.16, 0.32, 0.16) m, 9451 solid px, 12536 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#2 try 0: (0.19, 0.18, 0.20) m, 23900 solid px, 32100 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#3 try 0: (0.15, 0.29, 0.13) m, 11073 solid px, 13665 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#4 try 0: (0.16, 0.32, 0.16) m, 9449 solid px, 12537 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Post-dry-valley-A-bar
-[Impostor] grass_medium_01#5 try 0: (0.15, 0.24, 0.13) m, 16856 solid px, 20502 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#6 try 0: (0.17, 0.10, 0.19) m, 12528 solid px, 17921 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#5 try 0: (0.15, 0.24, 0.13) m, 16841 solid px, 20499 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#6 try 0: (0.17, 0.10, 0.19) m, 12529 solid px, 17920 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Post-dry-valley-A-flank
-[Impostor] grass_medium_01#7 try 0: (0.19, 0.14, 0.20) m, 29219 solid px, 37644 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#8 try 0: (0.22, 0.22, 0.22) m, 41034 solid px, 50288 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#7 try 0: (0.19, 0.14, 0.20) m, 29197 solid px, 37646 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#8 try 0: (0.22, 0.22, 0.22) m, 41017 solid px, 50295 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Post-dry-valley-B-bench-Zoom
-[Impostor] grass_medium_01#9 try 0: (0.32, 0.15, 0.33) m, 36919 solid px, 45958 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#10 try 0: (0.28, 0.14, 0.26) m, 34377 solid px, 42410 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#9 try 0: (0.32, 0.15, 0.33) m, 36924 solid px, 45965 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#10 try 0: (0.28, 0.14, 0.26) m, 34399 solid px, 42414 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_01#11 try 0: (0.02, 0.08, 0.03) m, 5960 solid px, 7045 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Post-dry-valley-B-bar-Zoom
 [Impostor] grass_medium_01#12 try 0: (0.07, 0.11, 0.07) m, 5771 solid px, 7880 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] quiver_tree_01 try 0: (1.18, 2.72, 0.97) m, 20178 solid px, 22078 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] quiver_tree_01 try 0: (1.18, 2.72, 0.97) m, 20168 solid px, 22074 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Post-dry-valley-B-flank-Zoom
-[Impostor] quiver_tree_02 try 0: (0.87, 1.47, 0.88) m, 47250 solid px, 49827 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] cheiridopsis_succulent#0 try 0: (0.20, 0.19, 0.18) m, 74508 solid px, 75956 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] quiver_tree_02 try 0: (0.87, 1.47, 0.88) m, 47252 solid px, 49836 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] cheiridopsis_succulent#0 try 0: (0.20, 0.19, 0.18) m, 74506 solid px, 75955 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Post-dry-valley-Air
 Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 994 unused Assets to reduce memory usage. Loaded Objects now: 3928.
-Total: 15.536943 ms (FindLiveObjects: 0.395149 ms CreateObjectMapping: 0.052479 ms MarkObjects: 9.617524 ms  DeleteObjects: 5.471591 ms)
+Total: 21.838070 ms (FindLiveObjects: 0.471862 ms CreateObjectMapping: 0.066889 ms MarkObjects: 17.491017 ms  DeleteObjects: 3.807792 ms)
 
-[Memory] map unloaded: reserved 610 MB, allocated 369 MB, managed 50 MB, textures 83 MB, 143 meshes with 168,989 vertices, 250 textures (115 MB by size), 214 materials; textures by kind: other 172x 32 MB, surface normal 13x 17 MB, render targets 32x 17 MB, repacked masks 12x 16 MB, plant pictures 9x 12 MB, sky 1x 11 MB, unnamed 10x 9 MB, surface colour 1x 1 MB; biggest textures: kloofendal_48d_partly_cloudy_puresky_4k 10.7, _CameraTargetAttachment_1677x773_B10G11R11_UFloatPack32_Tex2D 4.9, TempBuffer 26 1024x1024 4.0, Reflections 4.0, Reflections 4.0, Studio 1.5, Impostor cheiridopsis_succulent#8 1.3, Impostor cheiridopsis_succulent#7 1.3, Impostor cheiridopsis_succulent#6 1.3, Impostor cheiridopsis_succulent#5 1.3, Impostor cheiridopsis_succulent#4 1.3, Impostor cheiridopsis_succulent#3 1.3; biggest model textures: ; materials holding full-size model textures: 
+[Memory] map unloaded: reserved 642 MB, allocated 358 MB, managed 53 MB, textures 83 MB, 143 meshes with 168,989 vertices, 250 textures (115 MB by size), 214 materials; textures by kind: other 172x 32 MB, surface normal 13x 17 MB, render targets 32x 17 MB, repacked masks 12x 16 MB, plant pictures 9x 12 MB, sky 1x 11 MB, unnamed 10x 9 MB, surface colour 1x 1 MB; biggest textures: kloofendal_48d_partly_cloudy_puresky_4k 10.7, _CameraTargetAttachment_1677x773_B10G11R11_UFloatPack32_Tex2D 4.9, TempBuffer 26 1024x1024 4.0, Reflections 4.0, Reflections 4.0, Studio 1.5, Impostor cheiridopsis_succulent#8 1.3, Impostor cheiridopsis_succulent#7 1.3, Impostor cheiridopsis_succulent#6 1.3, Impostor cheiridopsis_succulent#5 1.3, Impostor cheiridopsis_succulent#4 1.3, Impostor cheiridopsis_succulent#3 1.3; biggest model textures: ; materials holding full-size model textures: 
 [Arena] harbor-rooftops: shadows off for 64 small far renderers
 [Arena] harbor-rooftops: 1,542,484 triangles; heaviest:
   240,480 exterior_aircon_unit (72 meshes)
@@ -526,22 +498,22 @@ Total: 15.536943 ms (FindLiveObjects: 0.395149 ms CreateObjectMapping: 0.052479 
 [Memory] 0 model textures made lean in 0 ms
 Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
 [Sound] harbor-rooftops: 29 clips, 8.3 MB of PCM
-[Impostor] cheiridopsis_succulent#1 try 0: (0.24, 0.17, 0.24) m, 80702 solid px, 82565 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] cheiridopsis_succulent#1 try 0: (0.24, 0.17, 0.24) m, 80707 solid px, 82563 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 Unloading 1735 unused Assets to reduce memory usage. Loaded Objects now: 9228.
-Total: 271.650584 ms (FindLiveObjects: 0.683819 ms CreateObjectMapping: 0.086849 ms MarkObjects: 17.477007 ms  DeleteObjects: 253.402698 ms)
+Total: 547.329344 ms (FindLiveObjects: 0.934239 ms CreateObjectMapping: 0.126468 ms MarkObjects: 21.910508 ms  DeleteObjects: 524.357438 ms)
 
-[Memory] map harbor-rooftops: reserved 483 MB, allocated 234 MB, managed 80 MB, textures 325 MB, 247 meshes with 1,125,054 vertices, 406 textures (382 MB by size), 394 materials; textures by kind: surface normal 58x 116 MB, other 218x 82 MB, surface mask 19x 59 MB, repacked masks 32x 43 MB, surface colour 23x 35 MB, render targets 38x 18 MB, sky 1x 11 MB, plant pictures 7x 9 MB, unnamed 10x 9 MB; biggest textures: BaseMap-Hidden/Universal Render Pipeline/Terrain/Lit (Basemap Gen)-_MainTex 21.3, kloofendal_48d_partly_cloudy_puresky_4k 10.7, asphalt_02_mask 5.3, brown_mud_leaves_01_mask 5.3, coast_sand_rocks_02_mask 5.3, concrete_wall_008_mask 5.3, corrugated_iron_02_mask 5.3, gravelly_sand_mask 5.3, rusty_metal_02_mask 5.3, rusty_painted_metal_mask 5.3, sparse_grass_mask 5.3, weathered_planks_mask 5.3; biggest model textures: ; materials holding full-size model textures: 
-[Impostor] cheiridopsis_succulent#2 try 0: (0.24, 0.20, 0.26) m, 105037 solid px, 106895 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] cheiridopsis_succulent#3 try 0: (0.35, 0.25, 0.35) m, 98034 solid px, 100069 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] cheiridopsis_succulent#4 try 0: (0.39, 0.23, 0.35) m, 80459 solid px, 82065 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] cheiridopsis_succulent#5 try 0: (0.45, 0.23, 0.40) m, 69192 solid px, 70854 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] cheiridopsis_succulent#6 try 0: (0.51, 0.27, 0.42) m, 68337 solid px, 69863 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] cheiridopsis_succulent#7 try 0: (0.60, 0.24, 0.53) m, 66685 solid px, 67936 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] cheiridopsis_succulent#8 try 0: (0.51, 0.27, 0.55) m, 71784 solid px, 73206 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Memory] map harbor-rooftops: reserved 515 MB, allocated 234 MB, managed 104 MB, textures 325 MB, 247 meshes with 1,125,054 vertices, 406 textures (382 MB by size), 394 materials; textures by kind: surface normal 58x 116 MB, other 218x 82 MB, surface mask 19x 59 MB, repacked masks 32x 43 MB, surface colour 23x 35 MB, render targets 38x 18 MB, sky 1x 11 MB, plant pictures 7x 9 MB, unnamed 10x 9 MB; biggest textures: BaseMap-Hidden/Universal Render Pipeline/Terrain/Lit (Basemap Gen)-_MainTex 21.3, kloofendal_48d_partly_cloudy_puresky_4k 10.7, asphalt_02_mask 5.3, brown_mud_leaves_01_mask 5.3, coast_sand_rocks_02_mask 5.3, concrete_wall_008_mask 5.3, corrugated_iron_02_mask 5.3, gravelly_sand_mask 5.3, rusty_metal_02_mask 5.3, rusty_painted_metal_mask 5.3, sparse_grass_mask 5.3, weathered_planks_mask 5.3; biggest model textures: ; materials holding full-size model textures: 
+[Impostor] cheiridopsis_succulent#2 try 0: (0.24, 0.20, 0.26) m, 105036 solid px, 106898 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] cheiridopsis_succulent#3 try 0: (0.35, 0.25, 0.35) m, 98022 solid px, 100066 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] cheiridopsis_succulent#4 try 0: (0.39, 0.23, 0.35) m, 80454 solid px, 82065 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] cheiridopsis_succulent#5 try 0: (0.45, 0.23, 0.40) m, 69206 solid px, 70855 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] cheiridopsis_succulent#6 try 0: (0.51, 0.27, 0.42) m, 68338 solid px, 69861 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] cheiridopsis_succulent#7 try 0: (0.60, 0.24, 0.53) m, 66690 solid px, 67935 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] cheiridopsis_succulent#8 try 0: (0.51, 0.27, 0.55) m, 71779 solid px, 73203 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Memory] 0 model textures made lean in 0 ms
 Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 84 unused Assets to reduce memory usage. Loaded Objects now: 9203.
-Total: 9.800250 ms (FindLiveObjects: 0.743268 ms CreateObjectMapping: 0.083575 ms MarkObjects: 8.811536 ms  DeleteObjects: 0.161651 ms)
+Total: 7.888209 ms (FindLiveObjects: 0.558921 ms CreateObjectMapping: 0.057786 ms MarkObjects: 7.049532 ms  DeleteObjects: 0.221480 ms)
 
 [Capture] Post-harbor-rooftops-A-roof
 [Capture] Post-harbor-rooftops-A-warehouse
@@ -554,9 +526,9 @@ Total: 9.800250 ms (FindLiveObjects: 0.743268 ms CreateObjectMapping: 0.083575 m
 [Capture] Post-harbor-rooftops-Air
 Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 446 unused Assets to reduce memory usage. Loaded Objects now: 3858.
-Total: 16.057018 ms (FindLiveObjects: 0.340698 ms CreateObjectMapping: 0.036344 ms MarkObjects: 13.353136 ms  DeleteObjects: 2.326610 ms)
+Total: 25.831142 ms (FindLiveObjects: 0.443349 ms CreateObjectMapping: 0.064256 ms MarkObjects: 21.796573 ms  DeleteObjects: 3.526433 ms)
 
-[Memory] map unloaded: reserved 467 MB, allocated 214 MB, managed 40 MB, textures 72 MB, 134 meshes with 106,051 vertices, 233 textures (97 MB by size), 206 materials; textures by kind: other 171x 28 MB, surface normal 13x 17 MB, repacked masks 12x 16 MB, render targets 26x 15 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: kloofendal_48d_partly_cloudy_puresky_4k 10.7, _CameraTargetAttachment_1677x773_B10G11R11_UFloatPack32_Tex2D 4.9, Reflections 4.0, Reflections 4.0, Studio 1.5, arms_sniper_1k_img7_metal (mask) 1.3, arms_sniper_1k_img4_metal (mask) 1.3, arms_sniper_1k_img1_metal (mask) 1.3, rifle_l115a3_hd_1k_img18_metal (mask) 1.3, rifle_l115a3_hd_1k_img14_metal (mask) 1.3, rifle_l115a3_hd_1k_img10_metal (mask) 1.3, rifle_l115a3_hd_1k_img6_metal (mask) 1.3; biggest model textures: ; materials holding full-size model textures: 
+[Memory] map unloaded: reserved 467 MB, allocated 213 MB, managed 37 MB, textures 72 MB, 134 meshes with 106,051 vertices, 233 textures (97 MB by size), 206 materials; textures by kind: other 171x 28 MB, surface normal 13x 17 MB, repacked masks 12x 16 MB, render targets 26x 15 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: kloofendal_48d_partly_cloudy_puresky_4k 10.7, _CameraTargetAttachment_1677x773_B10G11R11_UFloatPack32_Tex2D 4.9, Reflections 4.0, Reflections 4.0, Studio 1.5, arms_sniper_1k_img7_metal (mask) 1.3, arms_sniper_1k_img4_metal (mask) 1.3, arms_sniper_1k_img1_metal (mask) 1.3, rifle_l115a3_hd_1k_img18_metal (mask) 1.3, rifle_l115a3_hd_1k_img14_metal (mask) 1.3, rifle_l115a3_hd_1k_img10_metal (mask) 1.3, rifle_l115a3_hd_1k_img6_metal (mask) 1.3; biggest model textures: ; materials holding full-size model textures: 
 [Library] missing model pine_sapling_medium
 [Wilds] Forest: 56880 plants, 20 pictures
 [Wilds] Lane stones: 12000 stones
@@ -601,35 +573,35 @@ Total: 16.057018 ms (FindLiveObjects: 0.340698 ms CreateObjectMapping: 0.036344 
 Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
 [Sound] alpine-ridge: 29 clips, 9.0 MB of PCM
 Unloading 2438 unused Assets to reduce memory usage. Loaded Objects now: 39491.
-Total: 275.756212 ms (FindLiveObjects: 2.473720 ms CreateObjectMapping: 0.289802 ms MarkObjects: 25.563628 ms  DeleteObjects: 247.428842 ms)
+Total: 537.480255 ms (FindLiveObjects: 3.626281 ms CreateObjectMapping: 0.398673 ms MarkObjects: 28.822755 ms  DeleteObjects: 504.631903 ms)
 
-[Memory] map alpine-ridge: reserved 558 MB, allocated 359 MB, managed 53 MB, textures 334 MB, 420 meshes with 2,401,838 vertices, 593 textures (393 MB by size), 581 materials; textures by kind: surface normal 129x 122 MB, other 343x 100 MB, surface mask 10x 44 MB, repacked masks 28x 37 MB, plant pictures 21x 28 MB, surface colour 13x 25 MB, render targets 38x 18 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: BaseMap-Hidden/Universal Render Pipeline/Terrain/Lit (Basemap Gen)-_MainTex 21.3, pizzo_pernice_puresky_4k 10.7, SplatAlpha 0 5.3, aerial_rocks_02_mask 5.3, cliff_side_mask 5.3, corrugated_iron_02_mask 5.3, leafy_grass_mask 5.3, rock_boulder_dry_mask 5.3, rocky_terrain_02_mask 5.3, snow_02_mask 5.3, weathered_planks_mask 5.3, aerial_rocks_02_nor_gl_2k 5.3; biggest model textures: ; materials holding full-size model textures: 
-[Impostor] spruce try 0: (6.30, 4.51, 3.38) m, 29961 solid px, 33809 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] fir_sapling_medium#0 try 0: (4.99, 8.83, 5.28) m, 30375 solid px, 48097 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] fir_sapling_medium#1 try 0: (4.27, 7.80, 3.96) m, 23007 solid px, 36361 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] fir_sapling_medium#2 try 0: (4.31, 5.91, 4.01) m, 39037 solid px, 57346 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#0 try 0: (0.18, 0.14, 0.16) m, 19978 solid px, 26508 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#1 try 0: (0.28, 0.17, 0.28) m, 25746 solid px, 34592 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#2 try 0: (0.19, 0.18, 0.20) m, 23071 solid px, 30440 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#3 try 0: (0.15, 0.29, 0.13) m, 11449 solid px, 14232 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#4 try 0: (0.16, 0.32, 0.16) m, 8522 solid px, 11551 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#5 try 0: (0.15, 0.24, 0.13) m, 17731 solid px, 21299 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#6 try 0: (0.17, 0.10, 0.19) m, 13428 solid px, 18565 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#7 try 0: (0.19, 0.14, 0.20) m, 28619 solid px, 36486 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#8 try 0: (0.22, 0.22, 0.22) m, 42681 solid px, 51821 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#9 try 0: (0.32, 0.15, 0.33) m, 37189 solid px, 46152 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#10 try 0: (0.28, 0.14, 0.26) m, 34907 solid px, 42669 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Memory] map alpine-ridge: reserved 572 MB, allocated 358 MB, managed 106 MB, textures 334 MB, 420 meshes with 2,401,838 vertices, 593 textures (393 MB by size), 581 materials; textures by kind: surface normal 129x 122 MB, other 343x 100 MB, surface mask 10x 44 MB, repacked masks 28x 37 MB, plant pictures 21x 28 MB, surface colour 13x 25 MB, render targets 38x 18 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: BaseMap-Hidden/Universal Render Pipeline/Terrain/Lit (Basemap Gen)-_MainTex 21.3, pizzo_pernice_puresky_4k 10.7, SplatAlpha 0 5.3, aerial_rocks_02_mask 5.3, cliff_side_mask 5.3, corrugated_iron_02_mask 5.3, leafy_grass_mask 5.3, rock_boulder_dry_mask 5.3, rocky_terrain_02_mask 5.3, snow_02_mask 5.3, weathered_planks_mask 5.3, aerial_rocks_02_nor_gl_2k 5.3; biggest model textures: ; materials holding full-size model textures: 
+[Impostor] spruce try 0: (6.30, 4.51, 3.38) m, 29965 solid px, 33812 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] fir_sapling_medium#0 try 0: (4.99, 8.83, 5.28) m, 30365 solid px, 48091 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] fir_sapling_medium#1 try 0: (4.27, 7.80, 3.96) m, 23036 solid px, 36367 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] fir_sapling_medium#2 try 0: (4.31, 5.91, 4.01) m, 39024 solid px, 57346 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#0 try 0: (0.18, 0.14, 0.16) m, 19991 solid px, 26508 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#1 try 0: (0.28, 0.17, 0.28) m, 25730 solid px, 34590 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#2 try 0: (0.19, 0.18, 0.20) m, 23079 solid px, 30444 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#3 try 0: (0.15, 0.29, 0.13) m, 11451 solid px, 14231 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#4 try 0: (0.16, 0.32, 0.16) m, 8525 solid px, 11553 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#5 try 0: (0.15, 0.24, 0.13) m, 17730 solid px, 21293 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#6 try 0: (0.17, 0.10, 0.19) m, 13433 solid px, 18565 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#7 try 0: (0.19, 0.14, 0.20) m, 28616 solid px, 36479 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#8 try 0: (0.22, 0.22, 0.22) m, 42664 solid px, 51820 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#9 try 0: (0.32, 0.15, 0.33) m, 37183 solid px, 46155 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#10 try 0: (0.28, 0.14, 0.26) m, 34914 solid px, 42685 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_01#11 try 0: (0.02, 0.08, 0.03) m, 6254 solid px, 7369 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Post-alpine-ridge-A-shoulder
 [Impostor] grass_medium_01#12 try 0: (0.07, 0.11, 0.07) m, 6103 solid px, 7839 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_02#0 try 0: (0.12, 0.16, 0.12) m, 14411 solid px, 18640 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_02#1 try 0: (0.18, 0.18, 0.20) m, 15809 solid px, 20103 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_02#0 try 0: (0.12, 0.16, 0.12) m, 14409 solid px, 18636 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_02#1 try 0: (0.18, 0.18, 0.20) m, 15808 solid px, 20105 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Post-alpine-ridge-A-gully
-[Impostor] grass_medium_02#2 try 0: (0.91, 0.41, 0.43) m, 6286 solid px, 10641 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_02#2 try 0: (0.91, 0.41, 0.43) m, 6280 solid px, 10644 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Memory] 0 model textures made lean in 0 ms
 Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 847 unused Assets to reduce memory usage. Loaded Objects now: 38250.
-Total: 14.654096 ms (FindLiveObjects: 2.958082 ms CreateObjectMapping: 0.187940 ms MarkObjects: 10.941639 ms  DeleteObjects: 0.566264 ms)
+Total: 16.283205 ms (FindLiveObjects: 3.553774 ms CreateObjectMapping: 0.324583 ms MarkObjects: 11.560123 ms  DeleteObjects: 0.844165 ms)
 
 [Capture] Post-alpine-ridge-A-flank
 [Capture] Post-alpine-ridge-B-slope-Zoom
@@ -638,9 +610,9 @@ Total: 14.654096 ms (FindLiveObjects: 2.958082 ms CreateObjectMapping: 0.187940 
 [Capture] Post-alpine-ridge-Air
 Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 860 unused Assets to reduce memory usage. Loaded Objects now: 3909.
-Total: 25.130352 ms (FindLiveObjects: 0.375831 ms CreateObjectMapping: 0.041522 ms MarkObjects: 18.588554 ms  DeleteObjects: 6.124224 ms)
+Total: 35.785834 ms (FindLiveObjects: 0.469138 ms CreateObjectMapping: 0.065477 ms MarkObjects: 27.022304 ms  DeleteObjects: 8.228385 ms)
 
-[Memory] map unloaded: reserved 511 MB, allocated 262 MB, managed 47 MB, textures 72 MB, 134 meshes with 106,051 vertices, 284 textures (97 MB by size), 206 materials; textures by kind: other 222x 28 MB, surface normal 13x 17 MB, repacked masks 12x 16 MB, render targets 26x 15 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: pizzo_pernice_puresky_4k 10.7, _CameraTargetAttachment_1677x773_B10G11R11_UFloatPack32_Tex2D 4.9, Reflections 4.0, Reflections 4.0, Studio 1.5, arms_sniper_1k_img7_metal (mask) 1.3, arms_sniper_1k_img4_metal (mask) 1.3, arms_sniper_1k_img1_metal (mask) 1.3, rifle_l115a3_hd_1k_img18_metal (mask) 1.3, rifle_l115a3_hd_1k_img14_metal (mask) 1.3, rifle_l115a3_hd_1k_img10_metal (mask) 1.3, rifle_l115a3_hd_1k_img6_metal (mask) 1.3; biggest model textures: ; materials holding full-size model textures: 
+[Memory] map unloaded: reserved 495 MB, allocated 204 MB, managed 45 MB, textures 72 MB, 134 meshes with 106,051 vertices, 284 textures (97 MB by size), 206 materials; textures by kind: other 222x 28 MB, surface normal 13x 17 MB, repacked masks 12x 16 MB, render targets 26x 15 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: pizzo_pernice_puresky_4k 10.7, _CameraTargetAttachment_1677x773_B10G11R11_UFloatPack32_Tex2D 4.9, Reflections 4.0, Reflections 4.0, Studio 1.5, arms_sniper_1k_img7_metal (mask) 1.3, arms_sniper_1k_img4_metal (mask) 1.3, arms_sniper_1k_img1_metal (mask) 1.3, rifle_l115a3_hd_1k_img18_metal (mask) 1.3, rifle_l115a3_hd_1k_img14_metal (mask) 1.3, rifle_l115a3_hd_1k_img10_metal (mask) 1.3, rifle_l115a3_hd_1k_img6_metal (mask) 1.3; biggest model textures: ; materials holding full-size model textures: 
 [Library] missing model shrub_03
 [Library] missing model shrub_04
 [Wilds] Range woods: 49177 plants, 39 pictures
@@ -685,69 +657,69 @@ Total: 25.130352 ms (FindLiveObjects: 0.375831 ms CreateObjectMapping: 0.041522 
 Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
 [Sound] training-lane: 29 clips, 8.0 MB of PCM
 Unloading 3851 unused Assets to reduce memory usage. Loaded Objects now: 11274.
-Total: 311.714668 ms (FindLiveObjects: 0.990287 ms CreateObjectMapping: 0.144846 ms MarkObjects: 18.040988 ms  DeleteObjects: 292.538337 ms)
+Total: 596.350706 ms (FindLiveObjects: 1.266854 ms CreateObjectMapping: 0.243422 ms MarkObjects: 42.389827 ms  DeleteObjects: 552.450062 ms)
 
-[Memory] map training-lane: reserved 767 MB, allocated 429 MB, managed 77 MB, textures 414 MB, 397 meshes with 2,510,002 vertices, 640 textures (473 MB by size), 640 materials; textures by kind: surface normal 138x 142 MB, other 340x 99 MB, surface mask 15x 57 MB, plant pictures 40x 53 MB, repacked masks 39x 52 MB, surface colour 19x 33 MB, render targets 38x 18 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: BaseMap-Hidden/Universal Render Pipeline/Terrain/Lit (Basemap Gen)-_MainTex 21.3, sunflowers_puresky_4k 10.7, SplatAlpha 0 5.3, brown_mud_leaves_01_mask 5.3, concrete_wall_008_mask 5.3, corrugated_iron_02_mask 5.3, forest_ground_04_mask 5.3, gravelly_sand_mask 5.3, leafy_grass_mask 5.3, rock_boulder_dry_mask 5.3, rocky_terrain_02_mask 5.3, sparse_grass_mask 5.3; biggest model textures: ; materials holding full-size model textures: 
-[Impostor] island_tree_02 try 0: (4.21, 3.41, 4.07) m, 67327 solid px, 79220 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] island_tree_03 try 0: (2.97, 2.62, 2.91) m, 58914 solid px, 72841 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] spruce try 0: (6.30, 4.51, 3.38) m, 28211 solid px, 31999 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] island_tree_01 try 0: (4.76, 5.03, 4.82) m, 79612 solid px, 97930 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] tree_small_02 try 0: (2.92, 4.56, 4.29) m, 56193 solid px, 72769 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] shrub_01 try 0: (2.59, 0.40, 0.22) m, 3647 solid px, 6085 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] shrub_02 try 0: (6.57, 2.55, 2.54) m, 3804 solid px, 7816 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#0 try 0: (0.18, 0.14, 0.16) m, 19358 solid px, 26604 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#1 try 0: (0.28, 0.17, 0.28) m, 24719 solid px, 33404 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#2 try 0: (0.19, 0.18, 0.20) m, 23547 solid px, 32370 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#3 try 0: (0.15, 0.29, 0.13) m, 10854 solid px, 14143 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#4 try 0: (0.16, 0.32, 0.16) m, 9602 solid px, 12641 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#5 try 0: (0.15, 0.24, 0.13) m, 16061 solid px, 19890 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#6 try 0: (0.17, 0.10, 0.19) m, 13326 solid px, 19080 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Memory] map training-lane: reserved 767 MB, allocated 428 MB, managed 102 MB, textures 414 MB, 397 meshes with 2,510,002 vertices, 640 textures (473 MB by size), 640 materials; textures by kind: surface normal 138x 142 MB, other 340x 99 MB, surface mask 15x 57 MB, plant pictures 40x 53 MB, repacked masks 39x 52 MB, surface colour 19x 33 MB, render targets 38x 18 MB, sky 1x 11 MB, unnamed 10x 9 MB; biggest textures: BaseMap-Hidden/Universal Render Pipeline/Terrain/Lit (Basemap Gen)-_MainTex 21.3, sunflowers_puresky_4k 10.7, SplatAlpha 0 5.3, brown_mud_leaves_01_mask 5.3, concrete_wall_008_mask 5.3, corrugated_iron_02_mask 5.3, forest_ground_04_mask 5.3, gravelly_sand_mask 5.3, leafy_grass_mask 5.3, rock_boulder_dry_mask 5.3, rocky_terrain_02_mask 5.3, sparse_grass_mask 5.3; biggest model textures: ; materials holding full-size model textures: 
+[Impostor] island_tree_02 try 0: (4.21, 3.41, 4.07) m, 67322 solid px, 79215 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_03 try 0: (2.97, 2.62, 2.91) m, 58917 solid px, 72841 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] spruce try 0: (6.30, 4.51, 3.38) m, 28208 solid px, 31999 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_01 try 0: (4.76, 5.03, 4.82) m, 79626 solid px, 97928 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] tree_small_02 try 0: (2.92, 4.56, 4.29) m, 56222 solid px, 72773 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] shrub_01 try 0: (2.59, 0.40, 0.22) m, 3649 solid px, 6090 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] shrub_02 try 0: (6.57, 2.55, 2.54) m, 3812 solid px, 7812 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#0 try 0: (0.18, 0.14, 0.16) m, 19375 solid px, 26603 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#1 try 0: (0.28, 0.17, 0.28) m, 24739 solid px, 33407 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#2 try 0: (0.19, 0.18, 0.20) m, 23551 solid px, 32370 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#3 try 0: (0.15, 0.29, 0.13) m, 10841 solid px, 14146 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#4 try 0: (0.16, 0.32, 0.16) m, 9612 solid px, 12642 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#5 try 0: (0.15, 0.24, 0.13) m, 16053 solid px, 19888 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#6 try 0: (0.17, 0.10, 0.19) m, 13317 solid px, 19077 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Range] 22 stands, 63 targets
-[Impostor] grass_medium_01#7 try 0: (0.19, 0.14, 0.20) m, 29540 solid px, 38432 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#7 try 0: (0.19, 0.14, 0.20) m, 29538 solid px, 38417 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Memory] 0 model textures made lean in 0 ms
 Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
 [Figure] Prone: 143 bones, 10 renderers
 Unloading 1297 unused Assets to reduce memory usage. Loaded Objects now: 11981.
-Total: 24.629218 ms (FindLiveObjects: 0.835766 ms CreateObjectMapping: 0.191536 ms MarkObjects: 8.327775 ms  DeleteObjects: 15.273961 ms)
+Total: 21.666936 ms (FindLiveObjects: 0.835763 ms CreateObjectMapping: 0.133919 ms MarkObjects: 12.690078 ms  DeleteObjects: 8.006785 ms)
 
 [Memory] 0 model textures made lean in 0 ms
 Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 1235 unused Assets to reduce memory usage. Loaded Objects now: 10903.
-Total: 8.089540 ms (FindLiveObjects: 0.884299 ms CreateObjectMapping: 0.101482 ms MarkObjects: 6.505597 ms  DeleteObjects: 0.597942 ms)
+Total: 16.345228 ms (FindLiveObjects: 1.078073 ms CreateObjectMapping: 0.159737 ms MarkObjects: 14.516550 ms  DeleteObjects: 0.590207 ms)
 
-[Impostor] grass_medium_01#8 try 0: (0.22, 0.22, 0.22) m, 40671 solid px, 49454 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#9 try 0: (0.32, 0.15, 0.33) m, 38066 solid px, 47562 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#10 try 0: (0.28, 0.14, 0.26) m, 33750 solid px, 42082 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#8 try 0: (0.22, 0.22, 0.22) m, 40701 solid px, 49450 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#9 try 0: (0.32, 0.15, 0.33) m, 38066 solid px, 47551 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#10 try 0: (0.28, 0.14, 0.26) m, 33748 solid px, 42084 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_01#11 try 0: (0.02, 0.08, 0.03) m, 4308 solid px, 5297 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_01#12 try 0: (0.07, 0.11, 0.07) m, 6239 solid px, 8136 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_02#0 try 0: (0.12, 0.16, 0.12) m, 10773 solid px, 15017 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_02#0 try 0: (0.12, 0.16, 0.12) m, 10767 solid px, 15016 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Practice-Hud
-[Impostor] grass_medium_02#1 try 0: (0.18, 0.18, 0.20) m, 16883 solid px, 22496 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_02#1 try 0: (0.18, 0.18, 0.20) m, 16880 solid px, 22499 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Range] 22 stands, 63 targets
 [Capture] range: mover at 317 m, x 31, pigs at 321 m, x -26, turkeys at 369 m, x -50, rams at 477 m, x -48, chickens at 198 m, x 6, bottles at 228 m, x -10, cans at 202 m, x 1, balloons at 235 m, x 14, table at 223 m, x 39, paper at 271 m, x 40, clays at 343 m, x -56, cardboard at 236 m, x -44, spinner at 402 m, x -13, tree at 237 m, x -26, paper at 282 m, x 55, poppers at 477 m, x -37, kyl at 443 m, x 43, prairie at 449 m, x -1, gongs at 448 m, x -13, ipsc at 480 m, x 15, ipsc at 515 m, x 36, biggong at 552 m, x 54
-[Impostor] grass_medium_02#2 try 0: (0.91, 0.41, 0.43) m, 6470 solid px, 12794 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_02#2 try 0: (0.91, 0.41, 0.43) m, 6452 solid px, 12799 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Range-mover
 [Capture] struck mover-0-0 mover: HIT
 [Impostor] grass_bermuda_01#2 try 0: (0.04, 0.10, 0.03) m, 51790 solid px, 52951 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_bermuda_01#3 try 0: (0.05, 0.07, 0.02) m, 109380 solid px, 110407 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Range-mover-Hit
 [Impostor] grass_bermuda_01#4 try 0: (0.06, 0.07, 0.09) m, 72064 solid px, 72950 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_bermuda_01#5 try 0: (0.05, 0.10, 0.02) m, 28050 solid px, 29023 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#5 try 0: (0.05, 0.10, 0.02) m, 28048 solid px, 29023 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Range-pigs
 [Capture] struck pigs-1-0 pig: DOWN
 [Capture] struck pigs-1-1 pig: DOWN
 [Capture] struck pigs-1-2 pig: DOWN
 [Impostor] grass_bermuda_01#6 try 0: (0.07, 0.08, 0.04) m, 69607 solid px, 70696 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_bermuda_01#7 try 0: (0.04, 0.11, 0.03) m, 28629 solid px, 29858 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#7 try 0: (0.04, 0.11, 0.03) m, 28628 solid px, 29858 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Range-pigs-Hit
-[Impostor] grass_bermuda_01#8 try 0: (0.07, 0.15, 0.05) m, 44489 solid px, 46081 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#8 try 0: (0.07, 0.15, 0.05) m, 44490 solid px, 46077 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Range-turkeys
 [Capture] struck turkeys-2-0 turkey: DOWN
 [Capture] struck turkeys-2-1 turkey: DOWN
 [Capture] struck turkeys-2-2 turkey: DOWN
-[Impostor] grass_bermuda_01#9 try 0: (0.08, 0.13, 0.05) m, 59820 solid px, 61411 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_bermuda_01#10 try 0: (0.04, 0.09, 0.04) m, 10078 solid px, 11269 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_bermuda_01#11 try 0: (0.07, 0.15, 0.08) m, 32752 solid px, 34478 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#9 try 0: (0.08, 0.13, 0.05) m, 59816 solid px, 61411 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#10 try 0: (0.04, 0.09, 0.04) m, 10077 solid px, 11269 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#11 try 0: (0.07, 0.15, 0.08) m, 32750 solid px, 34477 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Range-turkeys-Hit
 [Impostor] grass_bermuda_01#12 try 0: (0.00, 0.15, 0.01) m, 3928 solid px, 4655 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Range-rams
@@ -767,7 +739,7 @@ Total: 8.089540 ms (FindLiveObjects: 0.884299 ms CreateObjectMapping: 0.101482 m
 [Memory] 0 model textures made lean in 0 ms
 Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 269 unused Assets to reduce memory usage. Loaded Objects now: 10905.
-Total: 7.290354 ms (FindLiveObjects: 0.616019 ms CreateObjectMapping: 0.057325 ms MarkObjects: 5.961412 ms  DeleteObjects: 0.655438 ms)
+Total: 14.355419 ms (FindLiveObjects: 1.159544 ms CreateObjectMapping: 0.163544 ms MarkObjects: 12.490336 ms  DeleteObjects: 0.541535 ms)
 
 [Capture] Range-chickens-Hit
 [Capture] Range-bottles
@@ -857,7 +829,7 @@ Total: 7.290354 ms (FindLiveObjects: 0.616019 ms CreateObjectMapping: 0.057325 m
 [Capture] range hit 63/63
 Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 1080 unused Assets to reduce memory usage. Loaded Objects now: 3139.
-Total: 22.072386 ms (FindLiveObjects: 0.280388 ms CreateObjectMapping: 0.029464 ms MarkObjects: 11.714969 ms  DeleteObjects: 10.047245 ms)
+Total: 39.742842 ms (FindLiveObjects: 0.455557 ms CreateObjectMapping: 0.205105 ms MarkObjects: 23.481354 ms  DeleteObjects: 15.600326 ms)
 
 [Skyline] 71404 vertices, 2 helipads
 [Estuary] 3114 trees, 462 shrubs
@@ -896,29 +868,29 @@ Total: 22.072386 ms (FindLiveObjects: 0.280388 ms CreateObjectMapping: 0.029464 
 [Figure] skin Object_121: 88 bones, head #6, middle at -2.64 of the head, size (0.52, 0.20, 0.42)
 [Figure] skin Object_123: 88 bones, head #6, middle at -6.05 of the head, size (0.62, 0.23, 0.41)
 [Figure] Prone: 110 bones, 15 renderers
-[Memory] menu again, twin-bridges: reserved 920 MB, allocated 702 MB, managed 83 MB, textures 541 MB, 433 meshes with 6,805,830 vertices, 563 textures (609 MB by size), 656 materials; textures by kind: surface normal 72x 142 MB, other 310x 117 MB, unnamed 38x 112 MB, surface mask 35x 84 MB, surface colour 35x 49 MB, repacked masks 37x 46 MB, sky 2x 21 MB, weathered 3x 16 MB, render targets 26x 15 MB, plant pictures 5x 7 MB; biggest textures: BaseMap-Hidden/Universal Render Pipeline/Terrain/Lit (Basemap Gen)-_MainTex 21.3, TempBuffer 42 2048x2048 16.0, kloofendal_48d_partly_cloudy_puresky_4k 10.7, sunflowers_puresky_4k 10.7, concrete_wall_008_diff_2k (weathered) 5.3, concrete_wall_008_diff_2k (weathered) 5.3, concrete_wall_008_diff_2k (weathered) 5.3, SplatAlpha 0 5.3, asphalt_02_mask 5.3, brown_mud_leaves_01_mask 5.3, coast_sand_rocks_02_mask 5.3, concrete_pavers_02_mask 5.3; biggest model textures: ; materials holding full-size model textures: 
+[Memory] menu again, twin-bridges: reserved 906 MB, allocated 701 MB, managed 61 MB, textures 541 MB, 433 meshes with 6,805,830 vertices, 563 textures (609 MB by size), 656 materials; textures by kind: surface normal 72x 142 MB, other 310x 117 MB, unnamed 38x 112 MB, surface mask 35x 84 MB, surface colour 35x 49 MB, repacked masks 37x 46 MB, sky 2x 21 MB, weathered 3x 16 MB, render targets 26x 15 MB, plant pictures 5x 7 MB; biggest textures: BaseMap-Hidden/Universal Render Pipeline/Terrain/Lit (Basemap Gen)-_MainTex 21.3, TempBuffer 42 2048x2048 16.0, kloofendal_48d_partly_cloudy_puresky_4k 10.7, sunflowers_puresky_4k 10.7, concrete_wall_008_diff_2k (weathered) 5.3, concrete_wall_008_diff_2k (weathered) 5.3, concrete_wall_008_diff_2k (weathered) 5.3, SplatAlpha 0 5.3, asphalt_02_mask 5.3, brown_mud_leaves_01_mask 5.3, coast_sand_rocks_02_mask 5.3, concrete_pavers_02_mask 5.3; biggest model textures: ; materials holding full-size model textures: 
 [Range] 0 stands, 0 targets
 [Sound] twin-bridges: 29 clips, 8.3 MB of PCM
 [Memory] 0 model textures made lean in 0 ms
 Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
 [Figure] Prone: 143 bones, 10 renderers
 Unloading 1292 unused Assets to reduce memory usage. Loaded Objects now: 8425.
-Total: 297.787687 ms (FindLiveObjects: 0.597411 ms CreateObjectMapping: 0.087791 ms MarkObjects: 19.517410 ms  DeleteObjects: 277.584865 ms)
+Total: 583.652756 ms (FindLiveObjects: 0.828011 ms CreateObjectMapping: 0.142341 ms MarkObjects: 26.361065 ms  DeleteObjects: 556.320477 ms)
 
 [Memory] 0 model textures made lean in 0 ms
 Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 1158 unused Assets to reduce memory usage. Loaded Objects now: 7267.
-Total: 10.281044 ms (FindLiveObjects: 0.682277 ms CreateObjectMapping: 0.115513 ms MarkObjects: 9.013884 ms  DeleteObjects: 0.468960 ms)
+Total: 9.894462 ms (FindLiveObjects: 0.498411 ms CreateObjectMapping: 0.070705 ms MarkObjects: 8.876298 ms  DeleteObjects: 0.448587 ms)
 
-[Impostor] island_tree_02 try 0: (4.21, 3.41, 4.07) m, 68302 solid px, 81103 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] island_tree_03 try 0: (2.97, 2.62, 2.91) m, 57053 solid px, 70290 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] island_tree_01 try 0: (4.76, 5.03, 4.82) m, 80435 solid px, 98119 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] tree_small_02 try 0: (2.92, 4.56, 4.29) m, 58008 solid px, 76000 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] shrub_02 try 0: (6.57, 2.55, 2.54) m, 3717 solid px, 7507 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_02 try 0: (4.21, 3.41, 4.07) m, 68299 solid px, 81116 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_03 try 0: (2.97, 2.62, 2.91) m, 57046 solid px, 70290 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_01 try 0: (4.76, 5.03, 4.82) m, 80453 solid px, 98119 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] tree_small_02 try 0: (2.92, 4.56, 4.29) m, 57996 solid px, 75993 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] shrub_02 try 0: (6.57, 2.55, 2.54) m, 3717 solid px, 7510 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Memory] 0 model textures made lean in 0 ms
 Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 119 unused Assets to reduce memory usage. Loaded Objects now: 7243.
-Total: 9.895869 ms (FindLiveObjects: 0.583030 ms CreateObjectMapping: 0.076524 ms MarkObjects: 9.056157 ms  DeleteObjects: 0.179978 ms)
+Total: 15.911804 ms (FindLiveObjects: 0.457280 ms CreateObjectMapping: 0.055172 ms MarkObjects: 15.082361 ms  DeleteObjects: 0.316250 ms)
 
 [Capture] Cross-Bridge-Hip
 [Capture] crosshair Bridge hip: centre 633.6 m: Cables (LitPlain) at 633.6 m; cam (0.77, 25.08, -0.43) fwd (0.0348, 0.0038, 0.9994); eye (0.00, 24.33, 2.00) aim 0.03500/0.00400
@@ -928,7 +900,7 @@ Total: 9.895869 ms (FindLiveObjects: 0.583030 ms CreateObjectMapping: 0.076524 m
 [Memory] 0 model textures made lean in 0 ms
 Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 1068 unused Assets to reduce memory usage. Loaded Objects now: 8053.
-Total: 8.829599 ms (FindLiveObjects: 0.576870 ms CreateObjectMapping: 0.060871 ms MarkObjects: 7.604793 ms  DeleteObjects: 0.586755 ms)
+Total: 12.439606 ms (FindLiveObjects: 0.717737 ms CreateObjectMapping: 0.131455 ms MarkObjects: 10.831956 ms  DeleteObjects: 0.757876 ms)
 
 [Capture] Cross-Bridge-Scope
 [Capture] crosshair Bridge scope: centre 631.2 m: Cables (LitPlain) at 631.2 m; cam (0.00, 24.33, 2.00) fwd (0.0362, 0.0051, 0.9993); eye (0.00, 24.33, 2.00) aim 0.03618/0.00505
@@ -938,7 +910,7 @@ Total: 8.829599 ms (FindLiveObjects: 0.576870 ms CreateObjectMapping: 0.060871 m
 [Memory] 0 model textures made lean in 0 ms
 Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 1356 unused Assets to reduce memory usage. Loaded Objects now: 7264.
-Total: 10.554201 ms (FindLiveObjects: 0.673965 ms CreateObjectMapping: 0.129023 ms MarkObjects: 8.551925 ms  DeleteObjects: 1.198938 ms)
+Total: 16.761768 ms (FindLiveObjects: 0.541014 ms CreateObjectMapping: 0.154180 ms MarkObjects: 14.895853 ms  DeleteObjects: 1.170220 ms)
 
 [Capture] Cross-Skyline-Hip
 [Capture] crosshair Skyline hip: centre 637.5 m: Cables (LitPlain) at 637.5 m; cam (1.13, 25.08, -0.28) fwd (-0.1203, 0.0293, 0.9923); eye (0.00, 24.33, 2.00) aim -0.12000/0.03000
@@ -947,8 +919,8 @@ Total: 10.554201 ms (FindLiveObjects: 0.673965 ms CreateObjectMapping: 0.129023 
 [Viewmodel] hands and rifle, eyepiece at (0.04, 0.18, 0.20)
 [Memory] 0 model textures made lean in 0 ms
 Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 1068 unused Assets to reduce memory usage. Loaded Objects now: 8081.
-Total: 12.389509 ms (FindLiveObjects: 0.502009 ms CreateObjectMapping: 0.056084 ms MarkObjects: 11.248356 ms  DeleteObjects: 0.582880 ms)
+Unloading 1068 unused Assets to reduce memory usage. Loaded Objects now: 8079.
+Total: 11.027932 ms (FindLiveObjects: 0.836083 ms CreateObjectMapping: 0.160128 ms MarkObjects: 9.371199 ms  DeleteObjects: 0.660041 ms)
 
 [Capture] Cross-Skyline-Scope
 [Capture] crosshair Skyline scope: centre 635.1 m: Cables (LitPlain) at 635.1 m; cam (0.00, 24.33, 2.00) fwd (-0.1190, 0.0306, 0.9924); eye (0.00, 24.33, 2.00) aim -0.11935/0.03063
@@ -957,8 +929,8 @@ Total: 12.389509 ms (FindLiveObjects: 0.502009 ms CreateObjectMapping: 0.056084 
 [Figure] Prone: 143 bones, 10 renderers
 [Memory] 0 model textures made lean in 0 ms
 Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 1356 unused Assets to reduce memory usage. Loaded Objects now: 7292.
-Total: 9.554070 ms (FindLiveObjects: 0.447127 ms CreateObjectMapping: 0.069383 ms MarkObjects: 8.078469 ms  DeleteObjects: 0.958920 ms)
+Unloading 1356 unused Assets to reduce memory usage. Loaded Objects now: 7290.
+Total: 13.632530 ms (FindLiveObjects: 0.573523 ms CreateObjectMapping: 0.090484 ms MarkObjects: 11.759665 ms  DeleteObjects: 1.208297 ms)
 
 [Capture] Cross-Water-Hip
 [Capture] crosshair Water hip: centre 1218.7 m: Water (Water twin-bridges) at 1218.7 m; cam (0.66, 25.08, -0.46) fwd (0.0792, -0.0206, 0.9966); eye (0.00, 24.33, 2.00) aim 0.08000/-0.02000
@@ -967,23 +939,23 @@ Total: 9.554070 ms (FindLiveObjects: 0.447127 ms CreateObjectMapping: 0.069383 m
 [Viewmodel] hands and rifle, eyepiece at (0.04, 0.18, 0.20)
 [Memory] 0 model textures made lean in 0 ms
 Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 1068 unused Assets to reduce memory usage. Loaded Objects now: 8109.
-Total: 8.059371 ms (FindLiveObjects: 0.725713 ms CreateObjectMapping: 0.105127 ms MarkObjects: 6.647354 ms  DeleteObjects: 0.580967 ms)
+Unloading 1068 unused Assets to reduce memory usage. Loaded Objects now: 8107.
+Total: 17.291590 ms (FindLiveObjects: 0.537259 ms CreateObjectMapping: 0.076584 ms MarkObjects: 15.890096 ms  DeleteObjects: 0.787160 ms)
 
 [Capture] Cross-Water-Scope
 [Capture] crosshair Water scope: centre 1216.3 m: Water (Water twin-bridges) at 1216.3 m; cam (0.00, 24.33, 2.00) fwd (0.0799, -0.0200, 0.9966); eye (0.00, 24.33, 2.00) aim 0.08000/-0.02000
 [Capture] crosshair Water: hip fov 55, scope fov 2
 Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 500 unused Assets to reduce memory usage. Loaded Objects now: 4046.
-Total: 10.844364 ms (FindLiveObjects: 0.385305 ms CreateObjectMapping: 0.073169 ms MarkObjects: 8.018910 ms  DeleteObjects: 2.366750 ms)
+Total: 22.700473 ms (FindLiveObjects: 0.310192 ms CreateObjectMapping: 0.079788 ms MarkObjects: 17.230425 ms  DeleteObjects: 5.079618 ms)
 
 [Memory] 0 model textures made lean in 0 ms
 Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
 [Sound] training-lane: 29 clips, 8.0 MB of PCM
 Unloading 5 unused Assets to reduce memory usage. Loaded Objects now: 4092.
-Total: 16.721927 ms (FindLiveObjects: 0.219778 ms CreateObjectMapping: 0.021232 ms MarkObjects: 5.189951 ms  DeleteObjects: 11.290736 ms)
+Total: 26.935229 ms (FindLiveObjects: 0.253367 ms CreateObjectMapping: 0.031727 ms MarkObjects: 13.135621 ms  DeleteObjects: 13.513623 ms)
 
-[Memory] map training-lane before biome: reserved 473 MB, allocated 149 MB, managed 73 MB, textures 176 MB
+[Memory] map training-lane before biome: reserved 507 MB, allocated 148 MB, managed 67 MB, textures 176 MB
 [Library] missing model shrub_03
 [Library] missing model shrub_04
 [Wilds] Range woods: 49177 plants, 39 pictures
@@ -992,9 +964,9 @@ Total: 16.721927 ms (FindLiveObjects: 0.219778 ms CreateObjectMapping: 0.021232 
 [Memory] 0 model textures made lean in 0 ms
 Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 2470 unused Assets to reduce memory usage. Loaded Objects now: 5973.
-Total: 88.316943 ms (FindLiveObjects: 0.446456 ms CreateObjectMapping: 0.057596 ms MarkObjects: 5.952918 ms  DeleteObjects: 81.859833 ms)
+Total: 122.022209 ms (FindLiveObjects: 0.510660 ms CreateObjectMapping: 0.088000 ms MarkObjects: 9.224696 ms  DeleteObjects: 112.198122 ms)
 
-[Memory] map training-lane before scenery: reserved 845 MB, allocated 499 MB, managed 124 MB, textures 346 MB
+[Memory] map training-lane before scenery: reserved 845 MB, allocated 495 MB, managed 106 MB, textures 346 MB
 [Arena] training-lane: shadows off for 324 small far renderers
 [Arena] training-lane: 1,307,600 triangles; heaviest:
   295,062 Range woods (39 meshes)
@@ -1015,56 +987,56 @@ Total: 88.316943 ms (FindLiveObjects: 0.446456 ms CreateObjectMapping: 0.057596 
 [Memory] 0 model textures made lean in 0 ms
 Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 736 unused Assets to reduce memory usage. Loaded Objects now: 9621.
-Total: 8.723741 ms (FindLiveObjects: 0.706113 ms CreateObjectMapping: 0.082013 ms MarkObjects: 7.560025 ms  DeleteObjects: 0.375380 ms)
+Total: 10.199540 ms (FindLiveObjects: 0.540093 ms CreateObjectMapping: 0.102813 ms MarkObjects: 9.080396 ms  DeleteObjects: 0.475848 ms)
 
-[Memory] map training-lane: reserved 701 MB, allocated 353 MB, managed 83 MB, textures 394 MB
+[Memory] map training-lane: reserved 701 MB, allocated 352 MB, managed 106 MB, textures 394 MB
 [Range] 22 stands, 63 targets
 [Memory] 0 model textures made lean in 0 ms
 Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
-[Impostor] island_tree_02 try 0: (4.21, 3.41, 4.07) m, 67324 solid px, 79219 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_02 try 0: (4.21, 3.41, 4.07) m, 67315 solid px, 79215 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Figure] Prone: 143 bones, 10 renderers
 Unloading 144 unused Assets to reduce memory usage. Loaded Objects now: 12116.
-Total: 11.293939 ms (FindLiveObjects: 0.661777 ms CreateObjectMapping: 0.129904 ms MarkObjects: 10.118095 ms  DeleteObjects: 0.383963 ms)
+Total: 17.250484 ms (FindLiveObjects: 1.033197 ms CreateObjectMapping: 0.125526 ms MarkObjects: 15.564477 ms  DeleteObjects: 0.526814 ms)
 
 [Memory] 0 model textures made lean in 0 ms
 Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 1179 unused Assets to reduce memory usage. Loaded Objects now: 10976.
-Total: 7.454379 ms (FindLiveObjects: 0.681707 ms CreateObjectMapping: 0.078047 ms MarkObjects: 6.236051 ms  DeleteObjects: 0.458383 ms)
+Total: 9.676633 ms (FindLiveObjects: 0.739099 ms CreateObjectMapping: 0.105286 ms MarkObjects: 8.282090 ms  DeleteObjects: 0.549517 ms)
 
-[Impostor] island_tree_03 try 0: (2.97, 2.62, 2.91) m, 58900 solid px, 72852 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] spruce try 0: (6.30, 4.51, 3.38) m, 28197 solid px, 31998 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] island_tree_01 try 0: (4.76, 5.03, 4.82) m, 79616 solid px, 97934 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] tree_small_02 try 0: (2.92, 4.56, 4.29) m, 56175 solid px, 72774 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] shrub_01 try 0: (2.59, 0.40, 0.22) m, 3657 solid px, 6090 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] shrub_02 try 0: (6.57, 2.55, 2.54) m, 3808 solid px, 7816 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#0 try 0: (0.18, 0.14, 0.16) m, 19369 solid px, 26604 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#1 try 0: (0.28, 0.17, 0.28) m, 24723 solid px, 33398 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#2 try 0: (0.19, 0.18, 0.20) m, 23546 solid px, 32373 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#3 try 0: (0.15, 0.29, 0.13) m, 10850 solid px, 14146 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#4 try 0: (0.16, 0.32, 0.16) m, 9605 solid px, 12635 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#5 try 0: (0.15, 0.24, 0.13) m, 16048 solid px, 19888 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#6 try 0: (0.17, 0.10, 0.19) m, 13319 solid px, 19078 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#7 try 0: (0.19, 0.14, 0.20) m, 29551 solid px, 38421 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#8 try 0: (0.22, 0.22, 0.22) m, 40683 solid px, 49459 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#9 try 0: (0.32, 0.15, 0.33) m, 38072 solid px, 47563 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#10 try 0: (0.28, 0.14, 0.26) m, 33749 solid px, 42077 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_03 try 0: (2.97, 2.62, 2.91) m, 58925 solid px, 72842 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] spruce try 0: (6.30, 4.51, 3.38) m, 28210 solid px, 32000 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] island_tree_01 try 0: (4.76, 5.03, 4.82) m, 79621 solid px, 97931 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] tree_small_02 try 0: (2.92, 4.56, 4.29) m, 56184 solid px, 72767 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] shrub_01 try 0: (2.59, 0.40, 0.22) m, 3655 solid px, 6085 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] shrub_02 try 0: (6.57, 2.55, 2.54) m, 3813 solid px, 7812 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#0 try 0: (0.18, 0.14, 0.16) m, 19370 solid px, 26602 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#1 try 0: (0.28, 0.17, 0.28) m, 24710 solid px, 33404 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#2 try 0: (0.19, 0.18, 0.20) m, 23558 solid px, 32367 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#3 try 0: (0.15, 0.29, 0.13) m, 10849 solid px, 14147 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#4 try 0: (0.16, 0.32, 0.16) m, 9614 solid px, 12642 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#5 try 0: (0.15, 0.24, 0.13) m, 16054 solid px, 19892 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#6 try 0: (0.17, 0.10, 0.19) m, 13320 solid px, 19078 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#7 try 0: (0.19, 0.14, 0.20) m, 29542 solid px, 38420 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#8 try 0: (0.22, 0.22, 0.22) m, 40688 solid px, 49459 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#9 try 0: (0.32, 0.15, 0.33) m, 38078 solid px, 47553 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#10 try 0: (0.28, 0.14, 0.26) m, 33749 solid px, 42073 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_medium_01#11 try 0: (0.02, 0.08, 0.03) m, 4308 solid px, 5297 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_01#12 try 0: (0.07, 0.11, 0.07) m, 6240 solid px, 8136 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_02#0 try 0: (0.12, 0.16, 0.12) m, 10762 solid px, 15014 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_02#1 try 0: (0.18, 0.18, 0.20) m, 16879 solid px, 22494 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_medium_02#2 try 0: (0.91, 0.41, 0.43) m, 6478 solid px, 12799 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_bermuda_01#2 try 0: (0.04, 0.10, 0.03) m, 51789 solid px, 52951 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_01#12 try 0: (0.07, 0.11, 0.07) m, 6239 solid px, 8136 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_02#0 try 0: (0.12, 0.16, 0.12) m, 10770 solid px, 15017 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_02#1 try 0: (0.18, 0.18, 0.20) m, 16877 solid px, 22497 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_medium_02#2 try 0: (0.91, 0.41, 0.43) m, 6470 solid px, 12796 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#2 try 0: (0.04, 0.10, 0.03) m, 51790 solid px, 52951 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_bermuda_01#3 try 0: (0.05, 0.07, 0.02) m, 109380 solid px, 110407 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_bermuda_01#4 try 0: (0.06, 0.07, 0.09) m, 72064 solid px, 72950 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_bermuda_01#5 try 0: (0.05, 0.10, 0.02) m, 28050 solid px, 29023 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_bermuda_01#6 try 0: (0.07, 0.08, 0.04) m, 69607 solid px, 70696 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_bermuda_01#7 try 0: (0.04, 0.11, 0.03) m, 28629 solid px, 29858 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Memory] training started: reserved 953 MB, allocated 617 MB, managed 70 MB, textures 438 MB, 650 meshes with 6,556,781 vertices, 647 textures (492 MB by size), 843 materials; textures by kind: surface normal 134x 141 MB, other 328x 87 MB, surface mask 23x 67 MB, repacked masks 48x 64 MB, plant pictures 40x 53 MB, surface colour 30x 42 MB, render targets 32x 17 MB, sky 1x 11 MB, unnamed 11x 10 MB; biggest textures: BaseMap-Hidden/Universal Render Pipeline/Terrain/Lit (Basemap Gen)-_MainTex 21.3, sunflowers_puresky_4k 10.7, SplatAlpha 0 5.3, brown_mud_leaves_01_mask 5.3, concrete_wall_008_mask 5.3, corrugated_iron_02_mask 5.3, forest_ground_04_mask 5.3, gravelly_sand_mask 5.3, leafy_grass_mask 5.3, rock_boulder_dry_mask 5.3, rocky_terrain_02_mask 5.3, rusty_painted_metal_mask 5.3; biggest model textures: ; materials holding full-size model textures: 
-[Impostor] grass_bermuda_01#8 try 0: (0.07, 0.15, 0.05) m, 44490 solid px, 46079 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_bermuda_01#9 try 0: (0.08, 0.13, 0.05) m, 59817 solid px, 61412 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#7 try 0: (0.04, 0.11, 0.03) m, 28628 solid px, 29858 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Memory] training started: reserved 953 MB, allocated 616 MB, managed 76 MB, textures 438 MB, 650 meshes with 6,556,781 vertices, 647 textures (492 MB by size), 843 materials; textures by kind: surface normal 134x 141 MB, other 328x 87 MB, surface mask 23x 67 MB, repacked masks 48x 64 MB, plant pictures 40x 53 MB, surface colour 30x 42 MB, render targets 32x 17 MB, sky 1x 11 MB, unnamed 11x 10 MB; biggest textures: BaseMap-Hidden/Universal Render Pipeline/Terrain/Lit (Basemap Gen)-_MainTex 21.3, sunflowers_puresky_4k 10.7, SplatAlpha 0 5.3, brown_mud_leaves_01_mask 5.3, concrete_wall_008_mask 5.3, corrugated_iron_02_mask 5.3, forest_ground_04_mask 5.3, gravelly_sand_mask 5.3, leafy_grass_mask 5.3, rock_boulder_dry_mask 5.3, rocky_terrain_02_mask 5.3, rusty_painted_metal_mask 5.3; biggest model textures: ; materials holding full-size model textures: 
+[Impostor] grass_bermuda_01#8 try 0: (0.07, 0.15, 0.05) m, 44490 solid px, 46081 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#9 try 0: (0.08, 0.13, 0.05) m, 59817 solid px, 61413 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Capture] Training-Flow
-[Impostor] grass_bermuda_01#10 try 0: (0.04, 0.09, 0.04) m, 10077 solid px, 11268 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
-[Impostor] grass_bermuda_01#11 try 0: (0.07, 0.15, 0.08) m, 32755 solid px, 34478 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#10 try 0: (0.04, 0.09, 0.04) m, 10076 solid px, 11269 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
+[Impostor] grass_bermuda_01#11 try 0: (0.07, 0.15, 0.08) m, 32749 solid px, 34479 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Impostor] grass_bermuda_01#12 try 0: (0.00, 0.15, 0.01) m, 3928 solid px, 4655 lit px on black, white RGBA(1.000, 1.000, 1.000, 1.000)
 [Physics::Module] Cleanup current backend.
 [Physics::Module] Id: 0xf2b8ea05
