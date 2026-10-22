@@ -56,9 +56,12 @@ if os.environ.get("SCOUT_SET") == "organs":
 # SCOUT_UIDS=uid,uid: also download these models and list their parts (nodes, meshes, sizes).
 UIDS = [u.strip() for u in os.environ.get("SCOUT_UIDS", "").split(",") if u.strip()]
 
+# SCOUT_AMBIENT=facade,...: ambientCG (CC0) materials matching each query, with their real sizes.
+AMBIENT = [q.strip() for q in os.environ.get("SCOUT_AMBIENT", "").split(",") if q.strip()]
+
 
 def get(url, auth=True):
-    req = urllib.request.Request(url, headers={"Authorization": f"Token {TOKEN}"} if auth else {})
+    req = urllib.request.Request(url, headers={"Authorization": f"Token {TOKEN}"} if auth else {"User-Agent": "sniper-duel-scout"})
     with urllib.request.urlopen(req, timeout=120) as r:
         return r.read()
 
@@ -171,6 +174,33 @@ def main():
             entry["error"] = str(e)
         report.append(entry)
         print(json.dumps({k: entry.get(k) for k in ("uid", "name", "license", "glb_mb")}))
+    for q in AMBIENT:
+        try:
+            url = "https://ambientcg.com/api/v2/full_json?" + urllib.parse.urlencode(
+                {"type": "Material", "q": q, "limit": 120, "include": "imageData,dimensionsData,tagData,downloadData"})
+            found = json.loads(get(url, auth=False)).get("foundAssets", [])
+        except Exception as e:
+            report.append({"label": "ambientcg", "query": q, "error": str(e)})
+            continue
+        for a in found:
+            aid = a.get("assetId")
+            entry = {"label": "ambientcg", "query": q, "uid": aid, "name": a.get("displayName"), "license": "cc0",
+                     "dims": [a.get(k) for k in ("dimensionX", "dimensionY", "dimensionZ")], "tags": a.get("tags")}
+            zips = []
+            for cat in (a.get("downloadFolders") or {}).values():
+                for ft in (cat.get("downloadFiletypeCategories") or {}).values():
+                    for d in ft.get("downloads", []):
+                        zips.append(d.get("fileName"))
+            entry["zips"] = zips[:12]
+            imgs = a.get("previewImage") or {}
+            pick = imgs.get("512-JPG-FFFFFF") or imgs.get("256-JPG-FFFFFF") or next(iter(imgs.values()), None) if imgs else None
+            if pick:
+                try:
+                    with open(os.path.join(out, "thumbs", f"ambientcg-{aid}.jpg"), "wb") as f:
+                        f.write(get(pick, auth=False))
+                except Exception as e:
+                    entry["thumb_error"] = str(e)
+            report.append(entry)
     with open(os.path.join(out, "report.json"), "w") as f:
         json.dump(report, f, indent=1)
 
