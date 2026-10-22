@@ -56,6 +56,9 @@ namespace SniperDuel.Game.World
             /// <summary>The part a shot to this zone is steered through when its path misses every such part.</summary>
             public HitZone? Target;
             public Color Blood = new Color(0.55f, 0.02f, 0.02f);
+            /// <summary>The real skeleton's triangles for this bone (RealBones), drawn in place of the shapes.</summary>
+            public Mesh? Real;
+            public Material[]? RealMats;
 
             public Vector3 Centre
             {
@@ -135,6 +138,7 @@ namespace SniperDuel.Game.World
             /// </summary>
             public GameObject? Build(Transform parent, int half, Vector3 hit, Vector3 plane, float gap)
             {
+                if (Real != null) return BuildReal(parent, half, hit, plane, gap);
                 var mb = new MeshBuilder();
                 int seed = 17;
                 foreach (char ch in Name) seed = seed * 31 + ch;
@@ -161,6 +165,82 @@ namespace SniperDuel.Game.World
                 if (mb.VertexCount == 0) return null;
                 var go = mb.Object(half == 0 ? Name : Name + (half == 1 ? " A" : " B"), Material, parent, shadows: false);
                 go.GetComponent<MeshRenderer>().receiveShadows = false;
+                return go;
+            }
+            /// <summary>
+            /// The real mesh whole, or one side of the break: along the struck tube's length where a
+            /// triangle lies on it, else by the side of the plane; triangles within `gap` are dropped.
+            /// </summary>
+            GameObject? BuildReal(Transform parent, int half, Vector3 hit, Vector3 plane, float gap)
+            {
+                var mesh = Real!;
+                if (half != 0)
+                {
+                    TubeSpec? tube = null;
+                    float bd = float.MaxValue;
+                    foreach (var t in Tubes)
+                    {
+                        float d = (t.Curve.At(t.Curve.Nearest(hit)) - hit).sqrMagnitude;
+                        if (d < bd) { bd = d; tube = t; }
+                    }
+                    float uh = tube != null ? tube.Curve.Nearest(hit) : 0;
+                    float g = tube != null ? gap / Mathf.Max(1e-3f, tube.Curve.Length) : 0;
+                    bool startNear = tube != null && Vector3.Dot(tube.Curve.At(0) - hit, plane) < 0;
+                    var v = new List<Vector3>();
+                    mesh.GetVertices(v);
+                    var cut = new Mesh { name = Name + (half == 1 ? " A" : " B"), indexFormat = mesh.indexFormat };
+                    cut.SetVertices(v);
+                    var n = new List<Vector3>();
+                    mesh.GetNormals(n);
+                    cut.SetNormals(n);
+                    var uv = new List<Vector2>();
+                    mesh.GetUVs(0, uv);
+                    cut.SetUVs(0, uv);
+                    cut.subMeshCount = mesh.subMeshCount;
+                    int kept = 0;
+                    for (int sub = 0; sub < mesh.subMeshCount; sub++)
+                    {
+                        var idx = mesh.GetTriangles(sub);
+                        var keep = new List<int>(idx.Length / 2);
+                        for (int i = 0; i + 2 < idx.Length; i += 3)
+                        {
+                            var c = (v[idx[i]] + v[idx[i + 1]] + v[idx[i + 2]]) / 3;
+                            bool first;
+                            float ut = tube != null ? tube.Curve.Nearest(c) : 0;
+                            if (tube != null && (tube.Curve.At(ut) - c).magnitude < tube.MaxRadius * 3)
+                            {
+                                if (Mathf.Abs(ut - uh) < g) continue;
+                                first = (ut < uh) == startNear;
+                            }
+                            else
+                            {
+                                float sd = Vector3.Dot(c - hit, plane);
+                                if (Mathf.Abs(sd) < gap) continue;
+                                first = sd < 0;
+                            }
+                            if (first != (half == 1)) continue;
+                            keep.Add(idx[i]);
+                            keep.Add(idx[i + 1]);
+                            keep.Add(idx[i + 2]);
+                        }
+                        cut.SetTriangles(keep, sub);
+                        kept += keep.Count;
+                    }
+                    if (kept == 0)
+                    {
+                        UnityEngine.Object.Destroy(cut);
+                        return null;
+                    }
+                    cut.RecalculateBounds();
+                    mesh = cut;
+                }
+                var go = new GameObject(half == 0 ? Name : Name + (half == 1 ? " A" : " B"));
+                go.transform.SetParent(parent, false);
+                go.AddComponent<MeshFilter>().sharedMesh = mesh;
+                var mr = go.AddComponent<MeshRenderer>();
+                mr.sharedMaterials = RealMats ?? new[] { Material };
+                mr.shadowCastingMode = ShadowCastingMode.Off;
+                mr.receiveShadows = false;
                 return go;
             }
         }
@@ -218,6 +298,7 @@ namespace SniperDuel.Game.World
                 if (go != null) p.Go = go;
             }
             a.Parts.RemoveAll(p => p.Go == null);
+            RealBones.Dress(a, f);
             return a;
         }
 
