@@ -46,18 +46,14 @@ namespace SniperDuel.Game.World
                     foreach (var anim in inst.GetComponentsInChildren<Animation>(true)) anim.enabled = false;
                     foreach (var anim in inst.GetComponentsInChildren<Animator>(true)) anim.enabled = false;
                     Figure.Freeze(inst);
-                    // Sketchfab wraps its exports in a node that turns the author's y-up model on
-                    // its back; the organ is measured in that node's own space, the author's frame.
-                    var frame = inst.transform;
-                    foreach (var t in inst.GetComponentsInChildren<Transform>(true))
-                        if (t.name.StartsWith("Sketchfab_model")) { frame = t; break; }
-                    var world = frame.worldToLocalMatrix;
+                    // Sketchfab's wrapper nodes turn the author's y-up model about; the organ is
+                    // measured in its meshes' own space, the frame it was modelled in.
                     src = new Source();
                     foreach (var mf in inst.GetComponentsInChildren<MeshFilter>(true))
                     {
                         var mesh = mf.sharedMesh;
                         if (mesh == null || !mesh.isReadable) continue;
-                        var m = world * mf.transform.localToWorldMatrix;
+                        var m = Matrix4x4.identity;
                         var nm = m.inverse.transpose;
                         int b = src.V.Count;
                         var v = mesh.vertices;
