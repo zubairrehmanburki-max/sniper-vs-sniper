@@ -46,7 +46,9 @@ namespace SniperDuel.Rules
             var me = state.Players[side];
             var profile = cfg.Bot[me.Bot ?? BotDifficulty.Medium];
             var map = Maps.ById(state.MapId);
-            var spots = map.Spots[side];
+            var post = Match.PostOf(state, side);
+            // At a post it holds the post's own spot; it changes post by relocating (Turn).
+            var spots = post != null ? new List<Vec3> { post.Spot } : map.Spots[side];
             var pool = profile.Positions > 0 ? spots.GetRange(0, Math.Min(profile.Positions, spots.Count)) : spots;
             Vec3 target;
             if (pool.Count == 1)
@@ -76,6 +78,11 @@ namespace SniperDuel.Rules
             var ez = map.Zones[Match.Other(side)];
             double lx = (ez.XMin + ez.XMax) / 2;
             double lz = -(ez.SMin + ez.SMax) / 2;
+            if (post != null)
+            {
+                lx = state.Players[Match.Other(side)].Position.X;
+                lz = state.Players[Match.Other(side)].Position.Z;
+            }
             var look = new Vec3(lx, map.Ground(lx, lz) + 0.6, lz);
             Stance? sees = null;
             foreach (var st in new[] { Stance.Prone, Stance.Crouch, Stance.Standing })
@@ -124,7 +131,11 @@ namespace SniperDuel.Rules
             double yaw = Math.Atan2(dx, -dz);
             double pitch = Math.Atan2(chest.Y - eye.Y, horiz);
             double trueRange = JsMath.Hypot(horiz, chest.Y - eye.Y);
-            double rangeEstimate = trueRange * (1 + (rng.Next() * 2 - 1) * profile.RangeErrorFrac);
+            // The enemy moved to a new post since the bot last fired this round: it has to range them afresh.
+            double rangeError = profile.RangeErrorFrac;
+            var last = state.Shots.FindLast(r => r.Round == state.Round && r.Shooter == side);
+            if (state.VariedPosts && last != null && Math.Abs(last.Distance - Geometry.HorizontalDistance(me.Position, enemy.Position)) > 5) rangeError *= 1.8;
+            double rangeEstimate = trueRange * (1 + (rng.Next() * 2 - 1) * rangeError);
 
             // The bot's wind read: what it believes, not what is.
             var conditions = Match.ActiveConditions(state);
@@ -191,6 +202,7 @@ namespace SniperDuel.Rules
         static List<BotAction> Turn(MatchState state, Side side, GameConfig cfg)
         {
             var map = Maps.ById(state.MapId);
+            if (Match.PostOf(state, side) != null) return Relocate(state, side, cfg) ?? Shot(state, side, cfg);
             if (!state.TurnLock || map.Spots[side].Count < 2 || !Match.CanMove(state, side)) return Shot(state, side, cfg);
             var rng = RngFor(state, side, 4);
             var (target, stance) = Choose(state, side, cfg, rng);
@@ -201,6 +213,28 @@ namespace SniperDuel.Rules
             var actions = Shot(moved, side, cfg);
             actions.Insert(0, shift);
             return actions;
+        }
+
+        /// <summary>How likely the bot is to give up a shot to change post, once it has a reason to.</summary>
+        static double RelocateChance(BotDifficulty d) => d switch { BotDifficulty.Easy => 0.25, BotDifficulty.Hard => 0.55, _ => 0.4 };
+
+        /// <summary>
+        /// Variable posts: wounded, or two misses into the round, the bot may spend its turn moving
+        /// to a linked post so the player has to find and range it again. Null keeps it where it is.
+        /// </summary>
+        static List<BotAction>? Relocate(MatchState state, Side side, GameConfig cfg)
+        {
+            var me = state.Players[side];
+            var post = Match.PostOf(state, side);
+            if (post == null || post.Links.Length == 0 || !Match.CanMove(state, side) || me.Relocations >= cfg.Rules.RelocationsPerRound) return null;
+            int misses = state.Shots.FindAll(r => r.Round == state.Round && r.Shooter == side && r.Verdict == Verdict.Miss).Count;
+            if (me.Wounds == 0 && misses < 2) return null;
+            var rng = RngFor(state, side, 5);
+            if (rng.Next() >= RelocateChance(me.Bot ?? BotDifficulty.Medium)) return null;
+            var map = Maps.ById(state.MapId);
+            int to = Maps.PostIndex(map, side, post.Links[(int)Math.Floor(rng.Next() * post.Links.Length)]);
+            if (to < 0) return null;
+            return new List<BotAction> { new BotAction(2 + rng.Next() * 3, MatchInput.RelocateTo(side, to, me.Stance, 0)) };
         }
 
         /// <summary>All bot actions for the current phase, with absolute times filled in.</summary>

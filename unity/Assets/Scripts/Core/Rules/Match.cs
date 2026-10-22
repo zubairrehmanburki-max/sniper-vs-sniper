@@ -9,6 +9,11 @@
  * Turn lock (the game's rules; off for the TypeScript parity matches): you walk and change stance
  * only in your own turn, and once you fire you stay on that spot in that stance until the enemy
  * fires. Stance is always your own choice: sudden death never forces anyone up.
+ *
+ * Variable posts (also off for the parity matches): on a map with posts, each round rolls a pair of
+ * them from the match seed, never the same range band twice running. In your own turn you may climb
+ * to another level of your structure (you keep your shot) or relocate to a linked post (your turn
+ * ends there), a few times a round.
  */
 using System;
 using System.Collections.Generic;
@@ -46,6 +51,10 @@ namespace SniperDuel.Rules
         public int IdlePhases;
         /// <summary>Turn lock: fired, and held on that spot in that stance until the enemy fires.</summary>
         public bool Locked;
+        /// <summary>Variable posts: the post this player holds (index into the map's posts), else -1.</summary>
+        public int Post = -1;
+        /// <summary>Relocations used this round.</summary>
+        public int Relocations;
 
         public PlayerState Clone() => (PlayerState)MemberwiseClone();
     }
@@ -98,6 +107,12 @@ namespace SniperDuel.Rules
         public bool ForfeitOnIdle;
         /// <summary>Movement only in your own turn, held where you fired until the enemy fires; no forced stance.</summary>
         public bool TurnLock;
+        /// <summary>Each round fights from a rolled pair of posts (the map's Posts).</summary>
+        public bool VariedPosts;
+        /// <summary>This round's post pair (index into Maps.Pairs), else -1.</summary>
+        public int PostPair = -1;
+        /// <summary>A pair the first round must not repeat (the one this player opened with last time), else -1.</summary>
+        public int AvoidOpening = -1;
 
         /// <summary>Shallow copy with fresh player records and shot list, like the TS reducer's clone.</summary>
         public MatchState Clone()
@@ -124,6 +139,12 @@ namespace SniperDuel.Rules
         /// acting and never ends a phase.
         /// </summary>
         Shift,
+        /// <summary>
+        /// Variable posts: go to another post of your own. The same structure (Group) is a climb,
+        /// done in your turn and keeping your shot; a linked post elsewhere is a relocation, which
+        /// ends your turn there.
+        /// </summary>
+        Relocate,
     }
 
     public sealed class MatchInput
@@ -137,6 +158,8 @@ namespace SniperDuel.Rules
         public Stance Stance;
         /// <summary>Fire.</summary>
         public FireInput? Fire;
+        /// <summary>Relocate: the post to go to.</summary>
+        public int Post;
 
         public MatchInput Clone() => (MatchInput)MemberwiseClone();
         public MatchInput At(double time)
@@ -151,6 +174,8 @@ namespace SniperDuel.Rules
             new MatchInput { Type = MatchInputType.Place, Side = side, Position = position, Stance = stance, Time = time };
         public static MatchInput ShiftTo(Side side, Vec3 position, Stance stance, double time) =>
             new MatchInput { Type = MatchInputType.Shift, Side = side, Position = position, Stance = stance, Time = time };
+        public static MatchInput RelocateTo(Side side, int post, Stance stance, double time) =>
+            new MatchInput { Type = MatchInputType.Relocate, Side = side, Post = post, Stance = stance, Time = time };
         public static MatchInput ReadyUp(Side side, double time) => new MatchInput { Type = MatchInputType.Ready, Side = side, Time = time };
         public static MatchInput FireShot(Side side, FireInput input, double time) => new MatchInput { Type = MatchInputType.Fire, Side = side, Fire = input, Time = time };
         public static MatchInput NextRound(double time) => new MatchInput { Type = MatchInputType.NextRound, Time = time };
@@ -246,7 +271,61 @@ namespace SniperDuel.Rules
 
         static Vec3 DefaultPosition(DuelMap map, Side side) => map.Spots[side][0];
 
-        public static MatchState CreateMatch(uint seed, string mapId, PerSide<PlayerSetup> players, double time, GameConfig cfg, bool forfeitOnIdle = false, bool turnLock = false)
+        /// <summary>Does this match fight from rolled posts?</summary>
+        public static bool HasPosts(MatchState state) => state.VariedPosts && state.PostPair >= 0;
+
+        /// <summary>The post a side holds now, if the match uses posts.</summary>
+        public static Post? PostOf(MatchState state, Side side)
+        {
+            var p = state.Players[side].Post;
+            var posts = Maps.ById(state.MapId).Posts;
+            return state.VariedPosts && posts != null && p >= 0 && p < posts[side].Count ? posts[side][p] : null;
+        }
+
+        /// <summary>Where a side may walk now: its post's area, else its roaming area or zone.</summary>
+        public static Zone WalkZone(MatchState state, Side side) => PostOf(state, side)?.Walk ?? Maps.RoamZone(Maps.ById(state.MapId), side);
+
+        /// <summary>
+        /// The post pair for a round: a band other than the last round's (when the map has one), each
+        /// band equally likely, then a pair within it; the first round avoids `avoid`.
+        /// </summary>
+        public static int RollPostPair(DuelMap map, uint seed, int round, int previous, int avoid = -1)
+        {
+            var pairs = Maps.Pairs(map);
+            if (pairs.Count == 0) return -1;
+            var rng = new Rng(Rng.HashSeed(seed, 0x706f7374, round));
+            RangeBand? last = previous >= 0 && previous < pairs.Count ? pairs[previous].Band : (RangeBand?)null;
+            var bands = new List<RangeBand>();
+            foreach (var p in pairs)
+                if (p.Band != last && !bands.Contains(p.Band)) bands.Add(p.Band);
+            if (bands.Count == 0) bands.Add(pairs[0].Band);
+            bands.Sort();
+            var band = bands[(int)Math.Floor(rng.Next() * bands.Count)];
+            var pool = new List<int>();
+            for (int i = 0; i < pairs.Count; i++)
+                if (pairs[i].Band == band && i != previous && i != avoid) pool.Add(i);
+            if (pool.Count == 0)
+                for (int i = 0; i < pairs.Count; i++)
+                    if (pairs[i].Band == band) pool.Add(i);
+            return pool[(int)Math.Floor(rng.Next() * pool.Count)];
+        }
+
+        /// <summary>Puts both players at the start of the round's posts.</summary>
+        static void TakePosts(MatchState state, DuelMap map)
+        {
+            if (!state.VariedPosts || map.Posts == null) return;
+            state.PostPair = RollPostPair(map, state.Seed, state.Round, state.PostPair, state.Round == 1 ? state.AvoidOpening : -1);
+            if (state.PostPair < 0) return;
+            var pair = Maps.Pairs(map)[state.PostPair];
+            foreach (var p in new[] { state.Players.A, state.Players.B })
+            {
+                p.Post = p.Side == Side.A ? pair.A : pair.B;
+                p.Position = map.Posts[p.Side][p.Post].Spot;
+                p.Relocations = 0;
+            }
+        }
+
+        public static MatchState CreateMatch(uint seed, string mapId, PerSide<PlayerSetup> players, double time, GameConfig cfg, bool forfeitOnIdle = false, bool turnLock = false, bool variedPosts = false, int avoidOpening = -1)
         {
             var map = Maps.ById(mapId);
             PlayerState Player(Side side) => new PlayerState
@@ -266,7 +345,7 @@ namespace SniperDuel.Rules
                 Ready = false,
                 IdlePhases = 0,
             };
-            return new MatchState
+            var state = new MatchState
             {
                 Seed = seed,
                 MapId = mapId,
@@ -290,7 +369,11 @@ namespace SniperDuel.Rules
                 Forfeit = false,
                 ForfeitOnIdle = forfeitOnIdle,
                 TurnLock = turnLock,
+                VariedPosts = variedPosts && map.Posts != null,
+                AvoidOpening = avoidOpening,
             };
+            TakePosts(state, map);
+            return state;
         }
 
         /// <summary>Sudden-death shrink factor for the current pair count (0 = full zone).</summary>
@@ -373,7 +456,7 @@ namespace SniperDuel.Rules
             {
                 var p = state.Players[next.actor];
                 // Sudden death: the usable zone shrinks toward the front, forcing exposure.
-                var zone = Maps.UsableZone(map, next.actor, ZoneShrink(state, cfg), cfg.Rules.MinZoneDepthM);
+                var zone = PostOf(state, next.actor)?.Walk ?? Maps.UsableZone(map, next.actor, ZoneShrink(state, cfg), cfg.Rules.MinZoneDepthM);
                 p.Position = Maps.ClampToZone(map, zone, p.Position);
                 state.MoveFrom = p.Position;
             }
@@ -459,6 +542,7 @@ namespace SniperDuel.Rules
                 p.Stance = Stance.Prone;
                 p.Position = DefaultPosition(map, p.Side);
             }
+            TakePosts(state, map);
             state.Phase = PhaseKind.Setup;
             state.Actor = null;
             state.Acted = false;
@@ -509,13 +593,13 @@ namespace SniperDuel.Rules
                     var p = state.Players[input.Side];
                     if (state.Phase == PhaseKind.Setup)
                     {
-                        p.Position = Maps.ClampToZone(map, map.Zones[input.Side], input.Position);
+                        p.Position = Maps.ClampToZone(map, PostOf(state, input.Side)?.Walk ?? map.Zones[input.Side], input.Position);
                         p.Stance = input.Stance;
                         return new StepResult(state);
                     }
                     if (state.Phase != PhaseKind.Move || state.Actor != input.Side) return Fail("Not your move phase");
                     if (!CanMove(state, input.Side)) return Fail("Held where you fired until the enemy fires");
-                    var zone = Maps.UsableZone(map, input.Side, ZoneShrink(state, cfg), cfg.Rules.MinZoneDepthM);
+                    var zone = PostOf(state, input.Side)?.Walk ?? Maps.UsableZone(map, input.Side, ZoneShrink(state, cfg), cfg.Rules.MinZoneDepthM);
                     var target = Maps.ClampToZone(map, zone, input.Position);
                     var from = state.MoveFrom!.Value;
                     double budget = MoveBudget(state, input.Side, cfg);
@@ -537,11 +621,38 @@ namespace SniperDuel.Rules
                     if (!CanMove(state, input.Side))
                         return Fail(state.Players[input.Side].Locked ? "Held where you fired until the enemy fires" : "Not your turn");
                     var p = state.Players[input.Side];
-                    var target = Maps.ClampToZone(map, Maps.RoamZone(map, input.Side), input.Position);
+                    var target = Maps.ClampToZone(map, WalkZone(state, input.Side), input.Position);
                     // Walking away from where they last fired: the enemy loses the flash and dust.
                     if (p.Revealed is Vec3 seen && Geometry.HorizontalDistance(seen, target) > 0.5) p.Revealed = null;
                     p.Position = target;
                     p.Stance = ClampStance(state, input.Stance, cfg);
+                    return new StepResult(state);
+                }
+
+                case MatchInputType.Relocate:
+                {
+                    var p = state.Players[input.Side];
+                    var from = PostOf(state, input.Side);
+                    var posts = map.Posts?[input.Side];
+                    if (from == null || posts == null || input.Post < 0 || input.Post >= posts.Count || input.Post == p.Post) return Fail("No such post");
+                    if (!CanMove(state, input.Side))
+                        return Fail(p.Locked ? "Held where you fired until the enemy fires" : "Not your turn");
+                    if ((state.Phase != PhaseKind.Move && state.Phase != PhaseKind.Shot) || state.Actor != input.Side) return Fail("Not your turn");
+                    var to = posts[input.Post];
+                    bool climb = to.Group == from.Group;
+                    if (!climb)
+                    {
+                        if (Array.IndexOf(from.Links, to.Id) < 0) return Fail("No way there from here");
+                        if (p.Relocations >= cfg.Rules.RelocationsPerRound) return Fail("No relocations left this round");
+                    }
+                    p.Post = input.Post;
+                    p.Position = to.Spot;
+                    p.Stance = ClampStance(state, input.Stance, cfg);
+                    p.Revealed = null;
+                    if (climb) return new StepResult(state);
+                    p.Relocations += 1;
+                    state.Acted = true;
+                    EndPhase(state, input.Time, cfg); // the trip takes the rest of your turn
                     return new StepResult(state);
                 }
 

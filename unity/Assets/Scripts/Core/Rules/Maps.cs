@@ -60,6 +60,41 @@ namespace SniperDuel.Rules
         public Zone Clone() => (Zone)MemberwiseClone();
     }
 
+    /// <summary>How far apart a pair of posts is. Only the round roll uses it: players never see a range.</summary>
+    public enum RangeBand
+    {
+        Close,
+        Mid,
+        Long,
+        Extreme,
+    }
+
+    /// <summary>
+    /// A named place one side fights from for a round (GAME_PLAN variable distance). Posts sharing a
+    /// Group are levels or corners of one structure: climbing between them keeps your shot. Links
+    /// name posts elsewhere that you can relocate to, which costs your shot.
+    /// </summary>
+    public sealed class Post
+    {
+        public string Id = "";
+        public string Name = "";
+        /// <summary>Where you start the round at this post.</summary>
+        public Vec3 Spot;
+        /// <summary>Where you may walk, crouch and lie while you hold this post.</summary>
+        public Zone Walk = null!;
+        public string Group = "";
+        public string[] Links = Array.Empty<string>();
+    }
+
+    /// <summary>One allowed match-up of an A post and a B post, with its straight-line range.</summary>
+    public sealed class PostPair
+    {
+        public int A;
+        public int B;
+        public double Distance;
+        public RangeBand Band;
+    }
+
     public enum StructureKind
     {
         Bridge,
@@ -182,6 +217,11 @@ namespace SniperDuel.Rules
         public Climate Climate = new Climate();
         public double Latitude;
         public MapLook Look = new MapLook();
+        /// <summary>Variable-distance posts per side; null keeps the map's one fixed match-up.</summary>
+        public PerSide<List<Post>>? Posts;
+        /// <summary>Post id pairs ("A-id|B-id") never rolled together (too short a trip, or the same ship twice).</summary>
+        public HashSet<string> NoPairs = new HashSet<string>();
+        internal List<PostPair>? PairCache;
     }
 
     public static class Maps
@@ -334,12 +374,34 @@ namespace SniperDuel.Rules
                 cover.Add(Rock($"B-rock-{i}", x, s, w, h, 1.6, ground));
                 spots.B.Add(new Vec3(x + (i % 2 == 0 ? -1.8 : 1.8), ground(x, -(s + 1.8)), -(s + 1.8)));
             }
+            // Variable distance: boulders on a gravel bar out by the wash, and on a shelf up each flank.
+            var extra = new (string id, double x, double s, double h, double w)[]
+            {
+                ("post-A-bar-0", -26.5, 309, 1.3, 2.6), ("post-A-bar-1", -13, 308, 1.1, 2.2),
+                ("post-A-flank-0", -156.5, 48, 1.2, 2.4), ("post-A-flank-1", -143.5, 49, 1.0, 2.0),
+                ("post-B-bar-0", 18.5, 551, 1.2, 2.4), ("post-B-bar-1", 32, 552, 1.3, 2.6),
+                ("post-B-flank-0", 108.5, 796, 1.1, 2.2), ("post-B-flank-1", 121.5, 795, 1.3, 2.6),
+            };
+            foreach (var e in extra) cover.Add(Rock(e.id, e.x, e.s, e.w, e.h, 1.6, ground));
+            var zones = new PerSide<Zone>(new Zone(-60, 60, 0, 90, 90), new Zone(-60, 60, 780, 870, 780));
+            var posts = new PerSide<List<Post>>(new List<Post>
+            {
+                new Post { Id = "A-bench", Name = "Low bench", Spot = spots.A[0], Walk = zones.A, Group = "A-bench", Links = new[] { "A-bar", "A-flank" } },
+                MakePost(ground, Side.A, "A-bar", "Gravel bar", -20, 304, -20, 298, 14, 6, "A-bench"),
+                MakePost(ground, Side.A, "A-flank", "West shelf", -150, 45, -150, 40, 12, 5, "A-bench"),
+            }, new List<Post>
+            {
+                new Post { Id = "B-bench", Name = "High bench", Spot = spots.B[0], Walk = zones.B, Group = "B-bench", Links = new[] { "B-bar", "B-flank" } },
+                MakePost(ground, Side.B, "B-bar", "Gravel bar", 25, 556, 25, 562, 14, 6, "B-bench"),
+                MakePost(ground, Side.B, "B-flank", "East shelf", 115, 800, 115, 804, 10, 4, "B-bench"),
+            });
             return new DuelMap
             {
                 Id = "dry-valley",
                 Name = "Dry Valley",
                 LaneLength = 870,
-                Zones = new PerSide<Zone>(new Zone(-60, 60, 0, 90, 90), new Zone(-60, 60, 780, 870, 780)),
+                Zones = zones,
+                Posts = posts,
                 Ground = ground,
                 Cover = cover,
                 Spots = spots,
@@ -450,13 +512,34 @@ namespace SniperDuel.Rules
             cover.Add(Block("crane-tower", 32, 128, 10, 10, 26, ground, CoverMaterial.Hard, CoverLook.Concrete));
             cover.Add(Block("office", -30, 312, 22, 18, 25, ground, CoverMaterial.Hard, CoverLook.Concrete));
             cover.Add(Block("shed", 22, 330, 18, 12, 7, ground, CoverMaterial.Hard, CoverLook.Concrete));
+            // Variable distance: a taller block behind each roof, and the quay buildings' roofs are walkable.
+            cover.Add(Block("post-hotel", 10, -40, 24, 20, 30, ground, CoverMaterial.Hard, CoverLook.Concrete));
+            cover.Add(Block("post-apartment", -10, 490, 24, 20, 34, ground, CoverMaterial.Hard, CoverLook.Concrete));
+            var roofs = cover.FindAll(b => b.Id is "warehouse" or "crane-tower" or "office" or "shed" or "post-hotel" or "post-apartment");
+            Ground hit = WithRoofs(ground, roofs);
+            var zones = new PerSide<Zone>(new Zone(-42, 42, 4, 54, 54), new Zone(-42, 42, 384, 434, 384));
+            var posts = new PerSide<List<Post>>(new List<Post>
+            {
+                new Post { Id = "A-roof", Name = "Rooftop", Spot = new Vec3(-4, RoofA, -55), Walk = new Zone(-42, 42, 4, 55.5, 55.5), Group = "A-roof", Links = new[] { "A-warehouse", "A-hotel" } },
+                MakePost(hit, Side.A, "A-warehouse", "Warehouse roof", -24, 110.5, -24, 100, 13, 11, "A-roof", "A-crane"),
+                MakePost(hit, Side.A, "A-crane", "Crane tower", 32, 131.5, 32, 128, 3.5, 3.5, "A-warehouse"),
+                MakePost(hit, Side.A, "A-hotel", "Hotel roof", 10, -32, 10, -40, 10.5, 8.5, "A-roof"),
+            }, new List<Post>
+            {
+                new Post { Id = "B-roof", Name = "Rooftop", Spot = new Vec3(-4, RoofB, -383), Walk = new Zone(-42, 42, 383, 434, 383), Group = "B-roof", Links = new[] { "B-shed", "B-apartment" } },
+                MakePost(hit, Side.B, "B-shed", "Shed roof", 22, 325, 22, 330, 7.5, 5, "B-roof", "B-office"),
+                MakePost(hit, Side.B, "B-office", "Port office roof", -30, 304, -30, 312, 9.5, 8, "B-shed"),
+                MakePost(hit, Side.B, "B-apartment", "Apartment roof", -10, 481.5, -10, 490, 10.5, 8.5, "B-roof"),
+            });
             return new DuelMap
             {
                 Id = "harbor-rooftops",
                 Name = "Harbor Rooftops",
                 LaneLength = 450,
-                Zones = new PerSide<Zone>(new Zone(-42, 42, 4, 54, 54), new Zone(-42, 42, 384, 434, 384)),
-                Ground = ground,
+                Zones = zones,
+                Terrain = ground,
+                Ground = hit,
+                Posts = posts,
                 Cover = cover,
                 Spots = spots,
                 WindEdges = V(150, 300),
@@ -859,6 +942,72 @@ namespace SniperDuel.Rules
             return m;
         }
 
+        // ---- variable-distance posts -----------------------------------------------------------------
+
+        /// <summary>Band edges, m: Close below the first, Extreme above the last.</summary>
+        public static readonly double[] BandEdges = { 350, 600, 900 };
+
+        public static RangeBand BandOf(double distance) =>
+            distance < BandEdges[0] ? RangeBand.Close : distance < BandEdges[1] ? RangeBand.Mid : distance < BandEdges[2] ? RangeBand.Long : RangeBand.Extreme;
+
+        /// <summary>Every A post against every B post, less the map's NoPairs, nearest first.</summary>
+        public static IReadOnlyList<PostPair> Pairs(DuelMap map)
+        {
+            if (map.PairCache != null) return map.PairCache;
+            var list = new List<PostPair>();
+            if (map.Posts != null)
+            {
+                for (int a = 0; a < map.Posts.A.Count; a++)
+                    for (int b = 0; b < map.Posts.B.Count; b++)
+                    {
+                        var pa = map.Posts.A[a];
+                        var pb = map.Posts.B[b];
+                        if (map.NoPairs.Contains(pa.Id + "|" + pb.Id)) continue;
+                        double d = JsMath.Hypot(pa.Spot.X - pb.Spot.X, pa.Spot.Y - pb.Spot.Y, pa.Spot.Z - pb.Spot.Z);
+                        list.Add(new PostPair { A = a, B = b, Distance = d, Band = BandOf(d) });
+                    }
+                list.Sort((x, y) => x.Distance.CompareTo(y.Distance));
+            }
+            map.PairCache = list;
+            return list;
+        }
+
+        public static int PostIndex(DuelMap map, Side side, string id) => map.Posts?[side].FindIndex(p => p.Id == id) ?? -1;
+
+        /// <summary>Every place a side may start a round from: the classic spots and any posts.</summary>
+        public static List<Vec3> FiringSpots(DuelMap map, Side side)
+        {
+            var all = new List<Vec3>(map.Spots[side]);
+            if (map.Posts != null)
+                foreach (var p in map.Posts[side])
+                    if (!all.Exists(q => Geometry.HorizontalDistance(q, p.Spot) < 1)) all.Add(p.Spot);
+            return all;
+        }
+
+        /// <summary>A walkable area `halfX` across and `halfS` along the lane round (x, s), front edge toward the enemy.</summary>
+        static Zone Around(Side side, double x, double s, double halfX, double halfS) =>
+            new Zone(x - halfX, x + halfX, s - halfS, s + halfS, side == Side.A ? s + halfS : s - halfS);
+
+        /// <summary>
+        /// A post on the ground or a walkable top in the map's hit ground: you start at (x, s) and walk
+        /// `halfX` across and `halfS` along the lane round (cx, cs).
+        /// </summary>
+        static Post MakePost(Ground ground, Side side, string id, string name, double x, double s, double cx, double cs, double halfX, double halfS, params string[] links) =>
+            new Post { Id = id, Name = name, Spot = new Vec3(x, ground(x, -s), -s), Walk = Around(side, cx, cs, halfX, halfS), Group = id, Links = links };
+
+        /// <summary>Hit-test ground with the flat tops of these boxes walkable (and solid to a bullet).</summary>
+        static Ground WithRoofs(Ground terrain, IEnumerable<Box> roofs)
+        {
+            var list = new List<Box>(roofs);
+            return (x, z) =>
+            {
+                double y = terrain(x, z);
+                foreach (var b in list)
+                    if (x >= b.Min.X && x <= b.Max.X && z >= b.Min.Z && z <= b.Max.Z) y = Math.Max(y, b.Max.Y);
+                return y;
+            };
+        }
+
         public static double LaneDistance(Vec3 p) => -p.Z;
 
         /// <summary>The usable part of a side's zone: during sudden death it shrinks toward the front edge.</summary>
@@ -891,6 +1040,8 @@ namespace SniperDuel.Rules
             foreach (var box in map.Cover)
             {
                 bool inside = x > box.Min.X && x < box.Max.X && -s > box.Min.Z && -s < box.Max.Z;
+                // Standing on its roof: a walkable top is part of the ground.
+                if (inside && map.Ground(x, -s) >= box.Max.Y - 1e-6) continue;
                 if (inside)
                 {
                     // Step out the short way, toward the player's own rear.
