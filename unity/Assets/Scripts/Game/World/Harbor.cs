@@ -68,6 +68,14 @@ namespace SniperDuel.Game.World
             FiringBuilding(map, k, rng, roofA, A0, A1, Side.A);
             FiringBuilding(map, k, rng, roofB, B0, B1, Side.B);
             LaneBuildings(map, k);
+            // The district leaves room (and a street) round the tall post buildings.
+            keepOut.Clear();
+            foreach (var box in map.Cover)
+                if (box.Id.StartsWith("post-"))
+                {
+                    var b = Biomes.ToUnity(box);
+                    keepOut.Add(new Rect(b.min.x - 6, b.min.z - 6, b.size.x + 12, b.size.z + 12));
+                }
             Quays(root, k, rng);
             Cranes(k);
             Containers(k, rng);
@@ -527,6 +535,17 @@ namespace SniperDuel.Game.World
                     case "crane-tower":
                         CraneTower(k, b);
                         break;
+                    case "post-hotel":
+                    case "post-apartment":
+                        // Taller blocks behind the firing buildings: window facade, a plain slab roof
+                        // you can lie on, plant at the back edge out of the way.
+                        float slab = Mathf.Floor((b.max.y - 0.6f) / FloorM) * FloorM;
+                        k.Facades[box.Id == "post-hotel" ? 2 : 3].Block(new Vector3(b.center.x, b.min.y, b.center.z), new Vector3(b.size.x, slab - b.min.y, b.size.z));
+                        k.Concrete.Box(new Vector3(b.center.x, (slab + b.max.y) / 2, b.center.z), new Vector3(b.size.x + 0.3f, b.max.y - slab, b.size.z + 0.3f));
+                        float back = box.Id == "post-hotel" ? b.min.z + 2.2f : b.max.z - 2.2f;
+                        k.Plant.Box(new Vector3(b.center.x - b.size.x * 0.25f, b.max.y + 0.8f, back), new Vector3(4.5f, 1.6f, 2.4f));
+                        k.Plant.Box(new Vector3(b.center.x + b.size.x * 0.3f, b.max.y + 0.6f, back), new Vector3(2.2f, 1.2f, 2.2f));
+                        break;
                 }
             }
         }
@@ -828,8 +847,14 @@ namespace SniperDuel.Game.World
         /// distance a plain deck of gravel, felt or membrane inside parapets and some plant; far ones a
         /// slab with plant boxes and the odd water tank.
         /// </summary>
+        /// <summary>Ground the district must not build on (the post buildings and their streets), Unity x/z.</summary>
+        static readonly List<Rect> keepOut = new List<Rect>();
+
         static void Block(Kit k, System.Random rng, float x, float s, float w, float d, int floors)
         {
+            var at = new Rect(x - w / 2, s - d / 2, w, d);
+            foreach (var r in keepOut)
+                if (r.Overlaps(at)) return;
             float h = floors * FloorM;
             k.Facades[rng.Next(k.Facades.Length)].Block(new Vector3(x, -0.5f, s), new Vector3(w, h + 0.5f, d));
             float near = Mathf.Min(new Vector2(x, s - (A0 + A1) / 2).magnitude, new Vector2(x, s - (B0 + B1) / 2).magnitude);

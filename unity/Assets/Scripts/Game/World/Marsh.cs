@@ -29,7 +29,8 @@ namespace SniperDuel.Game.World
             // The lane corridor and the tower footprints, widened by `margin`: nothing goes there.
             bool InCorridor(float x, float s, float margin) =>
                 (Mathf.Abs(x) < Corridor + margin && s > -20 - margin && s < lane + 20 + margin)
-                || new Vector2(x, s).magnitude < 16 + margin || new Vector2(x, s - lane).magnitude < 16 + margin;
+                || new Vector2(x, s).magnitude < 16 + margin || new Vector2(x, s - lane).magnitude < 16 + margin
+                || Biomes.InSightLine(map, x, s, 8 + margin);
 
             var green = new MeshBuilder();
             var straw = new MeshBuilder();

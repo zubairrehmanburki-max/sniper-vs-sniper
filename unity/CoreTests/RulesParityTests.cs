@@ -35,7 +35,8 @@ namespace SniperDuel.Tests
                     ["laneLength"] = Num(m.LaneLength),
                     ["fixed"] = m.Fixed,
                     ["zones"] = new JArray(Sides.Select(s => Arr(Num(m.Zones[s].XMin), Num(m.Zones[s].XMax), Num(m.Zones[s].SMin), Num(m.Zones[s].SMax), Num(m.Zones[s].Front)))),
-                    ["cover"] = new JArray(m.Cover.Select(b => new JObject
+                    // Variable-distance posts (ids "post-...") are Unity-only: the TypeScript referee has none.
+                    ["cover"] = new JArray(m.Cover.Where(b => !b.Id.StartsWith("post-")).Select(b => new JObject
                     {
                         ["id"] = b.Id,
                         ["min"] = V(b.Min),

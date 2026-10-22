@@ -193,14 +193,17 @@ namespace SniperDuel.Game.World
                 n++;
                 Wilds.Rock(single[n % single.Length], new Vector3(x, Y(x, s), s), R(0, 360), edge ? R(1.4f, 3.2f) : R(2, 6), root, Bleached, tinted, 0.22f);
             }
-            var piles = Wilds.Present("namaqualand_boulders_01", "namaqualand_cliff_01");
+            // Piles only: the cliff scan is a one-sided face that reads as torn scraps floating over the
+            // ridge from the forward posts. Each pile sits on the lowest ground under its footprint.
+            var piles = Wilds.Present("namaqualand_boulders_01");
             for (int i = 0, n = 0; piles.Length > 0 && i < 600 && n < 8; i++)
             {
                 float x = (rng.Next(2) == 0 ? -1 : 1) * R(130, 650), s = R(-500, length + 600);
                 if (!Off(x, s, 30)) continue;
                 n++;
-                string id = piles[n % piles.Length];
-                Wilds.Rock(id, new Vector3(x, Y(x, s), s), R(0, 360), id.Contains("cliff") ? R(18, 34) : R(8, 16), root, Bleached, tinted, 0.25f);
+                float size = R(8, 16), r = size * 0.4f;
+                float y = Mathf.Min(Mathf.Min(Y(x - r, s - r), Y(x + r, s - r)), Mathf.Min(Y(x - r, s + r), Y(x + r, s + r)));
+                Wilds.Rock(piles[0], new Vector3(x, Mathf.Min(y, Y(x, s)), s), R(0, 360), size, root, Bleached, tinted, 0.25f);
             }
             var deadwood = Wilds.Present("dry_branches_medium_01");
             for (int i = 0, n = 0; deadwood.Length > 0 && i < 300 && n < 8; i++)

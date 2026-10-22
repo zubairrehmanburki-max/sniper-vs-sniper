@@ -113,6 +113,9 @@ namespace SniperDuel.Game
         public static string MapId { get => PlayerPrefs.GetString("play.map", Maps.DefaultMap); set { PlayerPrefs.SetString("play.map", value); Save(); } }
         /// <summary>Online modes pick a random map each match.</summary>
         public static bool MapRotation { get => GetInt("play.rotation", 0, 0, 1) == 1; set => Set("play.rotation", value ? 1 : 0); }
+        /// <summary>The post pair this player's last match on a map opened with (so the next one opens elsewhere), else -1.</summary>
+        public static int Opening(string mapId) => PlayerPrefs.GetInt("play.opening." + mapId, -1);
+        public static void SetOpening(string mapId, int pair) => Set("play.opening." + mapId, pair);
 
         // ---- progress ------------------------------------------------------
 

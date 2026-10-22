@@ -195,7 +195,9 @@ namespace SniperDuel.Game
             var botRifle = BotRifle(cfg, bot, baseRifle);
             d.State = Match.CreateMatch(seed, arena.Map.Id, new PerSide<PlayerSetup>(
                 new PlayerSetup(playerName, kit.RifleId) { Suppressed = kit.Suppressed },
-                new PlayerSetup(Catalog.BotName(bot), botRifle, bot)), 0, cfg, turnLock: true);
+                new PlayerSetup(Catalog.BotName(bot), botRifle, bot)), 0, cfg, turnLock: true,
+                variedPosts: !solo, avoidOpening: Profile.Opening(arena.Map.Id));
+            if (d.State.PostPair >= 0) Profile.SetOpening(arena.Map.Id, d.State.PostPair);
             d.zoom = (int)Math.Round((cfg.Scope.MinZoom + cfg.Scope.MaxZoom) / 2);
             Trail.Mark("duel: screens");
             d.BindScreens();
@@ -207,7 +209,7 @@ namespace SniperDuel.Game
                 d.range = RangeTargets.Create(arena.Root);
                 d.NewField();
             }
-            else d.LookAtEnemy();
+            else if (!Match.HasPosts(d.State)) d.LookAtEnemy();
             Trail.Mark("duel: hud");
             d.ShowHud();
             Trail.Mark("duel: first frame");
@@ -224,6 +226,12 @@ namespace SniperDuel.Game
             hud.On("stand", () => SetStance(Stance.Standing));
             hud.On("crouch", () => SetStance(Stance.Crouch));
             hud.On("prone", () => SetStance(Stance.Prone));
+            hud.On("relocate", () => postsOpen = !postsOpen);
+            for (int i = 0; i < PostButtons; i++)
+            {
+                int slot = i;
+                hud.On("post" + i, () => GoToPost(slot));
+            }
             if (hud.Has("stick")) Stick(hud["stick"], hud.Has("stickKnob") ? hud["stickKnob"] : null);
             hud.On("pause", () => SetPaused(true));
             hud.On("resume", () => SetPaused(false));
@@ -783,9 +791,18 @@ namespace SniperDuel.Game
             else if (s.Phase == PhaseKind.Setup)
             {
                 // Fixed spots: take ours, prone, and get on with it.
-                // Practice starts from the middle of the line.
-                var spot = map.Spots[Me][solo ? map.Spots[Me].Count / 2 : 0];
+                // Practice starts from the middle of the line; a match with posts from this round's post.
+                var post = Match.PostOf(s, Me);
+                var spot = post?.Spot ?? map.Spots[Me][solo ? map.Spots[Me].Count / 2 : 0];
                 Apply(MatchInput.PlaceAt(Me, spot, Match.ClampStance(s, Stance.Prone, cfg), time));
+                laserText = "--- m";
+                if (post != null)
+                {
+                    // The enemy is somewhere on the far side, out in the open: find them.
+                    postsOpen = false;
+                    FaceDownLane();
+                    Call($"Round {s.Round}: {post.Name}");
+                }
                 Apply(MatchInput.ReadyUp(Me, time));
             }
             else if (s.Phase == PhaseKind.Move && s.Actor == Me)
@@ -956,6 +973,88 @@ namespace SniperDuel.Game
             return new Aim { Yaw = yaw + s.Right / 1000, Pitch = pitch + s.Up / 1000 + recoil };
         }
 
+        /// <summary>Looks level down the lane toward the enemy's side, without pointing at them.</summary>
+        void FaceDownLane()
+        {
+            var eye = Eye();
+            double farS = Match.WalkZone(State, Side.B).SMin + Match.WalkZone(State, Side.B).SMax;
+            yaw = Math.Atan2(0 - eye.X, -(-farS / 2 - eye.Z));
+            pitch = 0;
+        }
+
+        // ---- posts ---------------------------------------------------------
+
+        const int PostButtons = 3;
+        bool postsOpen;
+
+        /// <summary>The posts this player can go to from here: climbs on the same structure, then linked posts.</summary>
+        List<int> PostChoices()
+        {
+            var list = new List<int>();
+            var here = Match.PostOf(State, Me);
+            var posts = map.Posts?[Me];
+            if (here == null || posts == null) return list;
+            for (int i = 0; i < posts.Count; i++)
+                if (i != State.Players[Me].Post && posts[i].Group == here.Group) list.Add(i);
+            foreach (var id in here.Links)
+            {
+                int i = Maps.PostIndex(map, Me, id);
+                if (i >= 0 && !list.Contains(i)) list.Add(i);
+            }
+            return list;
+        }
+
+        /// <summary>Climbs or relocates to the post in this button slot.</summary>
+        void GoToPost(int slot)
+        {
+            var choices = PostChoices();
+            if (slot >= choices.Count) return;
+            if (!MayMove())
+            {
+                Held();
+                return;
+            }
+            int to = choices[slot];
+            var post = map.Posts![Me][to];
+            bool climb = post.Group == Match.PostOf(State, Me)!.Group;
+            var me = State.Players[Me];
+            if (!climb && me.Relocations >= cfg.Rules.RelocationsPerRound)
+            {
+                Call("No more moves this round.");
+                return;
+            }
+            postsOpen = false;
+            Apply(MatchInput.RelocateTo(Me, to, me.Stance, time));
+            if (State.Players[Me].Post != to) return;
+            Haptics.Click();
+            FaceDownLane();
+            Call(climb ? $"Climbed to {post.Name}" : $"Moved to {post.Name}. Your turn is over.");
+        }
+
+        /// <summary>The MOVE button and the post list it opens: only in a match with posts, in your own turn.</summary>
+        void ShowPosts(UiScreen hud)
+        {
+            bool any = !solo && Match.HasPosts(State) && State.Phase != PhaseKind.MatchOver;
+            var choices = any ? PostChoices() : new List<int>();
+            bool can = any && choices.Count > 0 && MayMove();
+            if (!can) postsOpen = false;
+            hud.Show("relocateBtn", any && choices.Count > 0);
+            if (hud.Has("relocateBtn")) hud["relocateBtn"].style.opacity = can ? 1 : 0.35f;
+            hud.Show("postList", postsOpen);
+            int left = cfg.Rules.RelocationsPerRound - State.Players[Me].Relocations;
+            for (int i = 0; i < PostButtons; i++)
+            {
+                bool shown = postsOpen && i < choices.Count;
+                hud.Show("post" + i, shown);
+                if (!shown) continue;
+                var post = map.Posts![Me][choices[i]];
+                bool climb = post.Group == Match.PostOf(State, Me)!.Group;
+                hud.Text("post" + i, climb ? $"CLIMB · {post.Name.ToUpperInvariant()}" : $"{post.Name.ToUpperInvariant()} · ENDS TURN");
+                hud["post" + i].style.opacity = climb || left > 0 ? 1 : 0.35f;
+            }
+            hud.Text("relocateLeft", left > 0 ? $"{left} LEFT" : "NONE LEFT");
+        }
+
         void LookAtEnemy()
         {
             var eye = Eye();
@@ -1050,12 +1149,24 @@ namespace SniperDuel.Game
             pitch = 0;
         }
 
-        /// <summary>The laser rangefinder: measures along the line of sight and shows it. It never dials anything.</summary>
+        /// <summary>The round whose one laser reading has been taken (a duel allows one a round), else 0.</summary>
+        int laserRound;
+
+        /// <summary>
+        /// The laser rangefinder: measures along the line of sight and shows it. It never dials
+        /// anything. In a duel it gives one reading a round (a shot that finds nothing doesn't count).
+        /// </summary>
         void Laser()
         {
+            if (!solo && laserRound == State.Round)
+            {
+                Call("One laser reading a round: judge the rest by eye.");
+                return;
+            }
             var d = Hits.Rangefind(Eye(), TrueAim(), Targets(), map.Ground, 3000, map.Cover);
             if (solo && range != null && RangeHits.Rangefind(Eye(), TrueAim(), range.Field, range.Now) is double t && (d == null || t < d)) d = t;
             laserText = d.HasValue ? $"{d.Value:0} m" : "no return";
+            if (d.HasValue) laserRound = State.Round;
         }
 
         List<Silhouette> Targets()
@@ -1411,10 +1522,12 @@ namespace SniperDuel.Game
                 Skin.Text(b, on ? Skin.Ink : Skin.Paper);
                 b.style.opacity = open ? 1 : 0.35f;
             }
+            ShowPosts(hud);
             Marker(hud);
             Crosshair(hud);
 
             scope.Text("lrf", laserText);
+            if (scope.Has("lrfBtn")) scope["lrfBtn"].style.opacity = solo || laserRound != State.Round ? 1 : 0.35f;
             scope.Text("solution", hintTimer > 0 ? hint : "");
             scope.Show("solution", hintTimer > 0);
             if (scope.Has("fireBtn")) scope["fireBtn"].style.opacity = firePointer != null && fireCancel ? 0.35f : can ? 1 : 0.5f;
