@@ -94,6 +94,8 @@ namespace SniperDuel.Game.World
             }
             Step("scenery");
             Scenery.Build(map, root);
+            Step("ambience");
+            Ambience.Build(map, root);
             Step("flags");
 
             var ground = map.Terrain ?? map.Ground;
@@ -238,6 +240,8 @@ namespace SniperDuel.Game.World
                 var w = SniperDuel.Rules.World.LaneWindAt(wind, Library.ToRules(f.transform.position));
                 f.Wind = new Vector3((float)w.X, 0, (float)-w.Z);
             }
+            var mid = SniperDuel.Rules.World.LaneWindAt(wind, new Vec3(0, 2, -Map.LaneLength / 2));
+            Ambience.SetWind(new Vector3((float)mid.X, 0, (float)-mid.Z));
         }
     }
 }

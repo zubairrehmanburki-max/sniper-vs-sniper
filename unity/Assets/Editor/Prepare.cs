@@ -117,6 +117,23 @@ namespace SniperDuel.EditorTools
                 alpha.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
                 EditorUtility.SetDirty(alpha);
             }
+            // See-through lit marks laid over a surface (road wear): blended, no depth write, never cast shadows.
+            var decal = Template("LitDecal", "Universal Render Pipeline/Lit", "_SURFACE_TYPE_TRANSPARENT");
+            if (decal != null)
+            {
+                decal.SetFloat("_Surface", 1);
+                decal.SetFloat("_Blend", 0);
+                decal.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                decal.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                decal.SetFloat("_SrcBlendAlpha", (float)UnityEngine.Rendering.BlendMode.One);
+                decal.SetFloat("_DstBlendAlpha", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                decal.SetFloat("_ZWrite", 0);
+                decal.SetFloat("_ReceiveShadows", 1);
+                decal.SetShaderPassEnabled("ShadowCaster", false);
+                // Before the other see-through things (smoke, water spray) so they draw over it.
+                decal.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent - 50;
+                EditorUtility.SetDirty(decal);
+            }
             // One sky material per downloaded photo.
             if (Directory.Exists(Tp + "/Hdris"))
             {
