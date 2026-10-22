@@ -77,6 +77,28 @@ namespace SniperDuel.Game.World
             return best;
         }
 
+        /// <summary>
+        /// Is (x, s) within `margin` of a post platform or of the straight line between any two posts
+        /// that can be rolled against each other? Scenery keeps off them so the guaranteed line of
+        /// sight is not hidden behind a tree the rules don't know about.
+        /// </summary>
+        public static bool InSightLine(DuelMap map, float x, float s, float margin)
+        {
+            if (map.Posts == null) return false;
+            var p = new Vector2(x, s);
+            foreach (var pair in Maps.Pairs(map))
+            {
+                var a = map.Posts.A[pair.A].Spot;
+                var b = map.Posts.B[pair.B].Spot;
+                var u = new Vector2((float)a.X, (float)-a.Z);
+                var v = new Vector2((float)b.X, (float)-b.Z);
+                var d = v - u;
+                float t = Mathf.Clamp01(Vector2.Dot(p - u, d) / Mathf.Max(1e-3f, d.sqrMagnitude));
+                if ((u + d * t - p).sqrMagnitude < margin * margin) return true;
+            }
+            return false;
+        }
+
         /// <summary>A rules box in Unity coordinates.</summary>
         public static Bounds ToUnity(Box b)
         {

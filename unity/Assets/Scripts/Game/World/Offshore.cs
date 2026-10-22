@@ -66,7 +66,10 @@ namespace SniperDuel.Game.World
         /// accommodation and bridge forward, twin funnels, a long open cargo deck aft with containers
         /// and pipe, crash rails, and a mast with radar. Built along local +z (bow).
         /// </summary>
-        static void SupplyVessel(Vector3 position, float yaw, Transform parent)
+        /// <summary>How far forward of the vessel's origin its bridge (and the bridge roof) is centred, m.</summary>
+        internal const float BridgeZ = 17.5f;
+
+        internal static void SupplyVessel(Vector3 position, float yaw, Transform parent)
         {
             var root = new GameObject("Supply vessel").transform;
             root.SetParent(parent, false);
