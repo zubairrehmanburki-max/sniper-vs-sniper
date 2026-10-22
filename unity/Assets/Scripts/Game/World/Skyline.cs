@@ -613,6 +613,14 @@ namespace SniperDuel.Game.World
                                     else { c = accent * grain; sm = 0.18f; }
                                     break;
                             }
+                            if (!glazed)
+                            {
+                                // Weather: rain streaks hanging down the wall from each sill and ledge
+                                // (the same columns floor after floor), heavier toward the bottom of each floor.
+                                float streak = Mathf.PerlinNoise(seed + (bx * Px + x) * 0.18f, seed * 0.5f);
+                                streak = streak * streak * streak;
+                                c *= 1 - 0.32f * streak * (0.55f + 0.45f * (1 - v));
+                            }
                             if (glazed)
                             {
                                 float t = Mathf.Clamp01((v - g0) / (g1 - g0));

@@ -53,7 +53,9 @@ namespace SniperDuel.Game.World
                     Put("trench_set", root, new Vector3(140, Y(140, lane * 0.3f) - 1.2f, lane * 0.3f), -35, 22);
                     foreach (var (x, s, yaw) in new[] { (250f, 620f, 180f), (-260f, 760f, 10f) })
                         Put("cliffs_set", root, new Vector3(x, Y(x, s) - 6, s), yaw, 240, false, Sandstone, "cliff_04", "cliff_lp");
-                    Put("desert_cliff", root, new Vector3(-500, Y(-500, lane + 900) - 30, lane + 900), 30, 700);
+                    // The scan is a salmon-pink sandstone that reads as plastic under the desert sun:
+                    // pulled toward the valley's own ochre so it belongs to the same ground.
+                    Put("desert_cliff", root, new Vector3(-500, Y(-500, lane + 900) - 30, lane + 900), 30, 700, false, DesertOchre);
                     Sandbags(root, Y, new[] { (-150f, lane * 0.5f + 26, 20f), (-140f, lane * 0.5f + 31, 30f) });
                     break;
                 case "alpine-ridge":
@@ -103,6 +105,7 @@ namespace SniperDuel.Game.World
 
         /// <summary>Sun-bleached sandstone: the scanned rock and cliff textures are grey and mossy.</summary>
         static readonly Color Sandstone = new Color(1.55f, 1.25f, 0.95f);
+        static readonly Color DesertOchre = new Color(0.95f, 1.1f, 0.82f);
         static readonly Dictionary<Material, Material> Tinted = new Dictionary<Material, Material>();
 
         /// <summary>Drops the cached tinted materials (a map is being unloaded).</summary>

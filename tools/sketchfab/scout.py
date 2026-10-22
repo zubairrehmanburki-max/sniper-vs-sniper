@@ -27,6 +27,21 @@ QUERIES = [
     ("prop", "abandoned car", False, 60000, False),
 ]
 
+# SCOUT_SET=graphics: the X-ray anatomy and the scenery the 2026-10-22 graphics review asks for.
+if os.environ.get("SCOUT_SET") == "graphics":
+    QUERIES = [
+        ("skeleton", "human skeleton rigged", True, 150000, True),
+        ("skeleton", "skeleton mixamo", True, 150000, True),
+        ("skeleton", "human skeleton anatomy", False, 200000, False),
+        ("anatomy", "human organs anatomy", False, 150000, False),
+        ("anatomy", "heart lungs anatomy", False, 100000, False),
+        ("soldier", "ghillie suit sniper", True, 150000, True),
+        ("building", "apartment building low poly realistic", False, 40000, False),
+        ("building", "office building pbr", False, 40000, False),
+        ("prop", "oil rig platform", False, 150000, False),
+        ("prop", "watchtower wooden", False, 60000, False),
+    ]
+
 
 def get(url, auth=True):
     req = urllib.request.Request(url, headers={"Authorization": f"Token {TOKEN}"} if auth else {})

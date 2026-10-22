@@ -876,6 +876,14 @@
       "fix": {
         "maxTexture": 1024
       }
+    },
+    {
+      "id": "anatomy_skeleton",
+      "uid": "11b57ebfcf6c4e3b88d0cbe618ee70a7",
+      "name": "Male Skeleton",
+      "fix": {
+        "maxTexture": 1024
+      }
     }
   ]
 }
