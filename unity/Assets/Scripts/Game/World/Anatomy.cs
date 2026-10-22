@@ -299,6 +299,7 @@ namespace SniperDuel.Game.World
             }
             a.Parts.RemoveAll(p => p.Go == null);
             RealBones.Dress(a, f);
+            RealOrgans.Dress(a, f);
             return a;
         }
 

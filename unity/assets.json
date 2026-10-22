@@ -604,6 +604,48 @@
     }
   ],
   "maxModelMB": 120,
+  "zips": [
+    {
+      "url": "https://ambientcg.com/get?file=Facade018A_1K-JPG.zip",
+      "dest": "Textures/Facades/Facade018A",
+      "source": "ambientCG",
+      "author": "ambientCG (Lennart Demes)",
+      "license": "CC0",
+      "page": "https://ambientcg.com/view?id=Facade018A"
+    },
+    {
+      "url": "https://ambientcg.com/get?file=Facade019A_1K-JPG.zip",
+      "dest": "Textures/Facades/Facade019A",
+      "source": "ambientCG",
+      "author": "ambientCG (Lennart Demes)",
+      "license": "CC0",
+      "page": "https://ambientcg.com/view?id=Facade019A"
+    },
+    {
+      "url": "https://ambientcg.com/get?file=Facade019B_1K-JPG.zip",
+      "dest": "Textures/Facades/Facade019B",
+      "source": "ambientCG",
+      "author": "ambientCG (Lennart Demes)",
+      "license": "CC0",
+      "page": "https://ambientcg.com/view?id=Facade019B"
+    },
+    {
+      "url": "https://ambientcg.com/get?file=Facade020A_1K-JPG.zip",
+      "dest": "Textures/Facades/Facade020A",
+      "source": "ambientCG",
+      "author": "ambientCG (Lennart Demes)",
+      "license": "CC0",
+      "page": "https://ambientcg.com/view?id=Facade020A"
+    },
+    {
+      "url": "https://ambientcg.com/get?file=Facade020B_1K-JPG.zip",
+      "dest": "Textures/Facades/Facade020B",
+      "source": "ambientCG",
+      "author": "ambientCG (Lennart Demes)",
+      "license": "CC0",
+      "page": "https://ambientcg.com/view?id=Facade020B"
+    }
+  ],
   "sketchfab": [
     {
       "id": "soldier_tactical",
@@ -881,6 +923,38 @@
       "id": "anatomy_skeleton",
       "uid": "11b57ebfcf6c4e3b88d0cbe618ee70a7",
       "name": "Male Skeleton",
+      "fix": {
+        "maxTexture": 1024
+      }
+    },
+    {
+      "id": "organ_heart",
+      "uid": "3f8072336ce94d18b3d0d055a1ece089",
+      "name": "Realistic Human Heart",
+      "fix": {
+        "maxTexture": 1024
+      }
+    },
+    {
+      "id": "organ_lungs",
+      "uid": "3bb15abb9e6942cb8813b8d99d6064c2",
+      "name": "Textured Lungs (realistic)",
+      "fix": {
+        "maxTexture": 1024
+      }
+    },
+    {
+      "id": "organ_liver",
+      "uid": "cf66ae46c0e148139bbb360b70343b5a",
+      "name": "Liver",
+      "fix": {
+        "maxTexture": 1024
+      }
+    },
+    {
+      "id": "organ_kidney",
+      "uid": "2417146cf20a49b5960c79d554d20650",
+      "name": "Human kidney (Lowpoly example 9k)",
       "fix": {
         "maxTexture": 1024
       }
