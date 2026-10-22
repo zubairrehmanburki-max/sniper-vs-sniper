@@ -40,6 +40,12 @@ namespace SniperDuel.Game.World
         static float hazeDensity;
 
         /// <summary>
+        /// How bright the city's lit windows are (multiplies their emission): by day a lit office
+        /// barely shows against the sunlit glass; at dawn and dusk the lights carry the skyline.
+        /// </summary>
+        public static float WindowGlow { get; private set; } = 0.9f;
+
+        /// <summary>
         /// Good glass cuts through the haze: while scoped (0 bare eye, 1 through the scope) the air
         /// thins so the far bridge and the hills behind it keep their colour and edges.
         /// </summary>
@@ -110,12 +116,24 @@ namespace SniperDuel.Game.World
             RenderSettings.sun = sun;
 
             RenderSettings.ambientMode = AmbientMode.Skybox;
-            RenderSettings.ambientIntensity = 1f;
+            // A bright blue sky photo floods the shade with blue fill; a little less of it gives the
+            // sunlit/shaded contrast that makes surfaces read as solid.
+            RenderSettings.ambientIntensity = 0.85f;
             RenderSettings.defaultReflectionMode = DefaultReflectionMode.Skybox;
             DynamicGI.UpdateEnvironment();
+            WindowGlow = kind == SkyKind.Clear ? 0.12f : 0.75f;
+            PostFx.Grade(map.Id);
 
-            // Haze: the far bank should go soft and blue-grey, the near water stay crisp.
+            // Haze: the far bank should go soft and blue-grey, the near water stay crisp. Its colour
+            // leans toward the photo's own horizon (the sky light all round the horizon), so distant buildings and hills melt into this sky, not a stock grey.
             var fog = Color.Lerp(new Color(0.62f, 0.68f, 0.74f), new Color(0.8f, 0.68f, 0.6f), warm * 0.35f);
+            var horizon = HorizonColour();
+            if (horizon.maxColorComponent > 0.05f)
+            {
+                // Same brightness as the stock haze, the photo's hue.
+                horizon *= fog.grayscale / Mathf.Max(0.05f, horizon.grayscale);
+                fog = Color.Lerp(fog, horizon, 0.5f);
+            }
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
             // Thin enough that the city a kilometre or two away reads as hazy silhouettes, not a wall.
@@ -141,6 +159,24 @@ namespace SniperDuel.Game.World
             probe.importance = 1;
 
             return new Sky { Id = id, Sun = sun, FogColor = fog, Probe = probe };
+        }
+
+        /// <summary>The ambient sky light averaged all round the horizon (black if not ready).</summary>
+        static Color HorizonColour()
+        {
+            var dirs = new Vector3[8];
+            for (int i = 0; i < dirs.Length; i++)
+            {
+                float a = i * Mathf.PI * 2 / dirs.Length;
+                dirs[i] = new Vector3(Mathf.Cos(a), 0.05f, Mathf.Sin(a)).normalized;
+            }
+            var colours = new Color[dirs.Length];
+            RenderSettings.ambientProbe.Evaluate(dirs, colours);
+            var sum = Color.black;
+            foreach (var c in colours) sum += c;
+            sum /= colours.Length;
+            sum.a = 1;
+            return sum;
         }
     }
 }
