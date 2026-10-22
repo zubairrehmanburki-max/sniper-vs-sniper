@@ -322,6 +322,13 @@ namespace SniperDuel.Game.World
                 if (r is SkinnedMeshRenderer) Object.DestroyImmediate(mesh);
             }
 
+            // A real skeleton lined up on the body spreads over most bones; one that didn't land
+            // there piles onto a few. Then the procedural bones stay as they are.
+            if (gathered.Count < probes.Count / 3)
+            {
+                Debug.LogWarning($"[RealBones] {tris} triangles fell on only {gathered.Count} of {probes.Count} bones; keeping the procedural skeleton");
+                return;
+            }
             foreach (var p in a.Parts)
             {
                 if (p.Kind != Anatomy.Kind.Bone) continue;
