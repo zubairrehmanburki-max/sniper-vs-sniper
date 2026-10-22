@@ -55,6 +55,20 @@ namespace SniperDuel.EditorTools
                 water.SetColor("_BaseColor", new Color(0.05f, 0.11f, 0.12f));
                 EditorUtility.SetDirty(water);
             }
+            // The open-water shader (Assets/Shaders/Water.shader): depth colour, Fresnel reflection, sun glint, shore foam.
+            var surface = Template("WaterSurface", "SniperDuel/Water");
+            if (surface != null)
+            {
+                surface.SetTexture("_BumpMap", AssetDatabase.LoadAssetAtPath<Texture2D>(Gen + "/water_normal.png"));
+                EditorUtility.SetDirty(surface);
+            }
+            // Plant pictures that sway in the wind (Assets/Shaders/Foliage.shader).
+            var foliage = Template("Foliage", "SniperDuel/Foliage");
+            if (foliage != null)
+            {
+                foliage.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
+                EditorUtility.SetDirty(foliage);
+            }
             var cloth = Template("Cloth", "Universal Render Pipeline/Lit");
             if (cloth != null)
             {
@@ -116,6 +130,23 @@ namespace SniperDuel.EditorTools
                 alpha.SetFloat("_ZWrite", 0);
                 alpha.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
                 EditorUtility.SetDirty(alpha);
+            }
+            // See-through lit marks laid over a surface (road wear): blended, no depth write, never cast shadows.
+            var decal = Template("LitDecal", "Universal Render Pipeline/Lit", "_SURFACE_TYPE_TRANSPARENT");
+            if (decal != null)
+            {
+                decal.SetFloat("_Surface", 1);
+                decal.SetFloat("_Blend", 0);
+                decal.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                decal.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                decal.SetFloat("_SrcBlendAlpha", (float)UnityEngine.Rendering.BlendMode.One);
+                decal.SetFloat("_DstBlendAlpha", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                decal.SetFloat("_ZWrite", 0);
+                decal.SetFloat("_ReceiveShadows", 1);
+                decal.SetShaderPassEnabled("ShadowCaster", false);
+                // Before the other see-through things (smoke, water spray) so they draw over it.
+                decal.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent - 50;
+                EditorUtility.SetDirty(decal);
             }
             // One sky material per downloaded photo.
             if (Directory.Exists(Tp + "/Hdris"))

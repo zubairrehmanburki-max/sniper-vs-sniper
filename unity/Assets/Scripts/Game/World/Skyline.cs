@@ -644,7 +644,7 @@ namespace SniperDuel.Game.World
             mat.SetFloat("_Metallic", metallic);
             mat.EnableKeyword("_EMISSION");
             mat.SetTexture("_EmissionMap", glow);
-            mat.SetColor("_EmissionColor", Color.white * 0.9f);
+            mat.SetColor("_EmissionColor", Color.white * Atmos.WindowGlow);
             // MeshBuilder UVs are metres × 0.25: one texture repeat per `bays` bays and eight floors.
             var scale = new Vector2(4f / (bays * bayM), 4f / (Rows * floorM));
             mat.SetTextureScale("_BaseMap", scale);
@@ -704,7 +704,7 @@ namespace SniperDuel.Game.World
             mat.SetFloat("_Smoothness", curtain ? 0.8f : 0.4f);
             mat.EnableKeyword("_EMISSION");
             mat.SetTexture("_EmissionMap", glow);
-            mat.SetColor("_EmissionColor", Color.white * 0.9f);
+            mat.SetColor("_EmissionColor", Color.white * Atmos.WindowGlow);
             // MeshBuilder UVs are metres × 0.25: one texture repeat per Bays × Floors.
             var scale = new Vector2(4f / (Bays * BayM), 4f / (Floors * FloorM));
             mat.SetTextureScale("_BaseMap", scale);

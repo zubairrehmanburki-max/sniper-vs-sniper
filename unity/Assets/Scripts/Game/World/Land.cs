@@ -305,6 +305,15 @@ namespace SniperDuel.Game.World
             var mb = new MeshBuilder { UvScale = 1 };
             float centreS = (float)map.LaneLength / 2;
             mb.Plane(new Vector3(0, (float)(map.Water ?? 0), centreS), Extent, Extent);
+            var surface = Resources.Load<Material>("Materials/WaterSurface");
+            if (surface != null && surface.shader != null && surface.shader.isSupported)
+            {
+                var water = new Material(surface) { name = "Water " + map.Id };
+                Surface(water, map.Id);
+                var w = mb.Object("Water", water, parent, shadows: false);
+                w.GetComponent<MeshRenderer>().receiveShadows = true;
+                return w;
+            }
             var mat = new Material(Library.Template("Water"));
             mat.SetTextureScale("_BaseMap", Vector2.one / 24f);
             mat.SetTextureScale("_DetailAlbedoMap", Vector2.one / 9f);
@@ -339,6 +348,69 @@ namespace SniperDuel.Game.World
             go.GetComponent<MeshRenderer>().receiveShadows = true;
             go.AddComponent<Waves>().Material = mat;
             return go;
+        }
+
+        /// <summary>Each map's water on the water shader: its colours, clarity, wave sizes and drift.</summary>
+        static void Surface(Material m, string mapId)
+        {
+            switch (mapId)
+            {
+                case "twin-bridges":
+                    // A wide, slow, silty estuary: green-grey, cloudy, a long low swell under fine chop.
+                    m.SetColor("_ShallowColor", new Color(0.2f, 0.25f, 0.2f));
+                    m.SetColor("_DeepColor", new Color(0.05f, 0.09f, 0.08f));
+                    m.SetFloat("_Absorb", 0.35f);
+                    m.SetFloat("_Clarity", 0.3f);
+                    m.SetFloat("_Scale1", 46);
+                    m.SetFloat("_Scale2", 13);
+                    m.SetFloat("_Bump1", 0.75f);
+                    m.SetFloat("_Bump2", 0.45f);
+                    m.SetFloat("_FoamDepth", 0.8f);
+                    // Silty water under a bright sky: hold the sky's mirror back so the river keeps its colour.
+                    m.SetFloat("_Reflect", 0.65f);
+                    break;
+                case "oil-rigs":
+                    // Open North Sea: deep slate water, long swell, brisk chop, foam round the rig legs.
+                    m.SetColor("_ShallowColor", new Color(0.08f, 0.13f, 0.14f));
+                    m.SetColor("_DeepColor", new Color(0.025f, 0.055f, 0.07f));
+                    m.SetFloat("_Absorb", 1.2f);
+                    m.SetFloat("_Clarity", 0.15f);
+                    m.SetFloat("_Scale1", 95);
+                    m.SetFloat("_Scale2", 23);
+                    m.SetFloat("_Bump1", 0.8f);
+                    m.SetFloat("_Bump2", 0.4f);
+                    m.SetVector("_Flow1", new Vector4(0.6f, 1.1f, 0, 0));
+                    m.SetVector("_Flow2", new Vector4(-1.2f, 0.7f, 0, 0));
+                    m.SetFloat("_FoamDepth", 1.4f);
+                    break;
+                case "watchtowers":
+                    // Still, peaty marsh water: tea-brown in the shallows, near black where deep, barely moving.
+                    m.SetColor("_ShallowColor", new Color(0.2f, 0.17f, 0.09f));
+                    m.SetColor("_DeepColor", new Color(0.04f, 0.045f, 0.025f));
+                    m.SetFloat("_Absorb", 0.8f);
+                    m.SetFloat("_Clarity", 0.45f);
+                    m.SetFloat("_Scale1", 30);
+                    m.SetFloat("_Scale2", 9);
+                    m.SetFloat("_Bump1", 0.45f);
+                    m.SetFloat("_Bump2", 0.3f);
+                    m.SetVector("_Flow1", new Vector4(0.08f, 0.12f, 0, 0));
+                    m.SetVector("_Flow2", new Vector4(-0.12f, 0.07f, 0, 0));
+                    // Reeds and stakes stand in still water: no foam, which only read as white specks.
+                    m.SetFloat("_FoamDepth", 0);
+                    break;
+                case "harbor-rooftops":
+                    // Dock water: dark, oily green, sheltered.
+                    m.SetColor("_ShallowColor", new Color(0.12f, 0.16f, 0.13f));
+                    m.SetColor("_DeepColor", new Color(0.03f, 0.06f, 0.055f));
+                    m.SetFloat("_Absorb", 0.6f);
+                    m.SetFloat("_Clarity", 0.2f);
+                    m.SetFloat("_Scale1", 28);
+                    m.SetFloat("_Scale2", 8);
+                    m.SetFloat("_Bump1", 0.5f);
+                    m.SetFloat("_Bump2", 0.35f);
+                    m.SetFloat("_FoamDepth", 0.5f);
+                    break;
+            }
         }
     }
 

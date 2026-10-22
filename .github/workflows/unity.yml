@@ -8,10 +8,10 @@ name: Unity
 # (guide: /mnt/project-files/guides/unity-license.md); without them they are skipped.
 on:
   push:
-    branches: [main, claude/project-thread-ux5zt1, claude/project-thread-c3cszi, claude/twin-bridges-final-sf70ds, claude/project-thread-oxea50, claude/project-thread-rqqnlq, claude/project-thread-w6mgc0, claude/project-thread-e5f8vx, claude/maps-polish-a0dq2s]
-    paths: [unity/**, config/**, packages/**, .github/workflows/unity.yml]
+    branches: [main, claude/project-thread-ux5zt1, claude/project-thread-c3cszi, claude/twin-bridges-final-sf70ds, claude/project-thread-oxea50, claude/project-thread-rqqnlq, claude/project-thread-w6mgc0, claude/project-thread-e5f8vx, claude/maps-polish-a0dq2s, claude/project-thread-8zt53c, claude/project-thread-zrknep]
+    paths: [unity/**, config/**, packages/**, tools/unity-assets/**, .github/actions/unity-assets/**, .github/workflows/unity.yml]
   pull_request:
-    paths: [unity/**, config/**, packages/**, .github/workflows/unity.yml]
+    paths: [unity/**, config/**, packages/**, tools/unity-assets/**, .github/actions/unity-assets/**, .github/workflows/unity.yml]
   workflow_dispatch:
     inputs:
       testflight:

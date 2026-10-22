@@ -94,6 +94,8 @@ namespace SniperDuel.Game.World
             }
             Step("scenery");
             Scenery.Build(map, root);
+            Step("ambience");
+            Ambience.Build(map, root);
             Step("flags");
 
             var ground = map.Terrain ?? map.Ground;
@@ -130,6 +132,8 @@ namespace SniperDuel.Game.World
                 foreach (var spot in map.Spots[side])
                     arena.Blocks.AddRange(Dressing.Kit(Library.ToUnity(spot), side == Side.A ? 0 : 180, root, !OnSmallTower(map, spot)));
             }
+            Step("shadows");
+            ShadowsNearSpots(map, root);
             // Water and steel reflect the finished scene; the probe renders once per map.
             Step("reflection probe");
             arena.Sky.Probe.RenderProbe();
@@ -156,6 +160,7 @@ namespace SniperDuel.Game.World
             Impostor.Forget();
             Figure.Forget();
             Scenery.Forget();
+            Pick.Forget();
             System.GC.Collect();
             return Resources.UnloadUnusedAssets();
         }
@@ -173,6 +178,32 @@ namespace SniperDuel.Game.World
             Debug.Log($"[Memory] {Library.LeanCount} model textures made lean in {Library.LeanMs:0} ms");
             System.GC.Collect();
             return Resources.UnloadUnusedAssets();
+        }
+
+        /// <summary>
+        /// Small things (under a metre across) cast shadows only near the firing spots, where the
+        /// eye is close enough to see them; out in the map their shadows are a few pixels that
+        /// still cost a draw into every shadow cascade.
+        /// </summary>
+        static void ShadowsNearSpots(DuelMap map, Transform root)
+        {
+            var spots = new List<Vector3>();
+            foreach (var p in map.Spots[Side.A]) spots.Add(Library.ToUnity(p));
+            foreach (var p in map.Spots[Side.B]) spots.Add(Library.ToUnity(p));
+            int off = 0;
+            foreach (var r in root.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                if (r.shadowCastingMode == UnityEngine.Rendering.ShadowCastingMode.Off) continue;
+                var b = r.bounds;
+                if (Mathf.Max(b.size.x, Mathf.Max(b.size.y, b.size.z)) >= 1) continue;
+                bool near = false;
+                foreach (var sp in spots)
+                    if ((b.center - sp).sqrMagnitude < 30 * 30) { near = true; break; }
+                if (near) continue;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                off++;
+            }
+            Debug.Log($"[Arena] {map.Id}: shadows off for {off} small far renderers");
         }
 
         /// <summary>True when a spot is on a tower roof too small for the kit's road barriers.</summary>
@@ -203,15 +234,66 @@ namespace SniperDuel.Game.World
             trimming = Trim();
         }
 
-        /// <summary>Places (or re-poses) the enemy figure at a rules position, facing the other side.</summary>
+        /// <summary>The enemy posed in each stance, made once per soldier and rifle (EnemyKit).</summary>
+        readonly Dictionary<Stance, Figure> enemyPoses = new Dictionary<Stance, Figure>();
+        string? enemyKit;
+
+        /// <summary>
+        /// Places the enemy figure at a rules position in a stance, facing the other side. Each
+        /// stance's figure is made once and kept: a bot moving or changing stance only moves and
+        /// swaps them, rather than loading, converting and unloading the soldier every time.
+        /// </summary>
         public Figure PlaceEnemy(Vec3 position, Stance stance, Side enemySide)
         {
-            if (Enemy != null) Object.Destroy(Enemy.gameObject);
-            Enemy = Figure.Create(stance, 1.8f, Root, new Color(0.62f, 0.64f, 0.52f), false, EnemySoldier, EnemyRifle);
-            Enemy.transform.position = Library.ToUnity(position);
-            Enemy.transform.rotation = Quaternion.Euler(0, enemySide == Side.A ? 0 : 180, 0);
+            UseEnemyKit();
+            if (!enemyPoses.TryGetValue(stance, out var fig) || fig == null)
+            {
+                fig = enemyPoses[stance] = Figure.Create(stance, 1.8f, Root, EnemyTint, false, EnemySoldier, EnemyRifle);
+                TrimSoon();
+            }
+            foreach (var other in enemyPoses.Values)
+                if (other != null && other != fig) other.gameObject.SetActive(false);
+            fig.gameObject.SetActive(true);
+            fig.transform.position = Library.ToUnity(position);
+            fig.transform.rotation = Quaternion.Euler(0, enemySide == Side.A ? 0 : 180, 0);
+            Enemy = fig;
+            return fig;
+        }
+
+        static readonly Color EnemyTint = new Color(0.62f, 0.64f, 0.52f);
+
+        /// <summary>
+        /// Makes the enemy in every stance now, in one go (the match is starting), so no stance is
+        /// made mid-match: the models load and convert once and are let go once.
+        /// </summary>
+        public void PrepareEnemy()
+        {
+            UseEnemyKit();
+            foreach (var stance in new[] { Stance.Standing, Stance.Crouch, Stance.Prone })
+            {
+                if (enemyPoses.TryGetValue(stance, out var f) && f != null) continue;
+                f = enemyPoses[stance] = Figure.Create(stance, 1.8f, Root, EnemyTint, false, EnemySoldier, EnemyRifle);
+                if (f != Enemy) f.gameObject.SetActive(false);
+            }
             TrimSoon();
-            return Enemy;
+        }
+
+        /// <summary>Takes the enemy away (solo practice) and frees its figures.</summary>
+        public void ClearEnemy()
+        {
+            foreach (var f in enemyPoses.Values) if (f != null) Object.Destroy(f.gameObject);
+            enemyPoses.Clear();
+            enemyKit = null;
+            Enemy = null;
+        }
+
+        /// <summary>A different soldier or rifle for the enemy: the figures made for the old one go.</summary>
+        void UseEnemyKit()
+        {
+            string kit = EnemySoldier + "|" + EnemyRifle;
+            if (kit == enemyKit) return;
+            ClearEnemy();
+            enemyKit = kit;
         }
 
         /// <summary>
@@ -238,6 +320,8 @@ namespace SniperDuel.Game.World
                 var w = SniperDuel.Rules.World.LaneWindAt(wind, Library.ToRules(f.transform.position));
                 f.Wind = new Vector3((float)w.X, 0, (float)-w.Z);
             }
+            var mid = SniperDuel.Rules.World.LaneWindAt(wind, new Vec3(0, 2, -Map.LaneLength / 2));
+            Ambience.SetWind(new Vector3((float)mid.X, 0, (float)-mid.Z));
         }
     }
 }

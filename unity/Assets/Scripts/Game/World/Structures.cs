@@ -137,6 +137,7 @@ namespace SniperDuel.Game.World
             var road = new MeshBuilder();
             road.Box(new Vector3(0, deck + 0.01f, 0), new Vector3(2 * reach, 0.04f, 2 * hw - 3.6f));
             road.Object("Road", asphalt, root);
+            Wear.Road(deck + 0.03f, reach, hw - 1.8f, 4, root, (int)(b.S * 7), clear: 3);
 
             // Lane markings: dashed centre line and solid edges.
             var marks = new MeshBuilder();
