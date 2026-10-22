@@ -187,8 +187,10 @@ namespace SniperDuel.EditorTools
             pipeline.shadowDistance = 220f;
             pipeline.shadowCascadeCount = 4;
             pipeline.mainLightShadowmapResolution = 4096;
-            // Most of the first cascade where the prone camera looks: the ground and kit within ~9 m.
+            // Most of the first cascade where the prone camera looks: the ground and kit within ~9 m
+            // with four cascades, ~26 m with two.
             pipeline.cascade4Split = new Vector3(0.04f, 0.12f, 0.35f);
+            pipeline.cascade2Split = 0.12f;
             pipeline.supportsCameraDepthTexture = true;
             pipeline.supportsCameraOpaqueTexture = true;
             EditorUtility.SetDirty(pipeline);
