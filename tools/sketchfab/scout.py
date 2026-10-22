@@ -42,6 +42,20 @@ if os.environ.get("SCOUT_SET") == "graphics":
         ("prop", "watchtower wooden", False, 60000, False),
     ]
 
+# SCOUT_SET=organs: single organs for the X-ray, each fitted into the body on its own.
+if os.environ.get("SCOUT_SET") == "organs":
+    QUERIES = [
+        ("organ", "human heart anatomy", False, 60000, True),
+        ("organ", "human lungs anatomy", False, 60000, True),
+        ("organ", "human liver", False, 60000, True),
+        ("organ", "human stomach", False, 60000, True),
+        ("organ", "human kidney", False, 60000, True),
+        ("organ", "human organs", False, 80000, True),
+    ]
+
+# SCOUT_UIDS=uid,uid: also download these models and list their parts (nodes, meshes, sizes).
+UIDS = [u.strip() for u in os.environ.get("SCOUT_UIDS", "").split(",") if u.strip()]
+
 
 def get(url, auth=True):
     req = urllib.request.Request(url, headers={"Authorization": f"Token {TOKEN}"} if auth else {})
@@ -68,6 +82,27 @@ def glb_skeleton(data):
     anims = [a.get("name", "?") for a in doc.get("animations", [])]
     return {"joints": joints, "meshes": len(doc.get("meshes", [])), "materials": len(doc.get("materials", [])),
             "images": len(doc.get("images", [])), "animations": anims}
+
+
+def glb_parts(data):
+    """Nodes with their mesh, each mesh's primitives (material, size from the position bounds)."""
+    length = struct.unpack_from("<I", data, 12)[0]
+    doc = json.loads(data[20:20 + length])
+    acc = doc.get("accessors", [])
+    mats = [m.get("name", "?") for m in doc.get("materials", [])]
+    meshes = []
+    for m in doc.get("meshes", []):
+        prims = []
+        for p in m.get("primitives", []):
+            a = acc[p["attributes"]["POSITION"]]
+            lo, hi = a.get("min", [0, 0, 0]), a.get("max", [0, 0, 0])
+            prims.append({"material": mats[p["material"]] if "material" in p else None, "verts": a.get("count"),
+                          "min": [round(v, 3) for v in lo], "max": [round(v, 3) for v in hi]})
+        meshes.append({"name": m.get("name"), "primitives": prims})
+    nodes = [{"name": n.get("name"), "mesh": n.get("mesh"), "children": n.get("children", []),
+              "t": n.get("translation"), "r": n.get("rotation"), "s": n.get("scale"), "m": n.get("matrix")}
+             for n in doc.get("nodes", [])]
+    return {"nodes": nodes, "meshes": meshes, "materials": mats}
 
 
 def main():
@@ -122,6 +157,20 @@ def main():
                     entry["download_error"] = str(e)
             report.append(entry)
             print(json.dumps({k: entry.get(k) for k in ("label", "uid", "name", "license", "faces", "mixamo", "glb_mb")}))
+    for uid in UIDS:
+        entry = {"label": "inspect", "uid": uid}
+        try:
+            info = json.loads(get(f"{API}/models/{uid}"))
+            entry.update({"name": info.get("name"), "author": (info.get("user") or {}).get("username"),
+                          "license": (info.get("license") or {}).get("slug")})
+            g = json.loads(get(f"{API}/models/{uid}/download")).get("glb")
+            entry["glb_mb"] = round(g["size"] / 1e6, 1) if g else None
+            if g:
+                entry.update(glb_parts(get(g["url"], auth=False)))
+        except Exception as e:
+            entry["error"] = str(e)
+        report.append(entry)
+        print(json.dumps({k: entry.get(k) for k in ("uid", "name", "license", "glb_mb")}))
     with open(os.path.join(out, "report.json"), "w") as f:
         json.dump(report, f, indent=1)
 

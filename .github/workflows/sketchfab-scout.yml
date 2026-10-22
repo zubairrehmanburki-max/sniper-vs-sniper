@@ -9,6 +9,10 @@ on:
         description: Query set (blank = soldiers/rifles/props, graphics = anatomy and scenery)
         type: string
         default: ''
+      uids:
+        description: Model uids to download and list the parts of (comma separated)
+        type: string
+        default: ''
   push:
     branches: [claude/project-thread-ux5zt1]
     paths: [tools/sketchfab/scout.py, .github/workflows/sketchfab-scout.yml]
@@ -29,6 +33,7 @@ jobs:
         env:
           SKETCHFAB_API_TOKEN: ${{ secrets.SKETCHFAB_API_TOKEN }}
           SCOUT_SET: ${{ inputs.set }}
+          SCOUT_UIDS: ${{ inputs.uids }}
         run: |
           if [ -z "$SKETCHFAB_API_TOKEN" ]; then echo "::error::SKETCHFAB_API_TOKEN is not set"; exit 1; fi
           python3 tools/sketchfab/scout.py "$RUNNER_TEMP/scout"
