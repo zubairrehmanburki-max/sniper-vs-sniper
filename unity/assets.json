@@ -604,6 +604,48 @@
     }
   ],
   "maxModelMB": 120,
+  "zips": [
+    {
+      "url": "https://ambientcg.com/get?file=Facade018A_1K-JPG.zip",
+      "dest": "Textures/Facades/Facade018A",
+      "source": "ambientCG",
+      "author": "ambientCG (Lennart Demes)",
+      "license": "CC0",
+      "page": "https://ambientcg.com/view?id=Facade018A"
+    },
+    {
+      "url": "https://ambientcg.com/get?file=Facade019A_1K-JPG.zip",
+      "dest": "Textures/Facades/Facade019A",
+      "source": "ambientCG",
+      "author": "ambientCG (Lennart Demes)",
+      "license": "CC0",
+      "page": "https://ambientcg.com/view?id=Facade019A"
+    },
+    {
+      "url": "https://ambientcg.com/get?file=Facade019B_1K-JPG.zip",
+      "dest": "Textures/Facades/Facade019B",
+      "source": "ambientCG",
+      "author": "ambientCG (Lennart Demes)",
+      "license": "CC0",
+      "page": "https://ambientcg.com/view?id=Facade019B"
+    },
+    {
+      "url": "https://ambientcg.com/get?file=Facade020A_1K-JPG.zip",
+      "dest": "Textures/Facades/Facade020A",
+      "source": "ambientCG",
+      "author": "ambientCG (Lennart Demes)",
+      "license": "CC0",
+      "page": "https://ambientcg.com/view?id=Facade020A"
+    },
+    {
+      "url": "https://ambientcg.com/get?file=Facade020B_1K-JPG.zip",
+      "dest": "Textures/Facades/Facade020B",
+      "source": "ambientCG",
+      "author": "ambientCG (Lennart Demes)",
+      "license": "CC0",
+      "page": "https://ambientcg.com/view?id=Facade020B"
+    }
+  ],
   "sketchfab": [
     {
       "id": "soldier_tactical",

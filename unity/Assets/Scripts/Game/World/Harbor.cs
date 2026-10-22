@@ -63,6 +63,11 @@ namespace SniperDuel.Game.World
                 k.Facades[i] = new MeshBuilder();
                 k.FacadeMats[i] = Skyline.Facade(rng, tones[i].Item1, 0.025f, tones[i].Item2);
             }
+            // Photographed facades (ambientCG, CC0, 13 m square) for the masonry blocks when the
+            // asset set has them; the glass curtain walls keep their generated look.
+            var photos = new[] { "Facade019A", "Facade020A", "Facade018A", "Facade019B", "Facade020B" };
+            for (int i = 0; i < photos.Length; i++)
+                if (PhotoFacade(photos[i], 13, Color.Lerp(Color.white, tones[i].Item1, 0.15f)) is Material photo) k.FacadeMats[i] = photo;
             for (int i = 0; i < 5; i++) k.Boxes[i] = new MeshBuilder();
 
             FiringBuilding(map, k, rng, roofA, A0, A1, Side.A);
@@ -505,6 +510,37 @@ namespace SniperDuel.Game.World
         }
 
         // ---- the rules' buildings between the roofs ------------------------------------------------
+
+        /// <summary>A photographed facade from TP/Textures/Facades/`id`, one repeat every `metres`; null when missing.</summary>
+        static Material? PhotoFacade(string id, float metres, Color tint)
+        {
+            Texture2D? colour = null, normal = null;
+            foreach (var t in Resources.LoadAll<Texture2D>("TP/Textures/Facades/" + id))
+            {
+                string n = t.name.ToLowerInvariant();
+                if (n.Contains("_color")) colour = t;
+                else if (n.Contains("normalgl")) normal = t;
+            }
+            if (colour == null) return null;
+            var mat = new Material(Library.Template("Lit")) { name = id };
+            mat.SetTexture("_BaseMap", colour);
+            mat.SetColor("_BaseColor", tint);
+            if (normal != null)
+            {
+                mat.SetTexture("_BumpMap", normal);
+                mat.EnableKeyword("_NORMALMAP");
+            }
+            // Masonry with glass in it: dull overall, the panes catching a little sky.
+            mat.SetTexture("_MetallicGlossMap", Library.Flat(0, 0.3f));
+            mat.SetTexture("_OcclusionMap", Texture2D.whiteTexture);
+            mat.SetFloat("_Smoothness", 1);
+            mat.SetFloat("_Metallic", 1);
+            // MeshBuilder UVs are metres × 0.25.
+            var scale = Vector2.one * (4f / metres);
+            mat.SetTextureScale("_BaseMap", scale);
+            mat.mainTextureScale = scale;
+            return mat;
+        }
 
         /// <summary>The warehouse, crane tower, office and shed: each fills its rules box exactly.</summary>
         static void LaneBuildings(DuelMap map, Kit k)
